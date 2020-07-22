@@ -17,5 +17,5 @@
     "secondaryTokenAttribute": "power",
     "url": "https://gitlab.com/rolnl/sandbox-system-builder/",
     "manifest": "https://gitlab.com/rolnl/sandbox-system-builder/raw/master/system.json",
-    "download": "https://gitlab.com/foundrynet/sandbox/-/archive/master/sandbox-master.zip"
+    "download": "https://gitlab.com/rolnl/sandbox-system-builder/-/archive/master/sandbox-master.zip"
 }
