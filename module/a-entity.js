@@ -1303,6 +1303,7 @@ export class gActor extends Actor{
                 let attvalue = subrolls[parseInt(attindex)].total;
 
                 rollexp = rollexp.replace(attname,attvalue);
+                rollformula = rollformula.replace(attname,subrolls[parseInt(attindex)].expr);
             }         
 
         }
@@ -1330,7 +1331,6 @@ export class gActor extends Actor{
         }
 
         let formula = rollformula.replace(/\s[0]\s\+/g,"");
-
 
         //CHECK CRITS AND FUMBLES TO COLOR THE ROLL
         let hascrit = false;
