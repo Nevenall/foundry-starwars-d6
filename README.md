@@ -319,7 +319,7 @@ There is a list of functions to use with roll expressions. Now you will hate me 
 - #{diff}: There is a DC box on the bottom of your active scene, to the right of the macro bar. DC stands for difficulty class. If your system/game requires the GM to set a difficulty, this is the place to write it down. Then, the rolls can reference this difficulty by using #{diff}.
 - &&value_1:text_1;value_N;text_N&&: So imagine you want to return a sentence to the chat, along with your roll. You want to return "SUCESS" if the result of your roll is over 8, "FAILURE" if the result of the roll is under 7, and "PARTIAL SUCCESS" on every other result. This function allows you to return that sentence/word below the roll result. So you can do this with the following formula &&0:FAILURE;7:PARTIAL SUCCESS;9:SUCCESS&&
 
-[Success nad Difficulty rolls](docs/images/tuto41.png)
+[Success and Difficulty rolls](docs/images/tuto41.png)
 
 - ¬¬expresion, result1:value1,result2:value2¬¬: This function is an advanced successes calculator. Imagine you need to count the number of dice equsl to 5 or higher in a 4d6 roll. You use then ¬¬4d6, 0:0,5:1¬¬. This means that for every die equal or higher to 5 it will return 1. So for a roll of 3,4,5,6 it will return 2. But what if we want to add that every 6 should return 2 instead of 1? We just add it as an option to the formula like this: ¬¬4d6, 0:0,5:1,6:2¬¬ So for a roll of 3,4,5,6 it will return 3.
 - ~Roll_ID~: adds a Roll ID to the roll. Remember that we have a MOD type called ROLL? And this one adds values to rolls of a specific Roll ID? So this function lets you add ROll IDs to rolls. As many as you like. So let's say we just defined a roll for an attack with Roll Name:"Attack", Roll ID: "attack", and Roll Expression: 1d20+@{strength}. However, we want more definition for it, and for that we want to incorporate some more Roll IDs, in case we need to modify the roll through a MOD. Let's say we want to add the Ids "melee_attack" and "slashing", then we would have to change the Roll Expression to 1d20+@{strength} ~melee_attack~ ~slashing~
@@ -327,6 +327,10 @@ There is a list of functions to use with roll expressions. Now you will hate me 
 - ~init~: sends the result of the roll to the initiative on the combat tracker.
 
 [Rolling to initiative](docs/images/tuto42.png)
+
+- !(Roll Name;Roll Expression): If you want to have a roll separated from your roll expression, with a name, and displayed by its own, you use this formula. For example, imagine that for a system we are designing we need to roll 1d6 with every skill check, and this die is called the "Anger Die". You could set it up like this: 1d10 + !(Anger Die;1d6).
+
+[Naming sub rolls](docs/images/tuto44.png)
 
 ## 8.Folder structure best practices
 If we want to share our creations and systems, we will have to standardise the way we store Sandbox's info. In the future, we could try to include a button to export to db or something like that, I don't know. But for know, let's stick to this structure. In the Actors Directory I normally create 2 folders, one called _CONFIG, and one called CAMPAIGN. In _CONFIG, and within separate folders, I store each Template Actor that the system needs (one for PCs, other for NPCs, other for shared menus like shared inventory, etc).
@@ -339,9 +343,16 @@ In the _TEMPLATE folder I create 3 folders: _TABS, _PANELS, _PROPERTIES. On some
 
 Well, that's all. It can feel like chaotic and a mess, but it works. I have been creating systems, playing, and streaming them in my channel for these past 3 months, and it works great. I will do my bust to update the tool and create English tutorials as frequently as possible. Thanks for your understanding and enjoy!!
 
+## TODO LIST
+- Reuse naming rolls. This can be useful for Savage Worlds. If I use !(Wild Die; 1d6), my intention is to reuse the result of this die somewhere else in the roll expression by using ?(Wild Die). This can allow for rechecks of rolled dice in the same expression.
+- Give advantage through a ROLL type MOD. Actually the ROLL MOD only adds a modifier to a roll of a specific Roll ID. But I need to include options for it to give advantage or disadvantage.
+- Check if the same result has been obtained in different dice. Like how many 5 have we gotten after rolling 4d6. This is important to let me finish Vampire 5th edition conversion to sandbox (in order to calculate crits with the Hunger Dice);
+- Multipanel inside Multipanel. And the universe will implode.
+- Custom icons for panels, properties, tabs, etc.
+- More...
+
 ## FINAL THANKS
 - To James, Mikel, Enrique, Viletus. You guys are the best, and we together will put our hobby in the place it deserves. 
 - To Goblin Enmascarado: Thanks man, you rock, your Sandbox D&D compendium in Spanish is amazing!
 - The Rol NL discord community: because your support has been instrumental to achieve the objective. Thanks for your help!!
 - The Foundry discord community: for answering all my questions, I know they could sound strange XD
-- To all of you that subscribed to my twitch channel in order to see this project released. Thanks for your trust!
