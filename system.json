@@ -1,7 +1,7 @@
 {
-    "name": "sandbox",
-    "title": "Sandbox",
-    "description": "Custom system to build any game",
+    "name": "sandbox-system-builder",
+    "title": "Sandbox System Builder",
+    "description": "Custom system builder to build character sheets and rulesets for any game.",
     "version": 0.1,
     "minimumCoreVersion": "0.5.5",
     "compatibleCoreVersion": "0.5.5",
@@ -15,7 +15,7 @@
     "gridUnits": "ft",
     "primaryTokenAttribute": "health",
     "secondaryTokenAttribute": "power",
-    "url": "https://gitlab.com/foundrynet/sandbox/",
-    "manifest": "https://gitlab.com/foundrynet/sandbox/raw/master/system.json",
+    "url": "https://gitlab.com/rolnl/sandbox-system-builder/",
+    "manifest": "https://gitlab.com/rolnl/sandbox-system-builder/raw/master/system.json",
     "download": "https://gitlab.com/foundrynet/sandbox/-/archive/master/sandbox-master.zip"
 }
