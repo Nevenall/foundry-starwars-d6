@@ -344,3 +344,4 @@ Well, that's all. It can feel like chaotic and a mess, but it works. I have been
 - To Goblin Enmascarado: Thanks man, you rock, your Sandbox D&D compendium in Spanish is amazing!
 - The Rol NL discord community: because your support has been instrumental to achieve the objective. Thanks for your help!!
 - The Foundry discord community: for answering all my questions, I know they could sound strange XD
+- To all of you that subscribed to my twitch channel in order to see this project released. Thanks for your trust!
