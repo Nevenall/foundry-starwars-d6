@@ -25,17 +25,23 @@
                     {{else}}
                     {{#isGM}}
                     <select  class="selectsheet"  name="data.gtemplate"  data-type="String">
+<!--
                         {{#select actor.data.gtemplate}}
                         {{#each data.sheets as |gtemplate id|}}
                         <option  value="{{gtemplate}}">{{gtemplate}}</option>
                         {{/each}}
                         {{/select}}
+-->
                     </select>
                     {{/isGM}}
                     {{/if}}
                     {{#isGM}}
+
+
                     <h3 class="rightblock-element">Template</h3>
                     <input class="check-istemplate" name="data.istemplate" id="check-istemplate" type="checkbox" {{checked actor.data.istemplate}}/>
+
+
                     {{/isGM}}
 
                     {{#if actor.data.istemplate}}
