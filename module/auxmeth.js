@@ -5,21 +5,19 @@ export class auxMeth {
     /** Gets Sheets */
     static async getSheets(){
         //console.log("getting sheets");
-        let counter = 1;
-        setProperty(SBOX.templates,"temp0", "Default");
 
-        let templateFiles = await FilePicker.browse("data","worlds/" + game.data.world.name +"/");
+        SBOX.templates = [];
 
-        if(templateFiles.files!=null){
-            templateFiles.files.forEach(function(gtemplate) {
-                if(gtemplate.includes(".html")){
-                    let tName = gtemplate.split('\\').pop().split('/').pop().split('.').shift();
-                    setProperty(SBOX.templates,"temp" + counter, tName);
-                    counter++;
-                }
+        SBOX.templates.push("Default");
 
-            },this)
-        };
+        let templates = game.actors.filter(y=>y.data.data.istemplate);
+
+        for(let i=0;i<templates.length;i++){
+            if(!SBOX.templates.includes(templates[i].data.data.gtemplate))
+                SBOX.templates.push(templates[i].data.data.gtemplate);
+        }
+
+        //console.log(SBOX.templates);
 
     }
 
