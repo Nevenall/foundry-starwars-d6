@@ -326,7 +326,7 @@ There is a list of functions to use with roll expressions. Now you will hate me 
 - ~ADV~ or ~DIS~: fives advantage or disadvantage to the roll
 - ~init~: sends the result of the roll to the initiative on the combat tracker.
 
-[Rolling to initiative](docs/images/tuto42.png)
+[Rolling to initiative](docs/images/tuto42a.png)
 
 - !(Roll Name;Roll Expression): If you want to have a roll separated from your roll expression, with a name, and displayed by its own, you use this formula. For example, imagine that for a system we are designing we need to roll 1d6 with every skill check, and this die is called the "Anger Die". You could set it up like this: 1d10 + !(Anger Die;1d6).
 
