@@ -222,7 +222,7 @@ Hooks.on("preCreateActor", (createData) =>{
 });
 
 Hooks.on("deleteActor", (actor) =>{
-    console.log(actor);
+    //console.log(actor);
 
 });
 
@@ -339,6 +339,7 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
 
     }
 
+    actor.listSheets();
     app.refreshCItems(html);
     app.handleGMinputs(html);
     app.refreshBadge(html);
