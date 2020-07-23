@@ -63,6 +63,8 @@ export class gActor extends Actor{
             opt.value = SBOX.templates[k];
             selector.appendChild(opt);
         }
+
+        selector.value = this.data.data.gtemplate;
     }
 
     //Overrides update method
