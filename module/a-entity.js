@@ -11,8 +11,6 @@ export class gActor extends Actor{
         const data = actorData.data;
         const flags = actorData.flags;
 
-        data.sheets = SBOX.templates;
-
         if (!hasProperty(flags, "ischeckingauto")){
             setProperty(flags,"ischeckingauto", false);
         }
@@ -37,6 +35,34 @@ export class gActor extends Actor{
 
         }
 
+    }
+
+    async listSheets(){
+
+        await auxMeth.getSheets();
+
+        let sheets = document.getElementsByClassName("selectsheet");
+
+        if(sheets==null)
+            return;
+
+        let selector = sheets[0];
+
+        if(selector==null)
+            return;
+
+        var length = selector.options.length;
+
+        for (let j = length-1; j >= 0; j--) {
+            selector.options[j] = null;
+        }
+
+        for(let k=0;k<SBOX.templates.length;k++){
+            var opt = document.createElement('option');
+            opt.appendChild( document.createTextNode(SBOX.templates[k]) );
+            opt.value = SBOX.templates[k];
+            selector.appendChild(opt);
+        }
     }
 
     //Overrides update method
