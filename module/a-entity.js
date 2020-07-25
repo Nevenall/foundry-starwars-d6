@@ -41,7 +41,8 @@ export class gActor extends Actor{
 
         await auxMeth.getSheets();
 
-        let sheets = document.getElementsByClassName("selectsheet");
+        let charsheet = document.getElementById("actor-"+this._id);
+        let sheets = charsheet.getElementsByClassName("selectsheet");
 
         if(sheets==null)
             return;
