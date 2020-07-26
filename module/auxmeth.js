@@ -111,32 +111,35 @@ export class auxMeth {
         }
         //console.log(expr);
         //PARSE ACTOR ATTRIBUTES
-        var result = expr.match(/(?<=\@\{).*?(?=\})/g);
-        if(result!=null){
+        if(attributes!=null){
+            var result = expr.match(/(?<=\@\{).*?(?=\})/g);
+            if(result!=null){
 
-            //Substitute string for current value
-            for (let i=0;i<result.length;i++){
-                let rawattname = result[i];
-                let attname = "@{" + result[i]+ "}";
-                let attvalue;
+                //Substitute string for current value
+                for (let i=0;i<result.length;i++){
+                    let rawattname = result[i];
+                    let attname = "@{" + result[i]+ "}";
+                    let attvalue;
 
-                if(attributes[rawattname]!=null){
-                    if(rawattname.includes(".max")){
-                        rawattname = rawattname.replace(".max",'');
-                        attvalue = attributes[rawattname].max;
+                    if(attributes[rawattname]!=null){
+                        if(rawattname.includes(".max")){
+                            rawattname = rawattname.replace(".max",'');
+                            attvalue = attributes[rawattname].max;
+                        }
+                        else{
+                            attvalue = attributes[rawattname].value;
+                        }
                     }
-                    else{
-                        attvalue = attributes[rawattname].value;
-                    }
-                }
 
-                if(attvalue=="" || attvalue ==null)
-                    attvalue=0;
+                    if(attvalue=="" || attvalue ==null)
+                        attvalue=0;
 
-                expr = expr.replace(attname,attvalue);
-            }         
+                    expr = expr.replace(attname,attvalue);
+                }         
 
+            }
         }
+
         //console.log(expr);
         //PARSE SCALED AUTO VALUES
         var scaleresult = expr.match(/(?<=\%\[).*?(?=\])/g);
@@ -294,7 +297,8 @@ export class auxMeth {
         hotbar.className = "flexblock-left-nopad";
 
         let actionbar = document.getElementById("action-bar");
-        actionbar.className = "action-bar-container";
+        if(actionbar!=null)
+            actionbar.className = "action-bar-container";
 
         let prevmenu = hotbar.querySelector(".roll-menu");
 
