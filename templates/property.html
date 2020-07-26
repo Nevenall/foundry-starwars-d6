@@ -258,23 +258,36 @@
             {{#ifNot item.data.datatype "checkbox"}}
 
             <div class="flexblock">
-                <div class="col-1-1">
-                    {{#ifNot item.data.datatype "simpletext"}}
+                {{#ifNot item.data.datatype "simpletext"}}
+                <div class="col-2-3">
                     <div class="new-row">
                         <div class="flexblock-left">
                             <label class="label-medlarge">Max Value</label>
                             <input type="text" name="data.automax" value="{{data.automax}}"/>
                         </div>
                     </div>
-                    {{/ifNot}}
+                </div>
+                <div class="col-1-3">
                     <div class="new-row">
                         <div class="flexblock-left">
-                            <label class="label-medlarge">Auto</label>
-                            <input type="text" name="data.auto" value="{{data.auto}}"/>
+                            <label class="label-small righttext">Visible</label>
+                            <input class="check-maxvisible" name="data.maxvisible" id="check-maxvisible" type="checkbox" {{checked item.data.maxvisible}}/>
                         </div>
                     </div>
                 </div>
+                {{/ifNot}}
             </div>
+
+            <div class="col-1-1">
+                <div class="new-row">
+                    <div class="flexblock-left">
+                        <label class="label-medlarge">Auto</label>
+                        <input type="text" name="data.auto" value="{{data.auto}}"/>
+                    </div>
+                </div>
+            </div>
+
+
 
             {{/ifNot}}
             {{/ifNot}}
