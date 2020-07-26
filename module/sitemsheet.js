@@ -2,6 +2,8 @@
  * Extend the basic ItemSheet with some very simple modifications
  * @extends {ItemSheet}
  */
+
+import { auxMeth } from "./auxmeth.js";
 export class sItemSheet extends ItemSheet {
 
     /** @override */
@@ -479,7 +481,16 @@ export class sItemSheet extends ItemSheet {
 
                                         input.setAttribute("type", "number");
                                         input.className = "input-smallmed";
-                                        input.setAttribute("value", attribute.value);
+
+
+                                        if(property.auto!="" && property.auto!=null){
+                                            let atvalue = await auxMeth.autoParser(property.auto,null,attributes,false);
+                                            input.setAttribute("value", atvalue);
+                                            input.setAttribute("readonly", "true"); 
+                                        }
+                                        else{
+                                            input.setAttribute("value", attribute.value);
+                                        }
 
                                     }
                                     else if(property.datatype==="simpletext"){
