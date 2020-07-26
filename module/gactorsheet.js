@@ -1230,7 +1230,11 @@ export class gActorSheet extends ActorSheet {
                     sInput.setAttribute("type", "text");
                     sInput.className = "input-min";
 
-                    if(property.data.automax!=""){
+                    if(!hasProperty(property.data,"maxvisible")){
+                        property.data.maxvisible=true;
+                    }
+
+                    if(property.data.automax!="" && property.data.maxvisible){
                         sInputMax = deftemplate.createElement("INPUT");
                         sInputMax.setAttribute("type", "text");
                         sInput.className = "input-ahalf inputGM";
@@ -2435,7 +2439,8 @@ export class gActorSheet extends ActorSheet {
         let attKey = property.data.data.attKey;
         const attributes = this.actor.data.data.attributes;
         attributes[attKey].value =  clickValue;
-        this.actor.update({"data.attributes":attributes}, {diff: false});
+        this.actor.actorUpdater();
+        //this.actor.update({"data.attributes":attributes}, {diff: false});
         if(clickValue>0)
             target.className="fas fa-circle";
     }
