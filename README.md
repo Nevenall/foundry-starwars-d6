@@ -17,12 +17,15 @@ Also, consider donating if you want to help me, I will have to work a lot if we 
 ## Disclaimer
 I am not a programmer. I am just a poor chemical engineer, and a big fan of ttrpgs. So yes, the code might look like Chaos (which is fine, I am a Tzeench follower myself). It might be difficult to understand why I structured things this way, and there might be a better way of organising it, I know. Just bear with me, if you tell me how and help me, we can all get a great version of Sandbox. If you need clarification, just ask me, I am @Seregras in the Foundry discord channel.
 
-## Tutorial
+## Tutorials
 Playlist with videotutorials in English (if there aren't any, wait some days, I will try to upload every fortnite)
 [Videotutorials -English](https://www.youtube.com/playlist?list=PLMAQsyqo9jDFpHYy4WZv0eF_SgqotcUKs)
 
 Playlist with videotutorials in Spanish (why not? You might learn some)
 [Videotutorials -Spanish](https://www.youtube.com/playlist?list=PLMAQsyqo9jDFEfeqRHBhwHT7kY_1eK2zY)
+
+Do you have questions? Join my discord server and head to SANDBOX ENGLISH, I will help you there!
+[Discord](https://discord.gg/QE7CHNP)
 
 ## Index
 1. Basic Sheet Structure
