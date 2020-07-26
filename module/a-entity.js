@@ -40,7 +40,7 @@ export class gActor extends Actor{
     async listSheets(){
 
         await auxMeth.getSheets();
-
+        
         let charsheet = document.getElementById("actor-"+this._id);
         let sheets = charsheet.getElementsByClassName("selectsheet");
 
