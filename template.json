@@ -36,6 +36,7 @@
             "defvalue":"",
             "auto":"",
             "automax":"",
+            "maxvisible":true,
             "listoptions":"",
             "editable":true,
             "haslabel":true,
@@ -69,7 +70,7 @@
                 "three-fourths":{
                     "value":"3/4"
                 },
-                
+
                 "two-thirds":{
                     "value":"2/3"
                 },
@@ -149,7 +150,7 @@
                 "three-fourths":{
                     "value":"3/4"
                 },
-                
+
                 "two-thirds":{
                     "value":"2/3"
                 },
