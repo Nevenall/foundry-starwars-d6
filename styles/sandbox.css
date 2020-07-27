@@ -306,6 +306,13 @@
     max-width:608px;
 }
 
+.sandbox.sheet .new-multiblock {
+    padding: 0px 0px;
+    display:inline-block;
+    margin:0;
+}
+
+
 .sandbox.sheet .new-column {
     display: flex;
     flex: 0 0 100px;
