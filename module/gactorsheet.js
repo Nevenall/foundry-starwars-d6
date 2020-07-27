@@ -1431,7 +1431,7 @@ export class gActorSheet extends ActorSheet {
                 if(initial){
                     //parentRow = deftemplate.getElementById(multiID + "multi");
                     parentRow = deftemplate.createElement("DIV");
-                    parentRow.className = 'new-block';
+                    parentRow.className = 'new-multiblock';
 
                     let parentRoot;
                     let parentGranda = deftemplate.getElementById(multiID + "multi");
