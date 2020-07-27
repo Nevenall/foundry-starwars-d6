@@ -335,6 +335,8 @@ There is a list of functions to use with roll expressions. Now you will hate me 
 
 [Naming sub rolls](docs/images/tuto44.png)
 
+- $<index;expression>: So roll parsing is not perfect, and until we find a way to do it more visually attractive there will be tons of problems. Expressions that contain brackets inside other expressions that also contain brackets will give you troubles. To avoid this, you can save pieces of your expression through this function. For example $<1;%[@{str},0:0,15:1]> will register the expresion after the semicolon as $1. A full example of this is: $<1;%[@{str},0:0,15:1]> 2d6+$1. This expression is equivalent to 2d6 + %[@{str},0:0,15:1]. Remember to change the number before the semicolon, as is the index and will let you identify subexpressions using $1,$2,$3, etc.
+
 ## 8.Folder structure best practices
 If we want to share our creations and systems, we will have to standardise the way we store Sandbox's info. In the future, we could try to include a button to export to db or something like that, I don't know. But for know, let's stick to this structure. In the Actors Directory I normally create 2 folders, one called _CONFIG, and one called CAMPAIGN. In _CONFIG, and within separate folders, I store each Template Actor that the system needs (one for PCs, other for NPCs, other for shared menus like shared inventory, etc).
 
