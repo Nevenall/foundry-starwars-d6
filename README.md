@@ -359,5 +359,6 @@ Well, that's all. It can feel like chaotic and a mess, but it works. I have been
 ## FINAL THANKS
 - To James, Mikel, Enrique, Viletus. You guys are the best, and we together will put our hobby in the place it deserves. 
 - To Goblin Enmascarado: Thanks man, you rock, your Sandbox D&D compendium in Spanish is amazing!
+- To Dr.Slump: Thanks for the ideas and the help! You learnt this chaos too fast!
 - The Rol NL discord community: because your support has been instrumental to achieve the objective. Thanks for your help!!
 - The Foundry discord community: for answering all my questions, I know they could sound strange XD
