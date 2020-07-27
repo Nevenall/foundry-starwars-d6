@@ -83,9 +83,50 @@ export class auxMeth {
         });
     }
 
-    static autoParser(expr,attributes,itemattributes,exprmode){
+    static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false){
         var toreturn = expr;
         //console.log(expr);
+
+        //Expression register. Recommended to avoid REgex shennanigans
+        let regArray =[];
+        let expreg;
+        if(!noreg)
+            expreg = expr.match(/(?<=\$\<).*?(?=\>)/g);
+        if(expreg!=null){
+
+            //Substitute string for current value
+            for (let i=0;i<expreg.length;i++){
+                let attname = "$<" + expreg[i]+ ">";
+                let attvalue="";
+
+                let regblocks = expreg[i].split(";");
+
+                let regobject = {};
+                regobject.index = regblocks[0];
+                regobject.expr = regblocks[1];
+                regobject.result = await auxMeth.autoParser(regblocks[1],attributes,itemattributes,false,true);
+                regArray.push(regobject);
+
+                expr = expr.replace(attname,attvalue);
+
+            }
+
+            let exprparse = expr.match(/(?<=\$)[0-9]/g);
+            for (let i=0;i<exprparse.length;i++){
+                let regindex = exprparse[i];
+
+                let attname = "$" + regindex;
+                let regObj = regArray.find(y=>y.index==regindex);
+
+                let attvalue="";
+                if(regObj!=null)
+                    attvalue = regObj.result;
+
+                console.log(attvalue);
+                expr = expr.replace(attname,attvalue);
+            }
+        }
+
         //Parses last roll
         if(itemattributes!=null && expr.includes("#{roll}")){
             expr=expr.replace("#{roll}",itemattributes._lastroll);
