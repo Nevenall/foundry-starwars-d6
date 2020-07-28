@@ -159,17 +159,18 @@ export class auxMeth {
                 //Substitute string for current value
                 for (let i=0;i<result.length;i++){
                     let rawattname = result[i];
+                    let attProp = "value";
+                    if(rawattname.includes(".max")){
+                        rawattname = rawattname.replace(".max","");
+                        attProp = "max";
+                    }
+
                     let attname = "@{" + result[i]+ "}";
+                    const myatt = attributes[rawattname];
                     let attvalue;
 
-                    if(attributes[rawattname]!=null){
-                        if(rawattname.includes(".max")){
-                            rawattname = rawattname.replace(".max",'');
-                            attvalue = attributes[rawattname].max;
-                        }
-                        else{
-                            attvalue = attributes[rawattname].value;
-                        }
+                    if(myatt!=null){
+                        attvalue = myatt[attProp];
                     }
 
                     if(attvalue=="" || attvalue ==null)
