@@ -2127,7 +2127,10 @@ export class gActorSheet extends ActorSheet {
                                             cellvalue.value=constantvalue;
                                         }
 
-
+                                        if(propdata.auto!=""){
+                                            cellvalue.value = await auxMeth.autoParser(propdata.auto,attributes,ciObject.attributes,false);
+                                            cellvalue.setAttribute("readonly", true);
+                                        }
 
                                     }
 
