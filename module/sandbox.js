@@ -38,12 +38,50 @@ Hooks.once("init", async function() {
     auxMeth.registerIfGreaterHelper();
     auxMeth.registerIfLessHelper();
     auxMeth.registerIsGM();
+    auxMeth.registerShowMod();
 
     // Register sheet application classes
     Actors.unregisterSheet("core", ActorSheet);
     Actors.registerSheet("dnd5e", gActorSheet, { makeDefault: true });
     Items.unregisterSheet("core", ItemSheet);
     Items.registerSheet("dnd5e", sItemSheet, {makeDefault: true});
+
+    game.settings.register("sandbox", "showADV", {
+        name: "Show Roll with Advantage option",
+        hint: "If checked, 1d20,ADV,DIS options will be displayed under the Actor's name",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "showSimpleRoller", {
+        name: "Show d20 Roll icon option",
+        hint: "If checked a d20 icon will be displayed under the Actor's name",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "showDC", {
+        name: "Show DC window",
+        hint: "If checked a DC box will appear at the bottom of the screen",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "showLastRoll", {
+        name: "Show Last Roll window",
+        hint: "If checked a box displaying the results of the last Roll will appear at the bottom of the screen",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
 });
 
 Hooks.once('ready', async() => {
@@ -105,13 +143,13 @@ Hooks.once('ready', async() => {
 
         });
 
-
         form.appendChild(sInput);
         backgr.appendChild(header);
+
         backgr.appendChild(form);
 
-
-        await hotbar.appendChild(backgr);
+        if(game.settings.get("sandbox", "showDC"))
+            await hotbar.appendChild(backgr);
 
         await auxMeth.rollToMenu();
         SBOX.showshield = false;
@@ -217,7 +255,8 @@ Hooks.on('createCombatant', (combat, combatantId, options) => {
 });
 
 Hooks.on("preCreateActor", (createData) =>{
-    createData.token.name = createData.name;
+    if(createData.token!=null)
+        createData.token.name = createData.name;
 
 });
 
