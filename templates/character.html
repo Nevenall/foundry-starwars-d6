@@ -11,8 +11,15 @@
                     <div class="flexblock-left">
                         <label class="label-free boldtext">MOD</label>
                         <input class="input-med" type="number" name="data.mod" value="{{data.mod}}"/>
+
+                        {{#advShow}}
                         <a class="roll-mode boldtext" title="Roll mode"><i>{{data.rollmode}}</i></a>
+                        {{/advShow}}
+                        
+                        {{#showRoller}}
                         <a class="roll-free" title="Roll mode"><i class="fas fa-dice-d20"></i></a>
+                        {{/showRoller}}
+
                         {{#if actor.data.selector}}
                         <a class="mod-selector" title="Select Options"><i class="fas fa-exclamation-circle fa-2x"></i></a>
                         {{/if}}
@@ -25,12 +32,12 @@
                     {{else}}
                     {{#isGM}}
                     <select  class="selectsheet"  name="data.gtemplate"  data-type="String">
-<!--
-                        {{#select actor.data.gtemplate}}
-                        {{#each data.sheets as |gtemplate id|}}
-                        <option  value="{{gtemplate}}">{{gtemplate}}</option>
-                        {{/each}}
-                        {{/select}}
+                        <!--
+{{#select actor.data.gtemplate}}
+{{#each data.sheets as |gtemplate id|}}
+<option  value="{{gtemplate}}">{{gtemplate}}</option>
+{{/each}}
+{{/select}}
 -->
                     </select>
                     {{/isGM}}
