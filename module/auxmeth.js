@@ -83,6 +83,24 @@ export class auxMeth {
         });
     }
 
+    static async registerShowMod(){
+        Handlebars.registerHelper('advShow', function(options) {
+            if(game.settings.get("sandbox", "showADV")) {
+                return options.fn(this);
+            }
+            return options.inverse(this);
+        });
+    }
+
+    static async registerShowSimpleRoll(){
+        Handlebars.registerHelper('showRoller', function(options) {
+            if(game.settings.get("sandbox", "showSimpleRoller")) {
+                return options.fn(this);
+            }
+            return options.inverse(this);
+        });
+    }
+
     static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false){
         var toreturn = expr;
         //console.log(expr);
@@ -284,6 +302,12 @@ export class auxMeth {
         toreturn = expr;
         //console.log(expr);
 
+        //PARSE TO TEXT
+        if(expr.includes("|")){
+            expr = expr.replace("|","");
+            exprmode=true;
+        }
+
         if(isNaN(expr)){
 
             if(!exprmode){
@@ -334,6 +358,10 @@ export class auxMeth {
     }
 
     static rollToMenu(html=null){
+
+        if(!game.settings.get("sandbox", "showLastRoll"))
+            return;
+
         //console.log("rolling to menu");
         let hotbar = document.getElementById("hotbar");
         hotbar.className = "flexblock-left-nopad";
