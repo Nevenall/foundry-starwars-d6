@@ -40,7 +40,7 @@ export class gActor extends Actor{
     async listSheets(){
 
         await auxMeth.getSheets();
-        
+
         let charsheet = document.getElementById("actor-"+this._id);
         let sheets = charsheet.getElementsByClassName("selectsheet");
 
@@ -1339,6 +1339,11 @@ export class gActor extends Actor{
 
 
         roll = new Roll(rollexp).roll();
+
+        if(game.dice3d!=null){
+            game.dice3d.showForRoll(roll);
+        }
+
         rolltotal = roll.total;
         if(roll.formula.charAt(0)!="-" || roll.formula.charAt(0)!="0")
             multiroll.push(roll);
