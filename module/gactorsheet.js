@@ -41,6 +41,8 @@ export class gActorSheet extends ActorSheet {
         if(this.actor.data.data.istemplate && this.actor.data.data.gtemplate!="Default"){
             let _template = game.actors.find(y=>y.data.data.istemplate && y.data.data.gtemplate==this.actor.data.data.gtemplate);
             let html = _template.data.flags.template;
+            if(html=="" || html==null)
+                html=_template.data.data._html;
             return html;
         }
 
@@ -48,6 +50,20 @@ export class gActorSheet extends ActorSheet {
             return _html;
         }
 
+    }
+
+    async getTempHTML(){
+        if(this.actor.data.data.gtemplate!="Default"){
+            let _template = game.actors.find(y=>y.data.data.istemplate && y.data.data.gtemplate==this.actor.data.data.gtemplate);
+            let html = _template.data.flags.template;
+            if(html=="" || html==null)
+                html=_template.data.data._html;
+            return html;
+        }
+        else{
+            let html = await fetch(this.getHTMLPath()).then(resp => resp.text())
+            return html;
+        }
     }
 
 
@@ -448,7 +464,10 @@ export class gActorSheet extends ActorSheet {
         //Looks for template and finds inputs
         this.actor.data.data.gtemplate = gtemplate;
         var parser = new DOMParser();
-        var htmlcode = await fetch(this.getHTMLPath()).then(resp => resp.text());
+        //var htmlcode = await fetch(this.getHTMLPath()).then(resp => resp.text());
+
+        let htmlcode = await this.getTempHTML();
+        //console.log(htmlcode);
         var form = parser.parseFromString(htmlcode, 'text/html').querySelector('form');
 
         //Loops the inputs and creates the related attributes
@@ -493,9 +512,9 @@ export class gActorSheet extends ActorSheet {
         this.actor.data.data.tokenbar1 = "attributes." + bar1Att;
         this.actor.data.data.tokenshield = shield;
 
-        await this.actor.actorUpdater();
-
         console.log("setting sheet finished");
+
+        await this.actor.update({"data":this.actor.data},{diff:false});
     }
 
     setAttributeValues(attID){
@@ -507,7 +526,7 @@ export class gActorSheet extends ActorSheet {
         const attribute = property.data.data.attKey;
         //console.log(attribute);
         if(!hasProperty(attData,attribute)){
-            //console.log("setting");
+            console.log("setting");
             attData[attribute] = {};
 
             //Sets id and auto
@@ -1524,6 +1543,7 @@ export class gActorSheet extends ActorSheet {
         setProperty(flags,"multiwclass","");
 
         await this.buildHTML(tabs);
+        this.actor.update({"data.flags": flags},{diff:false});
 
     }
 
@@ -1689,11 +1709,16 @@ export class gActorSheet extends ActorSheet {
         //stringed = stringed.replaceAll('**"','');
         //console.log(stringed);
         await this.exportHTML(stringed,this.actor.name);
-
+        //TODO DELETE ON NEXT REVISION
         setProperty(this.actor.data.flags,"template",stringed);
+        setProperty(this.actor.data.data,"_html","");
         this.actor.update({"data.gtemplate": this.actor.name});
+        await this.actor.update({"data._html": stringed},{diff:false});
 
-        auxMeth.getSheets();
+        await auxMeth.getSheets();
+
+        //Comment this for debug
+        location.reload();
     }
 
     /* -------------------------------------------- */
@@ -2129,6 +2154,11 @@ export class gActorSheet extends ActorSheet {
 
                                         if(propdata.auto!=""){
                                             cellvalue.value = await auxMeth.autoParser(propdata.auto,attributes,ciObject.attributes,false);
+
+                                            if(ciObject.attributes[propKey].value!=cellvalue.value){
+                                                this.saveNewCIAtt(ciObject.id,groupprops[k].id,cellvalue.value);
+                                            }
+
                                             cellvalue.setAttribute("readonly", true);
                                         }
 
