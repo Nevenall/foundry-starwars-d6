@@ -167,6 +167,7 @@ Hooks.once('ready', async() => {
         });
 
         let macrosheet = document.getElementById("hotbar");
+
     }
 
 });
@@ -365,7 +366,12 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
     const actor = app.actor;
     let _html = await app.getTemplateHTML(html);
 
-    html = $(_html);
+    if(actor.data.data.istemplate && hasProperty(actor.data.data,"_html")){
+        html = actor.data.data._html;
+    }
+    else{
+        html = $(_html);
+    }
 
     if(actor.data.flags.lastupdatedBy==null){
         actor.data.flags.lastupdatedBy = game.user._id;
@@ -379,22 +385,31 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
     }
 
     actor.listSheets();
-    app.refreshCItems(html);
-    app.handleGMinputs(html);
-    app.refreshBadge(html);
-    app.displaceTabs();
-    app.populateRadioInputs(html);
-    app.scrollBarTest(html);
-    actor.setInputColor();
-
-    html.find('.window-resizable-handle').mouseup(ev => {
-        event.preventDefault();
+    if(!actor.data.data.istemplate){
+        app.refreshCItems(html);
+        app.handleGMinputs(html);
+        app.refreshBadge(html);
+        app.populateRadioInputs(html);
         app.scrollBarTest(html);
-    });
+        actor.setInputColor();
+
+        html.find('.window-resizable-handle').mouseup(ev => {
+            event.preventDefault();
+            app.scrollBarTest(html);
+        });
+    }
+
+    app.displaceTabs();
+
+
 
 });
 
 Hooks.on("renderChatMessage", async (app, html, data) => {
+    let messageId = app.data._id;
+    let msg = game.messages.get(messageId);
+    let msgIndex = game.messages.entities.indexOf(msg);
+
     let header = $(html).find(".message-header");
     header.remove();
     //console.log("tirando");
@@ -427,8 +442,15 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
         $(html).find(".roll-main-button").hide();
     });
 
-    if(game.user.isGM)
+
+
+    if(game.user.isGM){
+        $(html).find(".roll-message-delete").click(async ev => {
+            msg.delete();
+        });
         auxMeth.rollToMenu();
+    }
+
 
 });
 
