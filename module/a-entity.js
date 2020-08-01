@@ -179,8 +179,8 @@ export class gActor extends Actor{
                     const actorAtt = attributes[myAtt];
 
                     if(addsetmods[i].type=="ADD"){
-
-                        if((toRemove.isactive && !toRemoveObj.ispermanent) || toRemoveObj.usetype=="PAS")
+                        let jumpmod = await this.checkModConditional(addsetmods[i]);
+                        if(((toRemove.isactive && !toRemoveObj.ispermanent) || toRemoveObj.usetype=="PAS") && !jumpmod)
                             actorAtt[attProp] -= myAttValue;
                     }
                 }
@@ -490,19 +490,21 @@ export class gActor extends Actor{
         }
 
         else if(mod.condop=="HIH"){
-            if(!isNaN(attIntValue) && !isNaN(condValue))
-                if(attIntValue<condValue){
+            if(!isNaN(attIntValue) && !isNaN(condValue)){
+                if(attIntValue<=condValue){
                     jumpmod=true;
                 }
+            }
+
         }
 
         else if(mod.condop=="LOW"){
             if(!isNaN(attIntValue) && !isNaN(condValue))
-                if(attIntValue>condValue){
+                if(attIntValue>=condValue){
                     jumpmod=true;
                 }
         }
-
+        //console.log(jumpmod);
         return jumpmod;
     }
 
@@ -591,7 +593,7 @@ export class gActor extends Actor{
                 jumpmod = await this.checkModConditional(mod);
             }
 
-            if(hasProperty(attributes,modAtt) && !jumpmod){
+            if(hasProperty(attributes,modAtt)){
                 let value =mod.value;
                 let finalvalue =value;
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
@@ -624,7 +626,7 @@ export class gActor extends Actor{
                 }
 
                 //console.log(mod.name + " exec= " + _mod.exec + " citem= " + citem.name + " active= " + citem.isactive + " value= " + finalvalue + " isset=" + myAtt.isset);
-                if(_citem.usetype=="PAS" || citem.isactive){
+                if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                     if(attProp!="max" || (attProp=="max" && !myAtt.maxblocked)){
                         myAtt.prev= myAtt[attProp];
@@ -641,7 +643,7 @@ export class gActor extends Actor{
 
                 else{
 
-                    if(!citem.isreset){
+                    if((!citem.isreset)||(_mod.exec && jumpmod)){
                         if(!citem.ispermanent){
                             myAtt[attProp] = myAtt.prev;
                             ithaschanged = true;
@@ -681,11 +683,11 @@ export class gActor extends Actor{
             if(mod.condop!="NON" && mod.condop!=null){
                 jumpmod = await this.checkModConditional(mod);
             }
-
+            console.log(jumpmod);
             let citem = await citemIDs.find(y=>y.id==mod.citem);
             let _citem = await game.items.get(mod.citem).data.data;
 
-            if(hasProperty(attributes,modAtt) && !jumpmod){
+            if(hasProperty(attributes,modAtt)){
                 let seedprop = game.items.get(attributes[modAtt].id);
                 if((seedprop.data.data.auto=="" && seedprop.data.data.automax=="") && seedprop.data.data.datatype=="simplenumeric"){
 
@@ -719,7 +721,7 @@ export class gActor extends Actor{
                     }
 
                     //console.log(_mod.name + " " + _mod.exec + " " + finalvalue);
-                    if((_citem.usetype=="PAS" || citem.isactive)){
+                    if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                         if(!_mod.exec || (myAtt[modvable] && !mod.once)){
 
@@ -745,7 +747,8 @@ export class gActor extends Actor{
 
                     }
                     else{
-                        if(!citem.isreset && !_citem.isactive && !myAtt.default){
+                        //console.log(citem.isreset + " " + citem.isactive + " " + myAtt.default + " " + _mod.exec);
+                        if((!citem.isreset || (_mod.exec && jumpmod)) && !citem.isactive && !myAtt.default){
                             _mod.exec=false;
                             myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
                             ithaschanged = true;
@@ -825,7 +828,7 @@ export class gActor extends Actor{
             let _citem = game.items.get(mod.citem).data.data;
 
             //console.log("entering " + mod.name + " " + jumpmod);
-            if(hasProperty(attributes,modAtt) && !jumpmod){
+            if(hasProperty(attributes,modAtt)){
                 let seedprop = game.items.get(attributes[modAtt].id);
                 if((seedprop.data.data.auto!="" || seedprop.data.data.automax!="") && seedprop.data.data.datatype=="simplenumeric"){
                     let value =mod.value;
@@ -860,7 +863,7 @@ export class gActor extends Actor{
 
 
                     //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
-                    if((_citem.usetype=="PAS" || citem.isactive)){
+                    if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                         //if(!_mod.exec || (myAtt[modvable] && !mod.once)){
                         if(!_mod.exec ||_mod.exec){
@@ -887,7 +890,7 @@ export class gActor extends Actor{
 
                     else{
 
-                        if(!citem.isreset && !_citem.isactive){
+                        if((!citem.isreset || jumpmod) && !_citem.isactive){
 
                             if(!myAtt.default && _mod.exec){
                                 //console.log("removing mod");
