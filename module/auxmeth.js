@@ -170,22 +170,24 @@ export class auxMeth {
         }
         //console.log(expr);
         //PARSE ACTOR ATTRIBUTES
-        if(attributes!=null){
-            var result = expr.match(/(?<=\@\{).*?(?=\})/g);
-            if(result!=null){
 
-                //Substitute string for current value
-                for (let i=0;i<result.length;i++){
-                    let rawattname = result[i];
-                    let attProp = "value";
-                    if(rawattname.includes(".max")){
-                        rawattname = rawattname.replace(".max","");
-                        attProp = "max";
-                    }
+        var result = expr.match(/(?<=\@\{).*?(?=\})/g);
+        if(result!=null){
 
-                    let attname = "@{" + result[i]+ "}";
-                    const myatt = attributes[rawattname];
-                    let attvalue;
+            //Substitute string for current value
+            for (let i=0;i<result.length;i++){
+                let rawattname = result[i];
+                let attProp = "value";
+                if(rawattname.includes(".max")){
+                    rawattname = rawattname.replace(".max","");
+                    attProp = "max";
+                }
+
+                let attname = "@{" + result[i]+ "}";
+                let attvalue;
+
+                if(attributes!=null){
+                    let myatt = attributes[rawattname];
 
                     if(myatt!=null){
                         attvalue = myatt[attProp];
@@ -193,12 +195,17 @@ export class auxMeth {
 
                     if(attvalue=="" || attvalue ==null)
                         attvalue=0;
+                }
+                else{
+                    attvalue=0;
+                }
 
-                    expr = expr.replace(attname,attvalue);
-                }         
 
-            }
+                expr = expr.replace(attname,attvalue);
+            }         
+
         }
+
 
         //console.log(expr);
         //PARSE SCALED AUTO VALUES
