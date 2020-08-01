@@ -596,7 +596,7 @@ export class gActor extends Actor{
                 let finalvalue =value;
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
                 let citem = citemIDs.find(y=>y.id==mod.citem);
-                //console.log(citem);
+
                 let _citem = game.items.get(mod.citem).data.data;
 
                 if(isNaN(value)){
@@ -613,7 +613,8 @@ export class gActor extends Actor{
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
                 const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
-
+                if(_mod==null)
+                    console.log(citem);
                 if(_mod.exec)
                     myAtt.isset=true;
 
@@ -1431,7 +1432,7 @@ export class gActor extends Actor{
         };
 
         renderTemplate("systems/sandbox/templates/dice.html", rollData).then(html => {
-            ChatMessage.create({
+            let newmessage = ChatMessage.create({
                 content: html
             });
 
