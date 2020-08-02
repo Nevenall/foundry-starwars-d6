@@ -130,6 +130,7 @@ export class auxMeth {
             }
 
             let exprparse = expr.match(/(?<=\$)[0-9]/g);
+
             for (let i=0;i<exprparse.length;i++){
                 let regindex = exprparse[i];
 
