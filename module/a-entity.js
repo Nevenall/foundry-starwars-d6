@@ -683,7 +683,7 @@ export class gActor extends Actor{
             if(mod.condop!="NON" && mod.condop!=null){
                 jumpmod = await this.checkModConditional(mod);
             }
-            console.log(jumpmod);
+            //console.log(jumpmod);
             let citem = await citemIDs.find(y=>y.id==mod.citem);
             let _citem = await game.items.get(mod.citem).data.data;
 
@@ -1184,8 +1184,13 @@ export class gActor extends Actor{
             rollexp = rollexp.replace("1d20","2d20kl");
         }
 
+        //console.log(rollexp);
+
+        //Parse Roll
+        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true);
+
         //Remove conditionalexp and save it
-        let condid = rollexp.match(/(?<=\&\&)\S*?(?=\&\&)/g);
+        let condid = rollexp.match(/(?<=\&\&)(.*?)(?=\&\&)/g);
         if(condid!=null){
             for (let j=0;j<condid.length;j++){
                 let condidexpr = condid[j];
@@ -1196,11 +1201,6 @@ export class gActor extends Actor{
                 rollexp = rollexp.replace(conddtoreplace,"");
             }  
         }
-
-
-
-        //Parse Roll
-        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true);
 
         //console.log(rollexp);
         //console.log(subrolls);
