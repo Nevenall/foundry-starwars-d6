@@ -49,7 +49,7 @@ export class sItemSheet extends ItemSheet {
         // Activate tabs
         let tabs = html.find('.tabs');
         let initial = this._sheetTab;
-        new Tabs(tabs, {
+        new TabsV2(tabs, {
             initial: initial,
             callback: clicked => this._sheetTab = clicked.data("tab")
         });
@@ -435,9 +435,17 @@ export class sItemSheet extends ItemSheet {
                             label.textContent = property.tag;
 
                             let input;
+
                             if(!hasProperty(attributes,property.attKey)){
                                 setProperty(attributes,property.attKey, {});
-                                attributes[property.attKey].value = property.defvalue;
+                                if(property.datatype==="simplenumeric"){
+                                    attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,false); 
+                                }
+
+                                else{
+                                    attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,true); 
+                                }
+
                                 tosave = true;
                             }
 
