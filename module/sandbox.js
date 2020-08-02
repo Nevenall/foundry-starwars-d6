@@ -406,6 +406,28 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
 });
 
 Hooks.on("renderChatMessage", async (app, html, data) => {
+    //console.log(app);
+    //console.log(html[0].outerHTML);
+
+    let _html = html[0].outerHTML;
+    if(!_html.includes("roll-template")){
+        let containerDiv = document.createElement("DIV");
+
+        let headerDiv = document.createElement("HEADER");
+        let headertext = await fetch("systems/sandbox/templates/sbmessage.html").then(resp => resp.text());
+        headerDiv.innerHTML = headertext;
+
+        let msgcontent = html;
+        let messageDiv = document.createElement("DIV");
+        messageDiv.innerHTML = msgcontent;
+
+        containerDiv.appendChild(headerDiv);
+        containerDiv.appendChild(messageDiv);
+
+        html = headerDiv;
+    }
+
+    //ROLL INSTRUCTIONS
     let messageId = app.data._id;
     let msg = game.messages.get(messageId);
     let msgIndex = game.messages.entities.indexOf(msg);
