@@ -779,7 +779,7 @@ export class gActor extends Actor{
                     }
 
                     if(property.data.data.auto !==""){
-                        console.log("autochecking " + attribute);
+                        //console.log("autochecking " + attribute);
                         rawexp = property.data.data.auto;
                         let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
                         if(actorAtt.value!=newvalue)
