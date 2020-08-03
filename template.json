@@ -6,7 +6,7 @@
             "istemplate":false,
             "gtemplate":"Default",
             "sheets":[],
-            "mod":0,
+            "mod":"0",
             "rollmode":"1d20",
             "displayName":"",
             "tokenbar1":"",
@@ -14,7 +14,8 @@
             "selector":false,
             "attributes":{},
             "citems":[],
-            "rolls":{}
+            "rolls":{},
+            "biography":""
         }
     },
     "Item": {
@@ -215,7 +216,8 @@
             "rollname":"",
             "mods":[],
             "groups":[],
-            "attributes":{}
+            "attributes":{},
+            "description":""
         }
     }
 }
