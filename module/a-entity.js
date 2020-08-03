@@ -779,7 +779,7 @@ export class gActor extends Actor{
                     }
 
                     if(property.data.data.auto !==""){
-
+                        console.log("autochecking " + attribute);
                         rawexp = property.data.data.auto;
                         let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
                         if(actorAtt.value!=newvalue)
@@ -1006,9 +1006,11 @@ export class gActor extends Actor{
                 delete actorData.data.attributes[attribute];
                 ithaschanged = true;
             }
+            if(attributearray[i]!="biography"){
+                attdata.modified = false;
+                attdata.modmax = false;
 
-            attdata.modified = false;
-            attdata.modmax = false;
+            }
 
         }
 
@@ -1344,8 +1346,9 @@ export class gActor extends Actor{
 
         roll = new Roll(rollexp).roll();
 
+        console.log("rolling 3D");
         if(game.dice3d!=null){
-            game.dice3d.showForRoll(roll);
+            await game.dice3d.showForRoll(roll);
         }
 
         rolltotal = roll.total;
