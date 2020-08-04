@@ -217,15 +217,19 @@ export class gActor extends Actor{
                 let groupID = citemTemplate.data.data.groups[j];
                 let group = game.items.get(groupID.id);
 
-                for(let y=0;y<group.data.data.properties.length;y++){
-                    let property = group.data.data.properties[y];
-                    if(property.isconstant && citem.attributes[property.ikey]){
-                        //console.log(property.ikey);
-                        if(citem.attributes[property.ikey].value != citemTemplate.data.data.attributes[property.ikey].value){
-                            citem.attributes[property.ikey].value = citemTemplate.data.data.attributes[property.ikey].value;
+                if(group!=null){
+                    for(let y=0;y<group.data.data.properties.length;y++){
+                        let property = group.data.data.properties[y];
+                        if(property.isconstant && citem.attributes[property.ikey]){
+                            //console.log(property.ikey);
+                            if(citem.attributes[property.ikey].value != citemTemplate.data.data.attributes[property.ikey].value){
+                                citem.attributes[property.ikey].value = citemTemplate.data.data.attributes[property.ikey].value;
+                            }
                         }
                     }
                 }
+
+
             }
 
         }
@@ -476,34 +480,51 @@ export class gActor extends Actor{
     }
 
     async checkModConditional(mod){
+        const citemIDs = this.data.data.citems;
         const attributes = this.data.data.attributes;
         let condAtt = mod.condat;
-        let condValue = parseInt(mod.condvalue);
         let jumpmod = false;
 
-        let attIntValue = parseInt(attributes[condAtt].value);
+        if (condAtt!=null){
+            let condValue = parseInt(mod.condvalue);
 
-        if(mod.condop=="EQU"){
-            if(attributes[condAtt].value.toString()!=mod.condvalue.toString()){
-                jumpmod=true;
+
+            let attIntValue;
+            if(condAtt.includes("#")){
+                let citem = citemIDs.find(y=>y.id==mod.citem);
+                attIntValue = await auxMeth.autoParser(condAtt,attributes,citem.attributes,false);
             }
-        }
 
-        else if(mod.condop=="HIH"){
-            if(!isNaN(attIntValue) && !isNaN(condValue)){
-                if(attIntValue<=condValue){
+            else{
+                attIntValue = parseInt(attributes[condAtt].value);
+            }
+
+            //console.log(condAtt + " " + attIntValue + " " + condValue);
+
+            if(mod.condop=="EQU"){
+                if(attributes[condAtt].value.toString()!=mod.condvalue.toString()){
                     jumpmod=true;
                 }
             }
 
+            else if(mod.condop=="HIH"){
+                if(!isNaN(attIntValue) && !isNaN(condValue)){
+                    if(attIntValue<=condValue){
+                        jumpmod=true;
+                    }
+                }
+
+            }
+
+            else if(mod.condop=="LOW"){
+                if(!isNaN(attIntValue) && !isNaN(condValue))
+                    if(attIntValue>=condValue){
+                        jumpmod=true;
+                    }
+            }
         }
 
-        else if(mod.condop=="LOW"){
-            if(!isNaN(attIntValue) && !isNaN(condValue))
-                if(attIntValue>=condValue){
-                    jumpmod=true;
-                }
-        }
+
         //console.log(jumpmod);
         return jumpmod;
     }
@@ -1079,6 +1100,7 @@ export class gActor extends Actor{
 
     async rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,target=null){
 
+        //console.log(rollexp);
         let initiative=false;
         let rolltotal=0;
         let conditionalText="";
@@ -1140,6 +1162,8 @@ export class gActor extends Actor{
                 rollexp = rollexp.replace(idtoreplace,newid);
             }  
         }
+
+        //console.log(rollexp);
 
         //Check roll ids
         if (rollid==null)
@@ -1266,6 +1290,9 @@ export class gActor extends Actor{
                         if(numDices<1)
                             succRoll="0";
                         allrolls = await new Roll(succRoll).roll();
+                        if(game.dice3d!=null){
+                            await game.dice3d.showForRoll(allrolls);
+                        }
 
 
                     }
@@ -1346,7 +1373,6 @@ export class gActor extends Actor{
 
         roll = new Roll(rollexp).roll();
 
-        console.log("rolling 3D");
         if(game.dice3d!=null){
             await game.dice3d.showForRoll(roll);
         }
