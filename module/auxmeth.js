@@ -287,6 +287,8 @@ export class auxMeth {
 
         }
 
+        //console.log(expr);
+
         //PARSE ACTOR ATTRIBUTE
         var attpresult = expr.match(/(?<=\_\_)\S*?(?=\_\_)/g);
         if(attpresult!=null){
