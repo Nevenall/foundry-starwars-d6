@@ -170,6 +170,19 @@ Hooks.once('ready', async() => {
 
     }
 
+    //    let gamecItems = game.items.filter(y=>y.data.description!="");
+    //    for(let i=0;i<gamecItems.length;i++){
+    //        const mycitem = gamecItems[i];
+    //        await mycitem.update({"data.attributes.description":mycitem.data.data.description});
+    //    }
+
+    //    let gameActors = game.actors;
+    //    //console.log(gameActors);
+    //    for(let j=0;j<gameActors.entities.length;j++){
+    //        const myactor = gameActors.entities[j];
+    //        await myactor.update({"data.attributes.biography":myactor.data.data.biography},{diff:false});
+    //    }
+
 });
 
 //COPIED FROM A MODULE. TO SHOW A SHIELD ON A TOKEN AND LINK THE ATTRIBUTE. TO REMOVE
