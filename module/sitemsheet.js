@@ -26,14 +26,17 @@ export class sItemSheet extends ItemSheet {
 
 
     /** @override */
-    getData() {
+    async getData() {
+
+        if(this.item.data.type=="cItem")
+            await this.checkStillUnique();
 
         const item = this.item;
         const data = super.getData();
         data.flags = item.data.flags;
 
         //BEHOLD THE BEST DEBUGGER LINE ON SANDBOX!
-        //console.log(data);
+        console.log(data);
 
         return data;
 
@@ -391,6 +394,37 @@ export class sItemSheet extends ItemSheet {
         }
 
         return subitems;
+    }
+
+    async checkStillUnique(){
+        let isUnique = false;
+        const groups = this.item.data.data.groups;
+        for(let j=groups.length-1;j>=0;j--){
+            let groupId = groups[j].id;
+            let groupObj = game.items.get(groupId);
+
+            //Checks if group still exist
+            if(groupObj!=null){
+                if(groupObj.data.data.isUnique){
+                    isUnique = true;
+                } 
+            }
+            else{
+                groups.splice(j,1);
+            }
+
+        }
+        //console.log(isUnique);
+        if(isUnique){
+            if(!this.item.data.data.isUnique){
+                this.item.data.data.isUnique=true;
+            }
+        }
+        else{
+            if(this.item.data.data.isUnique){
+                this.item.data.data.isUnique = false;
+            }
+        }
     }
 
     async refreshCIAttributes(basehtml){
