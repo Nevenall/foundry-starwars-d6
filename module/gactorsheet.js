@@ -79,7 +79,7 @@ export class gActorSheet extends ActorSheet {
         let tabs = html.find('.tabs');
         let initial = this._sheetTab;
 
-        new Tabs(tabs, {
+        new TabsV2(tabs, {
             initial: initial,
             callback: clicked => {
                 this._sheetTab = clicked.data("tab");
@@ -125,6 +125,7 @@ export class gActorSheet extends ActorSheet {
             await this.actor.update({[`data.attributes.${attKey}.value`] : stringvalue});
 
             this.actor.sendMsgChat("Utiliza 1",property.data.data.tag, "Le quedan " + newvalue);
+            //this.actor.sendMsgChat("Utiliza 1",property.data.data.tag, "Le quedan " + newvalue); to  this.actor.sendMsgChat("Uses 1",property.data.data.tag, "Remains " + newvalue);
 
         });
 
@@ -2141,7 +2142,7 @@ export class gActorSheet extends ActorSheet {
                                         cellvalue.className = "table-input table-small centertext";
                                     }
 
-                                    if(!propdata.editable)
+                                    if(!propdata.editable && !game.user.isGM)
                                         cellvalue.setAttribute("readonly", true);
 
 
