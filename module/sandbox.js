@@ -197,6 +197,9 @@ Hooks.on("hoverToken", (token, hovered) => {
     let shieldprop = token.actor.data.data.tokenshield;
     //console.log(shieldprop);
 
+    if(token.actor.data.data.attributes[shieldprop]==null)
+        return;
+
     let ca = token.actor.data.data.attributes[shieldprop].value;
 
     let template = $(`
