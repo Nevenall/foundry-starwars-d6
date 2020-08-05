@@ -1311,8 +1311,11 @@ export class gActorSheet extends ActorSheet {
             if(!property.data.editable)
                 sInput.className += " inputGM";
 
-            if(property.data.ishidden)
+            if(property.data.ishidden){
                 sInput.style.display = "none";
+                sLabel.style.display = "none";
+            }
+
 
             if(property.data.datatype!="label")
                 divtemp.appendChild(sInput);
