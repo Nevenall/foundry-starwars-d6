@@ -207,6 +207,45 @@ export class auxMeth {
 
         }
 
+        //PARSE ITEM ATTRIBUTE
+        var attcresult = expr.match(/(?<=\-\-)\S*?(?=\-\-)/g);
+        if(attcresult!=null){
+
+            //Substitute string for current value
+            for (let i=0;i<attcresult.length;i++){
+                let attname = "--" + attcresult[i]+ "--";
+                let attvalue;
+                if(itemattributes[attcresult[i]]!=null)
+                    attvalue = itemattributes[attcresult[i]].value;
+                if(attvalue=="" || attvalue ==null)
+                    attvalue=0;
+                console.log(attname + " " + attvalue);
+                expr = expr.replace(attname,attvalue);
+            }         
+
+        }
+
+        //console.log(expr);
+
+        //PARSE ACTOR ATTRIBUTE
+        var attpresult = expr.match(/(?<=\_\_)\S*?(?=\_\_)/g);
+        if(attpresult!=null){
+
+            //Substitute string for current value
+            for (let i=0;i<attpresult.length;i++){
+                //                let debugname = attpresult[i];
+                //                console.log(debugname);
+                let attname = "__" + attpresult[i]+ "__";
+                let attvalue;
+                if(attributes[attpresult[i]]!=null)
+                    attvalue = attributes[attpresult[i]].value;
+                if(attvalue=="" || attvalue ==null)
+                    attvalue=0;
+
+                expr = expr.replace(attname,attvalue);
+            }         
+
+        }
 
         //console.log(expr);
         //PARSE SCALED AUTO VALUES
@@ -269,45 +308,6 @@ export class auxMeth {
         }
 
         //console.log(expr);
-        //PARSE ITEM ATTRIBUTE
-        var attcresult = expr.match(/(?<=\-\-)\S*?(?=\-\-)/g);
-        if(attcresult!=null){
-
-            //Substitute string for current value
-            for (let i=0;i<attcresult.length;i++){
-                let attname = "--" + attcresult[i]+ "--";
-                let attvalue;
-                if(itemattributes[attcresult[i]]!=null)
-                    attvalue = itemattributes[attcresult[i]].value;
-                if(attvalue=="" || attvalue ==null)
-                    attvalue=0;
-                console.log(attname + " " + attvalue);
-                expr = expr.replace(attname,attvalue);
-            }         
-
-        }
-
-        //console.log(expr);
-
-        //PARSE ACTOR ATTRIBUTE
-        var attpresult = expr.match(/(?<=\_\_)\S*?(?=\_\_)/g);
-        if(attpresult!=null){
-
-            //Substitute string for current value
-            for (let i=0;i<attpresult.length;i++){
-                //                let debugname = attpresult[i];
-                //                console.log(debugname);
-                let attname = "__" + attpresult[i]+ "__";
-                let attvalue;
-                if(attributes[attpresult[i]]!=null)
-                    attvalue = attributes[attpresult[i]].value;
-                if(attvalue=="" || attvalue ==null)
-                    attvalue=0;
-
-                expr = expr.replace(attname,attvalue);
-            }         
-
-        }
 
         toreturn = expr;
         //console.log(expr);
