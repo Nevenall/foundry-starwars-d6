@@ -178,11 +178,14 @@ export class gActor extends Actor{
                     }
                     const actorAtt = attributes[myAtt];
 
-                    if(addsetmods[i].type=="ADD"){
-                        let jumpmod = await this.checkModConditional(addsetmods[i]);
-                        if(((toRemove.isactive && !toRemoveObj.ispermanent) || toRemoveObj.usetype=="PAS") && !jumpmod)
-                            actorAtt[attProp] -= myAttValue;
+                    if(actorAtt!=null){
+                        if(addsetmods[i].type=="ADD"){
+                            let jumpmod = await this.checkModConditional(addsetmods[i]);
+                            if(((toRemove.isactive && !toRemoveObj.ispermanent) || toRemoveObj.usetype=="PAS") && !jumpmod)
+                                actorAtt[attProp] -= myAttValue;
+                        }
                     }
+
                 }
 
 
@@ -727,6 +730,10 @@ export class gActor extends Actor{
                     finalvalue = Number(finalvalue);
 
                     const myAtt = attributes[modAtt];
+
+                    //                    console.log(mod.citem);
+                    //                    console.log(mod.index);
+                    //                    console.log(mod.name);
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                     const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
 
@@ -816,11 +823,11 @@ export class gActor extends Actor{
 
                         //if(actorAtt.max!=maxval){
                         if(actorAtt.max=="" || !actorAtt.maxblocked){
-                            actorAtt.max = maxval;
+                            actorAtt.max = parseInt(maxval);
                             ithaschanged = true;
                             actorAtt.maxblocked = false;
                             //console.log(attribute + " " + actorAtt.maxblocked);
-                            if(actorAtt.value>actorAtt.max){
+                            if(parseInt(actorAtt.value)>actorAtt.max){
                                 actorAtt.value=actorAtt.max;
                             }
                         }
