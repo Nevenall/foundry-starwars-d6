@@ -82,6 +82,15 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
+    game.settings.register("sandbox", "diff", {
+        name: "GM difficulty",
+        hint: "This is linked to the DC Box at the bottom of the screen",
+        scope: "world",
+        config: false,
+        default: 0,
+        type: Number,
+    });
+
 });
 
 Hooks.once('ready', async() => {
@@ -92,8 +101,9 @@ Hooks.once('ready', async() => {
 
     //GM ROLL MENU TEMPLATE
     //Sets roll menu close to hotbar THIS IS SOMETHING FOR ME STREAMS, TO REMOVE IF YOU LIKE
-
     if(game.user.isGM){
+
+        game.data.rolldc = 3;
 
         let hotbar = document.getElementById("hotbar");
         let backgr = document.createElement("DIV");
@@ -116,7 +126,7 @@ Hooks.once('ready', async() => {
 
         sInput.value = SBOX.diff[game.data.world.name];
 
-        sInput.addEventListener("keydown", (event) => {
+        sInput.addEventListener("keydown", async (event) => {
             event.preventDefault();
             event.stopPropagation();
 
@@ -126,6 +136,7 @@ Hooks.once('ready', async() => {
 
             else if(event.key=="Enter"){
                 SBOX.diff[game.data.world.name] = sInput.value;
+                await game.settings.set("sandbox", "diff", sInput.value);
             }
 
             else{
@@ -135,11 +146,12 @@ Hooks.once('ready', async() => {
 
         });
 
-        sInput.addEventListener("focusout", (event) => {
+        sInput.addEventListener("focusout", async (event) => {
             event.preventDefault();
             event.stopPropagation();
 
             SBOX.diff[game.data.world.name] = sInput.value;
+            await game.settings.set("sandbox", "diff", sInput.value);
 
         });
 
