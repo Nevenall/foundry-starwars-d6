@@ -413,7 +413,7 @@ export class gActorSheet extends ActorSheet {
         let targets = game.user.targets.ids;
         let finalroll;
 
-        if(targets.length>0 && rollexp.includes("@{target|")){
+        if(targets.length>0 && rollexp.includes("#{target|")){
             for(let i=0;i<targets.length;i++){
                 let tokenid = canvas.tokens.placeables.find(y=>y.id==targets[i]);
                 let finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,tokenid);
@@ -1313,7 +1313,8 @@ export class gActorSheet extends ActorSheet {
 
             if(property.data.ishidden){
                 sInput.style.display = "none";
-                sLabel.style.display = "none";
+                if(sLabel!=null)
+                    sLabel.style.display = "none";
             }
 
 
