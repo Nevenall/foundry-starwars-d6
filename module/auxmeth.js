@@ -141,7 +141,7 @@ export class auxMeth {
                 if(regObj!=null)
                     attvalue = regObj.result;
 
-                console.log(attvalue);
+                //console.log(attvalue);
                 expr = expr.replace(attname,attvalue);
             }
         }
@@ -290,7 +290,7 @@ export class auxMeth {
                 let conditionarray = limits[0].split(":");
                 let condition = conditionarray[0];
                 let conditioncheck = conditionarray[1];
-                //                console.log(condition + " " + conditioncheck);
+                //console.log(condition + " " + conditioncheck);
                 //                console.log(truevalue + " " + falsevalue);
                 if(condition==conditioncheck){
                     finalvalue = truevalue;
