@@ -41,7 +41,14 @@ export class gActor extends Actor{
 
         await auxMeth.getSheets();
 
-        let charsheet = document.getElementById("actor-"+this._id);
+        //let charsheet = document.getElementById("actor-"+this._id);
+        let charsheet;
+        if(this.token==null){
+            charsheet = document.getElementById("actor-"+this._id);
+        }
+        else{
+            charsheet = document.getElementById("actor-"+this._id+"-"+this.token.data._id);
+        }
         let sheets = charsheet.getElementsByClassName("selectsheet");
 
         if(sheets==null)
@@ -459,8 +466,15 @@ export class gActor extends Actor{
             for (let i=0;i<mods.length;i++){
                 if(mods[i].exec){
                     const thismod = mods[i];
-                    //console.log(thismod.attribute);
-                    let charsheet = document.getElementById("actor-"+this._id);
+
+                    let charsheet;
+                    if(this.token==null){
+                        charsheet = document.getElementById("actor-"+this._id);
+                    }
+                    else{
+                        charsheet = document.getElementById("actor-"+this._id+"-"+this.token.data._id);
+                    }
+
                     let attinput = charsheet.getElementsByClassName(thismod.attribute);
 
                     if (attinput[0]!=null){
@@ -487,11 +501,10 @@ export class gActor extends Actor{
         const attributes = this.data.data.attributes;
         let condAtt = mod.condat;
         let jumpmod = false;
+        console.log(condAtt);
 
-        if (condAtt!=null){
+        if (condAtt!=null && condAtt!=""){
             let condValue = parseInt(mod.condvalue);
-
-
             let attIntValue;
             if(condAtt.includes("#")){
                 let citem = citemIDs.find(y=>y.id==mod.citem);
@@ -713,7 +726,7 @@ export class gActor extends Actor{
 
             if(hasProperty(attributes,modAtt)){
                 let seedprop = game.items.get(attributes[modAtt].id);
-                if((seedprop.data.data.auto=="" && seedprop.data.data.automax=="") && seedprop.data.data.datatype=="simplenumeric"){
+                if((seedprop.data.data.auto=="" && seedprop.data.data.automax=="") && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
 
                     let value =mod.value;
                     let finalvalue=value;
@@ -788,53 +801,61 @@ export class gActor extends Actor{
             }
         }
 
-        //Checking AUTO ATTRIBUTES -- KEEP DEFAULT VALUE EMPTY THEN!!
-        for (let i=0;i<attributearray.length;i++) {
-            let attribute = attributearray[i];
-            if(attribute!=null || attribute!=undefined){
-                //console.log(attribute);
+        //AUTO PROPERTIES PRE CALCULATIONS, 2 ROUNDS!!
+        for (let j=0;j<2;j++){
+            //Checking AUTO ATTRIBUTES -- KEEP DEFAULT VALUE EMPTY THEN!!
+            for (let i=0;i<attributearray.length;i++) {
+                let attribute = attributearray[i];
+                if(attribute!=null || attribute!=undefined){
+                    //console.log(attribute);
 
-                let attdata = attributes[attribute];
-                let rawexp="";
-                let property = await game.items.get(actorData.data.attributes[attribute].id);
-                const actorAtt = attributes[attribute];
+                    let attdata = attributes[attribute];
+                    let rawexp="";
+                    let property = await game.items.get(actorData.data.attributes[attribute].id);
+                    const actorAtt = attributes[attribute];
 
-                //Check the Auto value
-                if(property!=null && !actorAtt.isset){
-                    let exprmode = false;
-                    if(property.data.data.datatype!="simplenumeric" && property.data.data.datatype!="radio"){
-                        exprmode = true;
-                    }
+                    //Check the Auto value
+                    if(property!=null && !actorAtt.isset){
+                        let exprmode = false;
+                        if(property.data.data.datatype!="simplenumeric" && property.data.data.datatype!="radio"){
+                            exprmode = true;
+                        }
 
-                    if(property.data.data.auto !==""){
-                        //console.log("autochecking " + attribute);
-                        rawexp = property.data.data.auto;
-                        let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
-                        if(actorAtt.value!=newvalue)
-                            ithaschanged = true;
-                        actorAtt.value = newvalue;
-                        actorAtt.default= true;
-                        //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
-                    }
+                        if(property.data.data.auto !==""){
+                            //console.log("autochecking " + attribute);
+                            rawexp = property.data.data.auto;
+                            let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
 
-                    if(property.data.data.automax !==""){
-                        rawexp = property.data.data.automax;
-                        let maxval = await auxMeth.autoParser(rawexp,attributes,null,exprmode);
+                            if(actorAtt.value!=newvalue)
+                                ithaschanged = true;
+                            actorAtt.default= true;
 
-                        //if(actorAtt.max!=maxval){
-                        if(actorAtt.max=="" || !actorAtt.maxblocked){
-                            actorAtt.max = parseInt(maxval);
-                            ithaschanged = true;
-                            actorAtt.maxblocked = false;
-                            //console.log(attribute + " " + actorAtt.maxblocked);
-                            if(parseInt(actorAtt.value)>actorAtt.max){
-                                actorAtt.value=actorAtt.max;
+                            actorAtt.value = newvalue;
+                            //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
+                        }
+
+                        if(property.data.data.automax !==""){
+                            rawexp = property.data.data.automax;
+                            let maxval = await auxMeth.autoParser(rawexp,attributes,null,exprmode);
+
+                            //if(actorAtt.max!=maxval){
+                            if(actorAtt.max=="" || !actorAtt.maxblocked){
+                                actorAtt.max = parseInt(maxval);
+                                actorAtt.maxblocked = false;
+                                ithaschanged = true;
+
+                                //console.log(attribute + " " + actorAtt.maxblocked);
+                                if(parseInt(actorAtt.value)>actorAtt.max){
+                                    actorAtt.value=actorAtt.max;
+                                }
                             }
                         }
                     }
                 }
             }
+
         }
+
 
         //CI ADD TO AUTO ATTR
         for(let i=0;i<addmods.length;i++){
@@ -858,7 +879,7 @@ export class gActor extends Actor{
             //console.log("entering " + mod.name + " " + jumpmod);
             if(hasProperty(attributes,modAtt)){
                 let seedprop = game.items.get(attributes[modAtt].id);
-                if((seedprop.data.data.auto!="" || seedprop.data.data.automax!="") && seedprop.data.data.datatype=="simplenumeric"){
+                if((seedprop.data.data.auto!="" || seedprop.data.data.automax!="") && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
                     let value =mod.value;
                     let finalvalue=value;
 
@@ -1108,10 +1129,13 @@ export class gActor extends Actor{
     async rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,target=null){
 
         //console.log(rollexp);
+
         let initiative=false;
         let rolltotal=0;
         let conditionalText="";
-        let diff = SBOX.diff[game.data.world.name];
+        //let diff = SBOX.diff[game.data.world.name];
+        let diff = game.settings.get("sandbox", "diff");
+        //console.log(diff);
 
         //Roll modifiers generated by MODs of ROLL type
         let actorrolls = this.data.data.rolls;
@@ -1156,13 +1180,15 @@ export class gActor extends Actor{
         rollexp = rollexp.replace(/\#{diff}/g,diff);
 
         //Parse target attribute
-        let targetexp = rollexp.match(/(?<=\@{target\|)\S*?(?=\})/g);
+        let targetexp = rollexp.match(/(?<=\#{target\|)\S*?(?=\})/g);
         if(targetexp!=null){
             for (let j=0;j<targetexp.length;j++){
                 let idexpr = targetexp[j];
-                let idtoreplace = "@{target|" + targetexp[j]+ "}";
+                let idtoreplace = "#{target|" + targetexp[j]+ "}";
+
                 let targetattributes = target.actor.data.data.attributes;
                 let newid = await auxMeth.autoParser("__"+idexpr+"__",targetattributes,null,true);
+
                 if(newid==null)
                     newid=0;
 
@@ -1377,6 +1403,7 @@ export class gActor extends Actor{
 
         }
 
+        //console.log(rollexp);
 
         roll = new Roll(rollexp).roll();
 
