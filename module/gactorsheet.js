@@ -469,8 +469,8 @@ export class gActorSheet extends ActorSheet {
 
         let htmlcode = await this.getTempHTML();
         //console.log(htmlcode);
-        var form = parser.parseFromString(htmlcode, 'text/html').querySelector('form');
-
+        var form = await parser.parseFromString(htmlcode, 'text/html').querySelector('form');
+        //console.log(form);
         //Loops the inputs and creates the related attributes
         var inputs = await form.querySelectorAll('input,select,textarea');
         for(let i = 0; i < inputs.length; i++){
@@ -518,7 +518,7 @@ export class gActorSheet extends ActorSheet {
         await this.actor.update({"data":this.actor.data},{diff:false});
     }
 
-    setAttributeValues(attID){
+    async setAttributeValues(attID){
 
         //reference to attribute
         //console.log(attID);
@@ -527,14 +527,14 @@ export class gActorSheet extends ActorSheet {
         const attribute = property.data.data.attKey;
         //console.log(attribute);
         if(!hasProperty(attData,attribute)){
-            console.log("setting");
+            //console.log("setting");
             attData[attribute] = {};
 
             //Sets id and auto
             setProperty(attData[attribute],"id", property._id);
             setProperty(attData[attribute],"value", "");
             setProperty(attData[attribute],"prev", "");
-            setProperty(attData[attribute],"isset", false);
+            await setProperty(attData[attribute],"isset", false);
 
             //Sets auto, auto max, and max
             if(property.data.data.automax!="" || property.data.data.datatype=="radio"){
@@ -1257,8 +1257,8 @@ export class gActorSheet extends ActorSheet {
                     if(property.data.automax!="" && property.data.maxvisible){
                         sInputMax = deftemplate.createElement("INPUT");
                         sInputMax.setAttribute("type", "text");
-                        sInput.className = "input-ahalf inputGM";
-                        sInputMax.className = "input-bhalf input-disabled " + property.data.attKey + ".max";
+                        sInput.className = "input-ahalf ";
+                        sInputMax.className = "input-bhalf input-disabled inputGM " + property.data.attKey + ".max";
                         sInputMax.setAttribute("name", "data.attributes." + property.data.attKey  + ".max");
                         sInputMax.setAttribute("value", "{{data.attributes." + property.data.attKey + ".max}}");
                     }
