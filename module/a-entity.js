@@ -463,32 +463,35 @@ export class gActor extends Actor{
 
         for(let j=0;j<citemIDs.length;j++){
             const mods = citemIDs[j].mods;
-            for (let i=0;i<mods.length;i++){
-                if(mods[i].exec){
-                    const thismod = mods[i];
+            if(mods!=null){
+                for (let i=0;i<mods.length;i++){
+                    if(mods[i].exec){
+                        const thismod = mods[i];
 
-                    let charsheet;
-                    if(this.token==null){
-                        charsheet = document.getElementById("actor-"+this._id);
-                    }
-                    else{
-                        charsheet = document.getElementById("actor-"+this._id+"-"+this.token.data._id);
-                    }
-
-                    let attinput = charsheet.getElementsByClassName(thismod.attribute);
-
-                    if (attinput[0]!=null){
-                        if(parseInt(thismod.value)<0){
-                            attinput[0].className += " input-red";
+                        let charsheet;
+                        if(this.token==null){
+                            charsheet = document.getElementById("actor-"+this._id);
                         }
                         else{
-                            attinput[0].className += " input-green";
+                            charsheet = document.getElementById("actor-"+this._id+"-"+this.token.data._id);
                         }
+
+                        let attinput = charsheet.getElementsByClassName(thismod.attribute);
+
+                        if (attinput[0]!=null){
+                            if(parseInt(thismod.value)<0){
+                                attinput[0].className += " input-red";
+                            }
+                            else{
+                                attinput[0].className += " input-green";
+                            }
+                        }
+
+
                     }
-
-
                 }
             }
+
         }
 
 
@@ -587,8 +590,11 @@ export class gActor extends Actor{
             const actorAtt = actorData.data.attributes[attribute];
             if(property!=null){
                 if(property.data.data.defvalue!="" && actorAtt.value=="" && property.data.data.auto=="" && !property.data.data.defvalue.includes(".max}")){
-
-                    let newValue = await auxMeth.autoParser(property.data.data.defvalue,attributes,null,false);
+                    //console.log("defaulting " + attribute);
+                    let exprmode = false;
+                    if(property.data.data.datatype == "simpletext" || property.data.data.datatype == "textarea")
+                        exprmode = true;
+                    let newValue = await auxMeth.autoParser(property.data.data.defvalue,attributes,null,exprmode);
                     //console.log("defaulting " + attribute + newValue);
                     if(actorAtt.value!=newValue)
                         ithaschanged = true;
