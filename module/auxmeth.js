@@ -321,15 +321,20 @@ export class auxMeth {
         if(isNaN(expr)){
 
             if(!exprmode){
-                let final = new Roll(expr);
-                //console.log(expr);
-                final.roll();
-                if(isNaN(final.total)||final.total==null)
-                {
-                    toreturn = expr;
+                try{
+                    let final = new Roll(expr);
+                    //console.log(expr);
+                    final.roll();
+                    if(isNaN(final.total)||final.total==null)
+                    {
+                        toreturn = expr;
+                    }
+                    else{
+                        toreturn = final.total;
+                    }
                 }
-                else{
-                    toreturn = final.total;
+                catch(err){
+                    toreturn = expr;
                 }
 
             }
