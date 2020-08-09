@@ -101,9 +101,11 @@ export class auxMeth {
         });
     }
 
-    static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false){
+    static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false,number=1){
         var toreturn = expr;
         //console.log(expr);
+        //console.log(itemattributes);
+        //console.log(number);
 
         //Expression register. Recommended to avoid REgex shennanigans
         let regArray =[];
@@ -150,6 +152,13 @@ export class auxMeth {
         if(itemattributes!=null && expr.includes("#{roll}")){
             expr=expr.replace("#{roll}",itemattributes._lastroll);
         }
+
+        //Parses number of citems
+        if(itemattributes!=null && expr.includes("#{num}")){
+            expr=expr.replace("#{num}",number);
+        }
+
+        //console.log(expr);
 
         //PARSE ITEM ATTRIBUTES
         var itemresult = expr.match(/(?<=\#\{).*?(?=\})/g);
@@ -236,11 +245,9 @@ export class auxMeth {
                 //                let debugname = attpresult[i];
                 //                console.log(debugname);
                 let attname = "__" + attpresult[i]+ "__";
-                let attvalue;
+                let attvalue=0;
                 if(attributes[attpresult[i]]!=null)
                     attvalue = attributes[attpresult[i]].value;
-                if(attvalue=="" || attvalue ==null)
-                    attvalue=0;
 
                 expr = expr.replace(attname,attvalue);
             }         
