@@ -504,13 +504,15 @@ export class gActor extends Actor{
         const attributes = this.data.data.attributes;
         let condAtt = mod.condat;
         let jumpmod = false;
-        console.log(condAtt);
+        //console.log(condAtt);
+
+        let citem = citemIDs.find(y=>y.id==mod.citem);
 
         if (condAtt!=null && condAtt!=""){
-            let condValue = parseInt(mod.condvalue);
+            let condValue = await auxMeth.autoParser(mod.condvalue,attributes,citem.attributes,false);
             let attIntValue;
             if(condAtt.includes("#")){
-                let citem = citemIDs.find(y=>y.id==mod.citem);
+
                 attIntValue = await auxMeth.autoParser(condAtt,attributes,citem.attributes,false);
             }
 
@@ -647,10 +649,10 @@ export class gActor extends Actor{
                 if(isNaN(value)){
                     if(value.charAt(0)=="|"){
                         value = value.replace("|","");
-                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true);
+                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
                     }
                     else{
-                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false);
+                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,citem.number);
                     }
                 }
 
@@ -732,17 +734,18 @@ export class gActor extends Actor{
 
             if(hasProperty(attributes,modAtt)){
                 let seedprop = game.items.get(attributes[modAtt].id);
-                if((seedprop.data.data.auto=="" && seedprop.data.data.automax=="") && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
+                //if((seedprop.data.data.auto=="" && seedprop.data.data.automax=="") && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
+                if(((seedprop.data.data.automax=="" && attProp=="max") || (seedprop.data.data.auto=="" && attProp=="value")) && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
 
                     let value =mod.value;
                     let finalvalue=value;
                     if(isNaN(value)){
                         if(value.charAt(0)=="|"){
                             value = value.replace("|","");
-                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true);
+                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
                         }
                         else{
-                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false);
+                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,citem.number);
                         }
                     }
 
@@ -756,6 +759,7 @@ export class gActor extends Actor{
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                     const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
 
+                    //console.log(_basecitem.name + " " + _mod.exec);
                     if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
                         if(!_mod.attribute.includes(".max")){
                             attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
@@ -885,24 +889,29 @@ export class gActor extends Actor{
             //console.log("entering " + mod.name + " " + jumpmod);
             if(hasProperty(attributes,modAtt)){
                 let seedprop = game.items.get(attributes[modAtt].id);
-                if((seedprop.data.data.auto!="" || seedprop.data.data.automax!="") && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
+                if(((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")) && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
                     let value =mod.value;
                     let finalvalue=value;
-
+                    console.log(citem.name + " num:" + citem.number);
                     if(isNaN(value)){
                         if(value.charAt(0)=="|"){
                             value = value.replace("|","");
-                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true);
+                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,parseInt(citem.number));
                         }
                         else{
-                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false);
+                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,parseInt(citem.number));
                         }
                     }
+                    console.log("finalvalue:" + finalvalue);
                     const myAtt = attributes[modAtt];
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
+                    //console.log(_basecitem);
                     const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
 
+                    //console.log(_basecitem.name + " _mod.exec:" + _mod.exec + " toadd:" + finalvalue);
+
                     if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
+                        console.log("emptying");
                         if(!_mod.attribute.includes(".max")){
                             attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
                         }
@@ -917,29 +926,30 @@ export class gActor extends Actor{
                         _mod.exec=false;
 
 
-                    //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
+                    console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
                     if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
+                        console.log(attProp + " :att/Prop - auto: " + seedprop.data.data.auto);
                         //if(!_mod.exec || (myAtt[modvable] && !mod.once)){
-                        if(!_mod.exec ||_mod.exec){
-                            //console.log("activating mod");
-                            ithaschanged = true;
-                            _mod.exec=true;
-                            _mod.value=finalvalue;
-                            _mod.attribute=mod.attribute;
+                        //if((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")){
+                        console.log("activating mod");
+                        ithaschanged = true;
+                        _mod.exec=true;
+                        _mod.value=finalvalue;
+                        _mod.attribute=mod.attribute;
 
-                            myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
+                        myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
 
-                            if(attProp=="value" && myAtt.max!="" && seedprop.data.data.automax!=""){
-
-                                if(myAtt[attProp]>myAtt.max){
-                                    myAtt[attProp]=myAtt.max;
-                                    ithaschanged = true;
-                                }
-
+                        if(attProp=="value" && myAtt.max!="" && seedprop.data.data.automax!=""){
+                            //console.log("changemax");
+                            if(myAtt[attProp]>myAtt.max){
+                                myAtt[attProp]=myAtt.max;
+                                ithaschanged = true;
                             }
 
                         }
+
+                        //}
 
                     }
 
@@ -996,7 +1006,7 @@ export class gActor extends Actor{
                     ithaschanged = true;
                 }
 
-                let toadd = await auxMeth.autoParser(rollvaluemod,attributes,citem.attributes,false);
+                let toadd = await auxMeth.autoParser(rollvaluemod,attributes,citem.attributes,false,false,citem.number);
                 const _basecitem = await citemIDs.find(y=>y.id==citem.id && y.mods.find(x=>x.index==mod.index));
                 //console.log(mod.name);
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
@@ -1132,7 +1142,7 @@ export class gActor extends Actor{
     }
 
 
-    async rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,target=null){
+    async rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number=1,target=null){
 
         //console.log(rollexp);
 
@@ -1154,7 +1164,7 @@ export class gActor extends Actor{
         if (citemattributes!=null)
             rollname = rollname.replace("#{name}",citemattributes.name);
 
-        rollname = await auxMeth.autoParser(rollname,actorattributes,citemattributes,true);
+        rollname = await auxMeth.autoParser(rollname,actorattributes,citemattributes,true,false,number);
 
         //Parse sub rolls !() into indexed string ··!1,··!2,etc
         let subrollsexp = rollexp.match(/(?<=\!\()\S*?(?=\))/g);
@@ -1167,7 +1177,7 @@ export class gActor extends Actor{
                 let sRoll = {};
 
                 sRoll.name = blocks[0];
-                sRoll.expr = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,true);
+                sRoll.expr = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,true,false,number);
                 sRoll.rolls = new Roll(sRoll.expr).roll();
                 sRoll.total = sRoll.rolls.total;
 
@@ -1219,7 +1229,7 @@ export class gActor extends Actor{
             for (let j=0;j<parseid.length;j++){
                 let idexpr = parseid[j];
                 let idtoreplace = "~" + parseid[j]+ "~";
-                let newid = await auxMeth.autoParser(idexpr,actorattributes,citemattributes,true);
+                let newid = await auxMeth.autoParser(idexpr,actorattributes,citemattributes,true,number);
 
                 if(newid!="")
                     rollid.push(newid);
@@ -1252,7 +1262,7 @@ export class gActor extends Actor{
         //console.log(rollexp);
 
         //Parse Roll
-        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true);
+        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
 
         //Remove conditionalexp and save it
         let condid = rollexp.match(/(?<=\&\&)(.*?)(?=\&\&)/g);
@@ -1330,7 +1340,7 @@ export class gActor extends Actor{
                             succRoll="0";
                         allrolls = await new Roll(succRoll).roll();
                         if(game.dice3d!=null){
-                            await game.dice3d.showForRoll(allrolls);
+                            await game.dice3d.showForRoll(allrolls,game.user,true);
                         }
 
 
@@ -1471,15 +1481,17 @@ export class gActor extends Actor{
             }
         }
 
+        if(this.data.data.mod=="" || this.data.data.mod==null)
+            this.data.data.mod = 0;
 
         rolltotal = parseInt(rolltotal) + parseInt(this.data.data.mod) + extramod;
 
         let convalue = null;
         if(conditionalText!=""){
-            convalue = await auxMeth.autoParser(conditionalText,actorattributes,citemattributes,true);
+            convalue = await auxMeth.autoParser(conditionalText,actorattributes,citemattributes,true,false,number);
             convalue = convalue.replace(/\;/g,',');
             convalue = "%["+rolltotal + "," + convalue + "]";
-            convalue = await auxMeth.autoParser(convalue,actorattributes,citemattributes,true);
+            convalue = await auxMeth.autoParser(convalue,actorattributes,citemattributes,true,false,number);
         }
 
         //console.log(rolldice);
