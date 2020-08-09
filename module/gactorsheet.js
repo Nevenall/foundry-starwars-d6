@@ -389,9 +389,12 @@ export class gActorSheet extends ActorSheet {
         let property;
         let initiative=false;
 
+        let findcitem;
+        let number;
+
         if(citemID!=null){
             citem = await game.items.get(citemID);
-            const findcitem = this.actor.data.data.citems.find(y=>y.id == citemID);
+            findcitem = this.actor.data.data.citems.find(y=>y.id == citemID);
             if(findcitem!=null)
                 citemattributes= findcitem.attributes;
 
@@ -413,15 +416,18 @@ export class gActorSheet extends ActorSheet {
         let targets = game.user.targets.ids;
         let finalroll;
 
+        if (findcitem!=null)
+            number = findcitem.number;
+
         if(targets.length>0 && rollexp.includes("#{target|")){
             for(let i=0;i<targets.length;i++){
                 let tokenid = canvas.tokens.placeables.find(y=>y.id==targets[i]);
-                let finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,tokenid);
+                let finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number,tokenid);
             }
         }
 
         else{
-            let finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes);
+            let finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number);
         }
 
         return finalroll;
@@ -1786,7 +1792,8 @@ export class gActorSheet extends ActorSheet {
                     subitems[i].number +=1;
                     subitems[i].uses = parseInt(subitems[i].uses) + parseInt(dropitem.data.data.maxuses);
                     await this.updateSubItems(isTab,subitems);
-                    return
+                    await this.actor.actorUpdater();
+                    return;
                 }
 
             }
