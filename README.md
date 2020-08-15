@@ -304,6 +304,7 @@ The fields mean the following:
 There is a list of functions to use with roll expressions. Now you will hate me for this, but I am horrible with Regex, so these functions are ugly, very bad looking. Bear with me, if you help me we can improve them. You can also use them in MOD value definition fields. The functions are the following:
 - ceil(): A classic, rounds to the highest number. Example: ceil(2.5) => will return 3 in the roll on chat
 - floor(): It rounds to the lowest number. Example: ceil(2.5) => will return 2 in the roll on chat
+- max(): returns the maximum roll of a simple dice roll, like 1d6, 2d6, 3d8, etc.
 - @{character_attribute_name}: so, imagine that the Key of the Level Property is "lvl". You can reference it on the roll with @{lvl}. So if you need to roll 1d6 + level to the chat you just use: 1d6+@{lvl}
 - #{citem_name_attribute}: if you are using a roll expression from a cItem you can reference one or more of its attributes with this. As an example, imagine a cItem has a "damage" property, and you want a roll expression to roll 1d6 + this attribute. So the roll expression would be 1d6+#{damage}. Remember @{} is for Actor attributes, #{} is for cItem attributes.
 
