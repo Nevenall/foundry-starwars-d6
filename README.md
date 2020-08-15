@@ -27,6 +27,11 @@ Playlist with videotutorials in Spanish (why not? You might learn some)
 Do you have questions? Join my discord server and head to SANDBOX ENGLISH, I will help you there!
 [Discord](https://discord.gg/QE7CHNP)
 
+## Frequent issues
+- Do not insert data in the Template actor. Template Actors are not for sheet building, just create regular actors for that!
+- After rebuilding a sheet, any previous character will require changing its sheet to Default, and back again to the current sheet, in order to display the new changes
+- Never forget to include a key to a Sandbox element, or it won't let you drag it anywhere. Also, make sure keys are unique and do not contain spaces!
+
 ## Index
 1. Basic Sheet Structure
 2. Creating Properties
