@@ -351,7 +351,7 @@ export class gActorSheet extends ActorSheet {
             let itemindex = li.data("itemId");
             if(itemindex>0)
                 stabs.splice(itemindex-1, 0, stabs.splice(itemindex, 1)[0]);
-            this.updateTabs();
+            this.updateSubItems(true,stabs);
         });
 
         // Bottom Item
@@ -360,7 +360,7 @@ export class gActorSheet extends ActorSheet {
             let itemindex = li.data("itemId");
             if(itemindex<stabs.length-1)
                 stabs.splice(itemindex+1, 0, stabs.splice(itemindex, 1)[0]);
-            this.updateTabs();
+            this.updateSubItems(true,stabs);
         });
 
         //Rebuild Sheet
@@ -634,6 +634,11 @@ export class gActorSheet extends ActorSheet {
                 newElement.insertAdjacentHTML( 'afterbegin', "{{#ifLess actor.data.attributes." + tabitem.data.condat + attProp + " '" + tabitem.data.condvalue + "'}}" );
                 newElement.insertAdjacentHTML( 'beforeend', "{{/ifLess}}" );
             }
+        }
+
+        if(tabitem.data.controlby=="gamemaster"){
+            newElement.insertAdjacentHTML( 'afterbegin', "{{#isGM}}" );
+            newElement.insertAdjacentHTML( 'beforeend', "{{/isGM}}" );
         }
 
         //Tab content
@@ -1495,25 +1500,33 @@ export class gActorSheet extends ActorSheet {
 
         //ADD VISIBILITY RULES TO PANEL
         if(tabpanel.data.condop!="NON"){
-            let _attProp = ".value ";
+            let attProp = ".value";
             if(tabpanel.data.condat!=null){
                 if(tabpanel.data.condat.includes("max")){
-                    _attProp=" ";
+                    attProp = "";
                 }
             }
 
+
             if(tabpanel.data.condop=="EQU"){
-                div6.insertAdjacentHTML( 'afterbegin', "{{#ifCond actor.data.attributes." + tabpanel.data.condat + _attProp + "'" + tabpanel.data.condvalue + "'}}" );
-                div6.insertAdjacentHTML( 'beforeend', "{{/ifCond}}" );
+                if(tabpanel.data.condvalue == "true"||tabpanel.data.condvalue == "false" || typeof tabpanel.data.condvalue ==="boolean"){
+                    div6.insertAdjacentHTML( 'beforebegin', "{{#if actor.data.attributes." + tabpanel.data.condat + attProp + "}}" );
+                    div6.insertAdjacentHTML( 'afterend', "{{/if}}" );
+                }
+                else{
+                    div6.insertAdjacentHTML( 'afterbegin', "{{#ifCond actor.data.attributes." + tabpanel.data.condat + attProp + " '" + tabpanel.data.condvalue + "'}}" );
+                    div6.insertAdjacentHTML( 'beforeend', "{{/ifCond}}" );
+                }
+
             }
 
             else if(tabpanel.data.condop=="HIH"){
-                div6.insertAdjacentHTML( 'afterbegin', "{{#ifGreater actor.data.attributes." + tabpanel.data.condat + _attProp + "'" + tabpanel.data.condvalue + "'}}" );
+                div6.insertAdjacentHTML( 'afterbegin', "{{#ifGreater actor.data.attributes." + tabpanel.data.condat + attProp + " '" + tabpanel.data.condvalue + "'}}" );
                 div6.insertAdjacentHTML( 'beforeend', "{{/ifGreater}}" );
             }
 
             else if(tabpanel.data.condop=="LOW"){
-                div6.insertAdjacentHTML( 'afterbegin', "{{#ifLess actor.data.attributes." + tabpanel.data.condat + _attProp + "'" + tabpanel.data.condvalue + "'}}" );
+                div6.insertAdjacentHTML( 'afterbegin', "{{#ifLess actor.data.attributes." + tabpanel.data.condat + attProp + " '" + tabpanel.data.condvalue + "'}}" );
                 div6.insertAdjacentHTML( 'beforeend', "{{/ifLess}}" );
             }
         }
@@ -2560,6 +2573,21 @@ export class gActorSheet extends ActorSheet {
 
     }
 
+    async checkAttributes(formData){
+        for(let att in formData){
+            if(att.includes("data.attributes.")){
+                let thisatt = formData[att];
+                if(Array.isArray(formData[att]))
+                    formData[att] = thisatt[0];
+
+            }
+        }
+        //console.log(formData);
+
+        return formData
+    }
+
+
     async _updateObject(event, formData) {
         this.actor.data.flags.haschanged=true;
 
@@ -2574,6 +2602,10 @@ export class gActorSheet extends ActorSheet {
             }
             target = target.replace(".value","");
             target = target.replace(".max","");
+            //console.log(formData);
+
+            formData = await this.checkAttributes(formData);
+            formData[event.target.name] = event.target.value;
 
             if(!hasProperty(this.actor.data,target)){
                 console.log("creating attribute");
