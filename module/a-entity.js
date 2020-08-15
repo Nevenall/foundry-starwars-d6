@@ -80,8 +80,27 @@ export class gActor extends Actor{
 
         //console.log("updating");
         // Get the Actor's data object
-        const actorData = await this.data;
-        return await super.update(data, options);
+        //const actorData = await this.data;
+        //console.log(this.data.token.actorData);
+        if(this.token==null){
+            return await super.update(data, options);
+        }
+        //
+        else{
+            //return await this.token.actor.update(data,options);
+            //            console.log(this.data);
+            this.data.flags.lastupdatedBy = game.user._id;
+
+            if(!this.data.flags.ischeckingauto){
+                this.token.data.actorData.data.citems = this.data.data.citems;
+                return await super.update(data, options);
+
+            }
+            await this.sheet.render(true);
+            //console.log(this.token.data.actorData);
+
+        }
+
 
 
     }
@@ -155,6 +174,11 @@ export class gActor extends Actor{
         this.data.flags.haschanged = true;
         //console.log(newItem);
 
+        if(this.token!=null){
+            this.actorUpdater();
+        }
+
+
     }
 
     async deletecItem(itemID, cascading=false){
@@ -212,7 +236,11 @@ export class gActor extends Actor{
         this.data.flags.haschanged = true;
         if(!cascading){
             await this.update({"data.citems":citems}, {diff: false});
-            console.log("User: " + game.user._id + " is updating actor: " + this.name);
+            //console.log("User: " + game.user._id + " is updating actor: " + this.name);
+        }
+
+        if(this.token!=null){
+            this.actorUpdater();
         }
 
     }
@@ -563,6 +591,8 @@ export class gActor extends Actor{
         let attributearray = [];
         for(let attribute in attributes){
             let attdata = attributes[attribute];
+            if(Array.isArray(attdata.value))
+                attdata.value = attdata.value[0];
             setProperty(attdata,"isset",false);
             setProperty(attdata,"default",false);
             attributearray.push(attribute);
@@ -892,7 +922,7 @@ export class gActor extends Actor{
                 if(((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")) && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
                     let value =mod.value;
                     let finalvalue=value;
-                    console.log(citem.name + " num:" + citem.number);
+                    //console.log(citem.name + " num:" + citem.number);
                     if(isNaN(value)){
                         if(value.charAt(0)=="|"){
                             value = value.replace("|","");
@@ -902,7 +932,7 @@ export class gActor extends Actor{
                             finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,parseInt(citem.number));
                         }
                     }
-                    console.log("finalvalue:" + finalvalue);
+                    //console.log("finalvalue:" + finalvalue);
                     const myAtt = attributes[modAtt];
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                     //console.log(_basecitem);
@@ -926,13 +956,13 @@ export class gActor extends Actor{
                         _mod.exec=false;
 
 
-                    console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
+                    //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
                     if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
-                        console.log(attProp + " :att/Prop - auto: " + seedprop.data.data.auto);
+                        //console.log(attProp + " :att/Prop - auto: " + seedprop.data.data.auto);
                         //if(!_mod.exec || (myAtt[modvable] && !mod.once)){
                         //if((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")){
-                        console.log("activating mod");
+                        //console.log("activating mod");
                         ithaschanged = true;
                         _mod.exec=true;
                         _mod.value=finalvalue;
@@ -1116,7 +1146,7 @@ export class gActor extends Actor{
         this.data.data.rolls = rolls;
 
         if(ithaschanged || this.data.flags.haschanged){
-            console.log("changes in data");
+            //console.log("changes in data");
             //console.log(attributes);
             await this.update({data:this.data.data},{diff: false});
 
@@ -1128,13 +1158,18 @@ export class gActor extends Actor{
     }
 
     async actorUpdater(data=null){
-
+        //console.log("updating");
         this.data.flags.ischeckingauto = true;       
 
         if(data==null)
             data=this.data;
+
         await this.checkPropAuto(data);
-        //await this.update({data:updateData.data},{diff: false});
+        if(this.token!=null){
+            await this.update({data:this.data},{diff: false});
+
+        }
+
         this.data.flags.ischeckingauto = false;
         this.data.flags.haschanged=false;
         console.log("update finished");
@@ -1338,9 +1373,10 @@ export class gActor extends Actor{
 
                         if(numDices<1)
                             succRoll="0";
-                        allrolls = await new Roll(succRoll).roll();
+                        let partroll = new Roll(succRoll);
+                        allrolls = await partroll.roll();
                         if(game.dice3d!=null){
-                            await game.dice3d.showForRoll(allrolls,game.user,true);
+                            await game.dice3d.showForRoll(partroll,game.user,true);
                         }
 
 
@@ -1420,11 +1456,11 @@ export class gActor extends Actor{
         }
 
         //console.log(rollexp);
-
-        roll = new Roll(rollexp).roll();
+        let partroll = new Roll(rollexp);
+        roll = partroll.roll();
 
         if(game.dice3d!=null){
-            await game.dice3d.showForRoll(roll);
+            await game.dice3d.showForRoll(partroll,game.user,true);
         }
 
         rolltotal = roll.total;
