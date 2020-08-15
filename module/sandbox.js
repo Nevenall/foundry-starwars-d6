@@ -39,6 +39,7 @@ Hooks.once("init", async function() {
     auxMeth.registerIfLessHelper();
     auxMeth.registerIsGM();
     auxMeth.registerShowMod();
+    auxMeth.registerShowSimpleRoll();
 
     // Register sheet application classes
     Actors.unregisterSheet("core", ActorSheet);
@@ -89,6 +90,15 @@ Hooks.once("init", async function() {
         config: false,
         default: 0,
         type: Number,
+    });
+
+    game.settings.register("sandbox", "tokenOptions", {
+        name: "Token Options",
+        hint: "You can specify bar1 under token on the template Token tab",
+        scope: "world",
+        config: true,
+        default: 0,
+        type: Boolean,
     });
 
 });
@@ -166,17 +176,22 @@ Hooks.once('ready', async() => {
         await auxMeth.rollToMenu();
         SBOX.showshield = false;
 
-        document.addEventListener("keydown", (event) => {
-            if(event.key=="Control"){
-                SBOX.showshield = true;
-            }
+        if(game.settings.get("sandbox", "tokenOptions")){
+            document.addEventListener("keydown", (event) => {
+                if(event.key=="Control"){
+                    SBOX.showshield = true;
+                }
 
-        });
+            });
 
-        document.addEventListener("keyup", (event) => {
-            SBOX.showshield = false;
+            document.addEventListener("keyup", (event) => {
+                SBOX.showshield = false;
 
-        });
+            });
+        }
+
+
+
 
         let macrosheet = document.getElementById("hotbar");
 
@@ -199,6 +214,9 @@ Hooks.once('ready', async() => {
 
 //COPIED FROM A MODULE. TO SHOW A SHIELD ON A TOKEN AND LINK THE ATTRIBUTE. TO REMOVE
 Hooks.on("hoverToken", (token, hovered) => {
+
+    if(!game.settings.get("sandbox", "tokenOptions"))
+        return;
 
     if(token.actor==null)
         return;
@@ -233,32 +251,44 @@ Hooks.on("hoverToken", (token, hovered) => {
 
 });
 
+Hooks.on("createToken", (scene,token,options,userId) => {
+    let actor = game.actors.get(token.actorId);
+    if(!hasProperty(token.dataactorData,"citems"))
+        setProperty(token.actorData,"citems",actor.data.data.citems);
+
+    if(!hasProperty(token.actorData,"attributes"))
+        setProperty(token.actorData,"attributes",actor.data.data.attributes);
+});
+
 Hooks.on("deleteToken", (scene, token) => {
     $('.dmtk-tooltip').remove();
+});
+
+Hooks.on("updateToken", async (scene, token, updatedData, options, userId) => {
+    console.log("updatingTokenActor");
+    console.log(token.actorData);
 });
 
 
 Hooks.on("preUpdateActor", async (data, updateData) => {
 
-    //console.log(updateData);
-    if(updateData.name){
-        //data.data.token.name = updateData.name;
+    if(game.settings.get("sandbox", "tokenOptions")){
+        if(updateData.data){
+            if(updateData.data.displayName){
+                data.data.token.displayName = updateData.data.displayName;
+                data.data.token.displayBars = updateData.data.displayName;
+            }
+            if(updateData.data.tokenbar1){
+                data.data.token.bar1.attribute = updateData.data.tokenbar1;
+            }
+        }
+
+        if(updateData.img){
+            updateData["token.img"] = updateData.img;
+            data.data.token.img = updateData.img;
+        }
     }
 
-    if(updateData.data){
-        if(updateData.data.displayName){
-            data.data.token.displayName = updateData.data.displayName;
-            data.data.token.displayBars = updateData.data.displayName;
-        }
-        if(updateData.data.tokenbar1){
-            data.data.token.bar1.attribute = updateData.data.tokenbar1;
-        }
-    }
-
-    if(updateData.img){
-        updateData["token.img"] = updateData.img;
-        data.data.token.img = updateData.img;
-    }
 
 
 
@@ -267,15 +297,18 @@ Hooks.on("preUpdateActor", async (data, updateData) => {
 Hooks.on("preCreateToken", async (scene, tokenData, options, userId) =>{
     //console.log(tokenData);
 
-    const sameTokens = game.scenes.get(scene.id).data.tokens.filter(e => e.actorId === tokenData.actorId) || [];
-    let tokennumber = 0;
-    if (sameTokens.length !== 0) { 
-        tokennumber = sameTokens.length + 1;
+    if(game.settings.get("sandbox", "tokenOptions")){
+        const sameTokens = game.scenes.get(scene.id).data.tokens.filter(e => e.actorId === tokenData.actorId) || [];
+        let tokennumber = 0;
+        if (sameTokens.length !== 0) { 
+            tokennumber = sameTokens.length + 1;
+        }
+
+        if(tokennumber!=0){
+            tokenData.name += " " + tokennumber;
+        }
     }
 
-    if(tokennumber!=0){
-        tokenData.name += " " + tokennumber;
-    }
 
 });
 
@@ -296,6 +329,7 @@ Hooks.on("deleteActor", (actor) =>{
 
 Hooks.on("updateActor", async (actor, updateData,options,userId) => {
 
+    //console.log("updatingactor");
     //console.log(actor);
     //console.log(updateData);
     if(updateData){
@@ -308,13 +342,16 @@ Hooks.on("updateActor", async (actor, updateData,options,userId) => {
         //console.log("not changed");
     }
 
-    if(actor.data.token.name!=actor.data.name){
-        actor.data.token.name = actor.data.name;
-        actor.data.token.displayName = actor.data.data.displayName;
-        actor.data.token.displayBars = actor.data.data.displayName;
-        actor.data.token.bar1.attribute = actor.data.data.tokenbar1;
-        actor.update({"token":actor.data.token},{diff:false});
+    if(game.settings.get("sandbox", "tokenOptions")){
+        if(actor.data.token.name!=actor.data.name){
+            actor.data.token.name = actor.data.name;
+            actor.data.token.displayName = actor.data.data.displayName;
+            actor.data.token.displayBars = actor.data.data.displayName;
+            actor.data.token.bar1.attribute = actor.data.data.tokenbar1;
+            actor.update({"token":actor.data.token},{diff:false});
+        }
     }
+
 
     //console.log("updated");
 
@@ -322,7 +359,8 @@ Hooks.on("updateActor", async (actor, updateData,options,userId) => {
 
 Hooks.on("closegActorSheet", (entity, eventData) => {
     //console.log(entity);
-    //console.log("closing");
+    //console.log(eventData);
+
     let character = entity.object.data;
     if(character.flags.ischeckingauto)
         character.flags.ischeckingauto=false;
@@ -332,8 +370,41 @@ Hooks.on("closegActorSheet", (entity, eventData) => {
 
 });
 
+Hooks.on("preCreateItem", (entity, options, userId) => {
+    let image="";
+    console.log(entity);
+    if(entity.type=="cItem"){
+        image="systems/sandbox/docs/icons/sh_citem_icon.png";
+    }
+
+    if(entity.type=="sheettab"){
+        image="systems/sandbox/docs/icons/sh_tab_icon.png";
+    }
+
+    if(entity.type=="group"){
+        image="systems/sandbox/docs/icons/sh_group_icon.png";
+    }
+
+    if(entity.type=="panel"){
+        image="systems/sandbox/docs/icons/sh_panel_icon.png";
+    }
+
+    if(entity.type=="multipanel"){
+        image="systems/sandbox/docs/icons/sh_panel_icon.png";
+    }
+
+    if(entity.type=="property"){
+        image="systems/sandbox/docs/icons/sh_prop_icon.png";
+    }
+
+    if(image!="")
+        entity.img = image;
+
+});
+
 Hooks.on("createItem", (entity) => {
     let do_update=false;
+    let image="";
     if(entity.type=="cItem"){
         //console.log(entity);
         for(let i=0;i<entity.data.data.mods.length;i++){
@@ -344,9 +415,11 @@ Hooks.on("createItem", (entity) => {
             }
 
         }
+
         if(do_update)
             entity.update();
     }
+
 });
 
 Hooks.on("updateItem", (entity) => {
@@ -391,6 +464,9 @@ Hooks.on("rendersItemSheet", (app, html, data) => {
 });
 
 Hooks.on("rendergActorSheet", async (app, html, data) => {
+    //console.log("rendering");
+    //console.log(app);
+    //console.log(data);
     const actor = app.actor;
     let _html = await app.getTemplateHTML(html);
 
