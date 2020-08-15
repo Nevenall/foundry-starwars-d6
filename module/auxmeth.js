@@ -314,6 +314,25 @@ export class auxMeth {
 
         }
 
+        //PARSE MAX ROLL
+        var maxresult = expr.match(/(?<=\max\().*?(?=\))/g);
+        if(maxresult!=null){
+            for (let i=0;i<maxresult.length;i++){
+                let attname = "max(" + maxresult[i]+ ")";
+                let newroll = new Roll(maxresult[i]).roll();
+
+                let attvalue = 0;
+                for(let j=0;j<newroll._dice.length;j++){
+                    let diceexp = newroll._dice[j];
+                    attvalue += parseInt(diceexp.rolls.length)*parseInt(diceexp.faces);
+                }
+
+
+
+                expr = expr.replace(attname,attvalue);
+            }
+        }
+
         //console.log(expr);
 
         toreturn = expr;
