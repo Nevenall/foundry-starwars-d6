@@ -357,12 +357,7 @@ In the _TEMPLATE folder I create 3 folders: _TABS, _PANELS, _PROPERTIES. On some
 Well, that's all. It can feel like chaotic and a mess, but it works. I have been creating systems, playing, and streaming them in my channel for these past 3 months, and it works great. I will do my bust to update the tool and create English tutorials as frequently as possible. Thanks for your understanding and enjoy!!
 
 ## TODO LIST
-- Reuse naming rolls. This can be useful for Savage Worlds. If I use !(Wild Die; 1d6), my intention is to reuse the result of this die somewhere else in the roll expression by using ?(Wild Die). This can allow for rechecks of rolled dice in the same expression.
-- Give advantage through a ROLL type MOD. Actually the ROLL MOD only adds a modifier to a roll of a specific Roll ID. But I need to include options for it to give advantage or disadvantage.
-- Check if the same result has been obtained in different dice. Like how many 5 have we gotten after rolling 4d6. This is important to let me finish Vampire 5th edition conversion to sandbox (in order to calculate crits with the Hunger Dice);
-- Multipanel inside Multipanel. And the universe will implode.
-- Custom icons for panels, properties, tabs, etc.
-- More...
+- Check release notes
 
 ## FINAL THANKS
 - To James, Mikel, Enrique, Viletus. You guys are the best, and we together will put our hobby in the place it deserves. 
