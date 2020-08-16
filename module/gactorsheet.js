@@ -2169,7 +2169,6 @@ export class gActorSheet extends ActorSheet {
                                     if(!propdata.editable && !game.user.isGM)
                                         cellvalue.setAttribute("readonly", true);
 
-
                                     if(propdata.datatype!="checkbox"){
                                         cellvalue.value = ciObject.attributes[propKey].value;
 
@@ -2600,12 +2599,24 @@ export class gActorSheet extends ActorSheet {
             if (target.includes(".max")){
                 modmax=true;
             }
+
             target = target.replace(".value","");
             target = target.replace(".max","");
             //console.log(formData);
+            //console.log(target);
+            //console.log(getProperty(this.actor.data,target));
 
             formData = await this.checkAttributes(formData);
-            formData[event.target.name] = event.target.value;
+            let attri = target.split(".")[2];
+
+            let property = game.items.find(y=>y.data.type=="property" && y.data.data.attKey==attri);
+
+            if(property!=null){
+                if(property.data.data.datatype != "checkbox"){
+                    formData[event.target.name] = event.target.value;
+                }
+
+            }
 
             if(!hasProperty(this.actor.data,target)){
                 console.log("creating attribute");
