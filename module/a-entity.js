@@ -196,30 +196,30 @@ export class gActor extends Actor{
             for(let i=0;i<addsetmods.length;i++){
                 let modID = addsetmods[i].index;
                 const _basecitem = await citems.find(y=>y.id==itemID && y.mods.find(x=>x.index==modID));
-                const _mod = await _basecitem.mods.find(x=>x.index==modID);
+                if(_basecitem!=null){
+                    const _mod = await _basecitem.mods.find(x=>x.index==modID);
 
-                let myAtt = _mod.attribute;
-                let myAttValue = _mod.value;
-                let attProp = "value";
+                    let myAtt = _mod.attribute;
+                    let myAttValue = _mod.value;
+                    let attProp = "value";
 
-                if(myAtt!=null){
-                    if(myAtt.includes(".max")){
-                        attProp="max";
-                        myAtt = myAtt.replace(".max","");
-                    }
-                    const actorAtt = attributes[myAtt];
-
-                    if(actorAtt!=null){
-                        if(addsetmods[i].type=="ADD"){
-                            let jumpmod = await this.checkModConditional(addsetmods[i]);
-                            if(((toRemove.isactive && !toRemoveObj.ispermanent) || toRemoveObj.usetype=="PAS") && !jumpmod)
-                                actorAtt[attProp] -= myAttValue;
+                    if(myAtt!=null){
+                        if(myAtt.includes(".max")){
+                            attProp="max";
+                            myAtt = myAtt.replace(".max","");
                         }
+                        const actorAtt = attributes[myAtt];
+
+                        if(actorAtt!=null){
+                            if(addsetmods[i].type=="ADD"){
+                                let jumpmod = await this.checkModConditional(addsetmods[i]);
+                                if(((toRemove.isactive && !toRemoveObj.ispermanent) || toRemoveObj.usetype=="PAS") && !jumpmod)
+                                    actorAtt[attProp] -= myAttValue;
+                            }
+                        }
+
                     }
-
                 }
-
-
 
             }
 
@@ -251,24 +251,32 @@ export class gActor extends Actor{
             let citem = citems[i];
             let citemTemplate = game.items.get(citems[i].id);
 
-            for(let j=0;j<citemTemplate.data.data.groups.length;j++){
-                let groupID = citemTemplate.data.data.groups[j];
-                let group = game.items.get(groupID.id);
+            if(citemTemplate!=null){
+                for(let j=0;j<citemTemplate.data.data.groups.length;j++){
+                    let groupID = citemTemplate.data.data.groups[j];
+                    let group = game.items.get(groupID.id);
 
-                if(group!=null){
-                    for(let y=0;y<group.data.data.properties.length;y++){
-                        let property = group.data.data.properties[y];
-                        if(property.isconstant && citem.attributes[property.ikey]){
-                            //console.log(property.ikey);
-                            if(citem.attributes[property.ikey].value != citemTemplate.data.data.attributes[property.ikey].value){
-                                citem.attributes[property.ikey].value = citemTemplate.data.data.attributes[property.ikey].value;
+                    if(group!=null){
+                        for(let y=0;y<group.data.data.properties.length;y++){
+                            let property = group.data.data.properties[y];
+                            if(property.isconstant && citem.attributes[property.ikey]){
+                                //console.log(property.ikey);
+                                if(citem.attributes[property.ikey].value != citemTemplate.data.data.attributes[property.ikey].value){
+                                    citem.attributes[property.ikey].value = citemTemplate.data.data.attributes[property.ikey].value;
+                                }
                             }
                         }
                     }
+
+
                 }
-
-
             }
+
+            else{
+                citems.splice(citems.indexOf(citem),1);
+            }
+
+
 
         }
 
@@ -346,14 +354,17 @@ export class gActor extends Actor{
 
             let ciID = citemIDs[n].id;
             let citemObjBase = await game.items.get(ciID);
-            let citemObj = citemObjBase.data.data;
+            if(citemObjBase!=null){
+                let citemObj = citemObjBase.data.data;
 
-            for(let i=0;i<citemObj.mods.length;i++){
-                //                if(citemObj.mods[i].citem==null)
-                //                    citemObj.mods[i].citem = citemObj.id;
-                //console.log(citemIDs[n].id + " " + citemIDs[n].name);
-                await mods.push(citemObj.mods[i]);
+                for(let i=0;i<citemObj.mods.length;i++){
+                    //                if(citemObj.mods[i].citem==null)
+                    //                    citemObj.mods[i].citem = citemObj.id;
+                    //console.log(citemIDs[n].id + " " + citemIDs[n].name);
+                    await mods.push(citemObj.mods[i]);
+                }
             }
+
         }
 
         //ADD CI ITEMS 
