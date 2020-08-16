@@ -101,10 +101,28 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
+    game.settings.register("sandbox", "customStyle", {
+        name: "CSS Style file",
+        hint: "You can specify a custom styling file. If default wanted, leave blank",
+        scope: "world",
+        config: true,
+        default: "",
+        type: String,
+    });
+
 });
 
 Hooks.once('ready', async() => {
     //console.log("ready!");
+    //Custom styling
+    if(game.settings.get("sandbox", "customStyle")!=""){
+        const link = document.createElement('link');
+        link.type = 'text/css';
+        link.rel = 'stylesheet';
+        link.href = game.settings.get("sandbox", "customStyle");
+        await document.getElementsByTagName('head')[0].appendChild(link);
+    }
+
 
     //Gets current sheets
     await auxMeth.getSheets();
@@ -372,33 +390,36 @@ Hooks.on("closegActorSheet", (entity, eventData) => {
 
 Hooks.on("preCreateItem", (entity, options, userId) => {
     let image="";
-    console.log(entity);
-    if(entity.type=="cItem"){
-        image="systems/sandbox/docs/icons/sh_citem_icon.png";
+    if(!entity.img){
+        if(entity.type=="cItem"){
+            image="systems/sandbox/docs/icons/sh_citem_icon.png";
+        }
+
+        if(entity.type=="sheettab"){
+            image="systems/sandbox/docs/icons/sh_tab_icon.png";
+        }
+
+        if(entity.type=="group"){
+            image="systems/sandbox/docs/icons/sh_group_icon.png";
+        }
+
+        if(entity.type=="panel"){
+            image="systems/sandbox/docs/icons/sh_panel_icon.png";
+        }
+
+        if(entity.type=="multipanel"){
+            image="systems/sandbox/docs/icons/sh_panel_icon.png";
+        }
+
+        if(entity.type=="property"){
+            image="systems/sandbox/docs/icons/sh_prop_icon.png";
+        }
+
+        if(image!="")
+            entity.img = image;
     }
 
-    if(entity.type=="sheettab"){
-        image="systems/sandbox/docs/icons/sh_tab_icon.png";
-    }
 
-    if(entity.type=="group"){
-        image="systems/sandbox/docs/icons/sh_group_icon.png";
-    }
-
-    if(entity.type=="panel"){
-        image="systems/sandbox/docs/icons/sh_panel_icon.png";
-    }
-
-    if(entity.type=="multipanel"){
-        image="systems/sandbox/docs/icons/sh_panel_icon.png";
-    }
-
-    if(entity.type=="property"){
-        image="systems/sandbox/docs/icons/sh_prop_icon.png";
-    }
-
-    if(image!="")
-        entity.img = image;
 
 });
 
