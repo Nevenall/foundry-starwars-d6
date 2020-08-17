@@ -92,7 +92,7 @@ export class gActor extends Actor{
             this.data.flags.lastupdatedBy = game.user._id;
 
             if(!this.data.flags.ischeckingauto){
-                this.token.data.actorData.data.citems = this.data.data.citems;
+                await this.token.update({"actorData.data.citems":this.data.data.citems});
                 return await super.update(data, options);
 
             }
@@ -145,7 +145,7 @@ export class gActor extends Actor{
         newItem[itemKey].rechargable = ciTem.data.data.rechargable;
         let maxuses = ciTem.data.data.maxuses;
         if(isNaN(maxuses))
-            maxuses = auxMeth.autoParser(maxuses,attributes,ciTem.data.data.attributes,false);
+            maxuses = await auxMeth.autoParser(maxuses,attributes,ciTem.data.data.attributes,false);
         newItem[itemKey].maxuses = maxuses;
         newItem[itemKey].uses = parseInt(maxuses);
         newItem[itemKey].icon = ciTem.data.data.icon;
@@ -1226,6 +1226,10 @@ export class gActor extends Actor{
                 sRoll.expr = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,true,false,number);
                 sRoll.rolls = new Roll(sRoll.expr).roll();
                 sRoll.total = sRoll.rolls.total;
+
+                if(game.dice3d!=null){
+                    await game.dice3d.showForRoll(sRoll.rolls,game.user,true);
+                }
 
                 setProperty(sRoll.rolls,"extraroll",true);
 
