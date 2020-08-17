@@ -1989,9 +1989,10 @@ export class gActorSheet extends ActorSheet {
                                 }
 
                                 let ciuses = ciObject.uses;
+
                                 if(isNaN(ciuses))
                                     ciObject.uses = await auxMeth.autoParser(ciuses,attributes,ciObject.attributes,false);
-                                usevalue.value = ciObject.uses;
+                                usevalue.value = parseInt(ciObject.uses);
 
 
 
