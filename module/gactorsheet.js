@@ -2038,7 +2038,7 @@ export class gActorSheet extends ActorSheet {
 
                                 new_cell.className = "centertext";
 
-                                if(ciObject.attributes[propKey]!=null){
+                                if(((ciObject.attributes[propKey]!=null && propdata.datatype!="label")||(propdata.datatype=="label")) && !propdata.ishidden){
                                     if(propdata.datatype=="textarea"){
 
                                         let textiContainer = document.createElement('a');
@@ -2057,7 +2057,7 @@ export class gActorSheet extends ActorSheet {
 
                                     }
 
-                                    else if(propdata.datatype!="radio" && propdata.datatype!="table" && !propdata.ishidden){
+                                    else if(propdata.datatype!="radio" && propdata.datatype!="table"){
 
                                         let constantvalue;
                                         if(propdata.datatype!="label")
@@ -2066,11 +2066,11 @@ export class gActorSheet extends ActorSheet {
                                         if(isconstant){
 
                                             let cContent = constantvalue;
-
+                                            //console.log(propdata);
                                             if(propdata.datatype=="label"){
                                                 if(propdata.labelformat=="D"){
                                                     cContent = "";
-                                                    //console.log("adding roll");
+                                                    console.log("adding roll");
                                                     let dieContainer = document.createElement("DIV");
                                                     dieContainer.setAttribute("title",propdata.tag);
 
@@ -2090,6 +2090,7 @@ export class gActorSheet extends ActorSheet {
                                             else{
 
                                                 if(propdata.datatype==="checkbox"){
+                                                    console.log("checkbox");
                                                     let cellvalue = document.createElement("INPUT");
                                                     //cellvalue.className = "table-input centertext";
 
@@ -2098,14 +2099,14 @@ export class gActorSheet extends ActorSheet {
                                                     cellvalue.className = "input-small";
                                                     cellvalue.setAttribute("type", "checkbox");
                                                     let setvalue= false;
-                                                    //console.log(propKey);
+                                                    console.log(propKey);
                                                     if(ciObject.attributes[propKey].value){
                                                         setvalue = true;
                                                     }
 
                                                     cellvalue.checked = setvalue;
                                                     cellvalue.setAttribute("disabled", "disabled");
-
+                                                    console.log("lol");
                                                     new_cell.appendChild(cellvalue);
 
                                                 }
@@ -2117,8 +2118,6 @@ export class gActorSheet extends ActorSheet {
 
                                             }
 
-
-
                                             if(propdata.hasroll){
                                                 new_cell.className += " rollable";
                                                 new_cell.addEventListener('click',this._onRollCheck.bind(this,groupprops[k].id,ciObject.id,false),false);
@@ -2126,7 +2125,7 @@ export class gActorSheet extends ActorSheet {
                                         }
 
                                         else{
-
+                                            //console.log(propdata);
                                             let cellvalue = document.createElement("INPUT");
                                             //cellvalue.className = "table-input centertext";
 
