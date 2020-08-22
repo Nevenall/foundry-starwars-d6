@@ -34,6 +34,7 @@ export class gActor extends Actor{
 
 
         }
+        //console.log(this);
 
     }
 
@@ -82,6 +83,7 @@ export class gActor extends Actor{
         // Get the Actor's data object
         //const actorData = await this.data;
         //console.log(this.data.token.actorData);
+        //console.log(this);
         if(this.token==null){
             return await super.update(data, options);
         }
@@ -643,11 +645,21 @@ export class gActor extends Actor{
                         ithaschanged = true;
                     actorAtt.value = newValue ;
                 }
+                //console.log(property.data.data);
                 //TODO DEFVALUE PARA MAX
-                if(property.data.data.maxauto!=""){
-                    if(!hasProperty(attdata,"maxblocked"))
-                        attdata.maxblocked = false;
+                if(property.data.data.automax!=null){
+                    if(property.data.data.automax!=""){
+                        //console.log(property.data.data.automax);
+                        if(!hasProperty(attdata,"maxblocked"))
+                            attdata.maxblocked = false;
+                        if(!attdata.maxblocked){
+                            actorAtt.max = await auxMeth.autoParser(property.data.data.automax,attributes,null,false);
+                            //console.log(attribute +" max to " + actorAtt.max);
+                        }
+
+                    }
                 }
+
 
                 if(attdata.modmax)
                     attdata.maxblocked = true;
@@ -887,7 +899,7 @@ export class gActor extends Actor{
 
                         if(property.data.data.automax !==""){
                             rawexp = property.data.data.automax;
-                            let maxval = await auxMeth.autoParser(rawexp,attributes,null,exprmode);
+                            let maxval = await auxMeth.autoParser(rawexp,attributes,null,false);
 
                             //if(actorAtt.max!=maxval){
                             if(actorAtt.max=="" || !actorAtt.maxblocked){
@@ -895,7 +907,7 @@ export class gActor extends Actor{
                                 actorAtt.maxblocked = false;
                                 ithaschanged = true;
 
-                                //console.log(attribute + " " + actorAtt.maxblocked);
+                                //console.log(attribute + " max: " + actorAtt.maxblocked);
                                 if(parseInt(actorAtt.value)>actorAtt.max){
                                     actorAtt.value=actorAtt.max;
                                 }
@@ -947,66 +959,73 @@ export class gActor extends Actor{
                     const myAtt = attributes[modAtt];
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                     //console.log(_basecitem);
-                    const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
 
-                    //console.log(_basecitem.name + " _mod.exec:" + _mod.exec + " toadd:" + finalvalue);
+                    if(_basecitem!=null){
+                        const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
 
-                    if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
-                        console.log("emptying");
-                        if(!_mod.attribute.includes(".max")){
-                            attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
-                        }
-                        else{
-                            attributes[modAtt].max = Number(attributes[modAtt].max) - _mod.value;
-                        }
+                        //console.log(_basecitem.name + " _mod.exec:" + _mod.exec + " toadd:" + finalvalue);
 
-                        _mod.exec = false;
-                    }
-                    //console.log(myAtt);
-                    if(myAtt.isset)
-                        _mod.exec=false;
-
-
-                    //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
-                    if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
-
-                        //console.log(attProp + " :att/Prop - auto: " + seedprop.data.data.auto);
-                        //if(!_mod.exec || (myAtt[modvable] && !mod.once)){
-                        //if((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")){
-                        //console.log("activating mod");
-                        ithaschanged = true;
-                        _mod.exec=true;
-                        _mod.value=finalvalue;
-                        _mod.attribute=mod.attribute;
-
-                        myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
-
-                        if(attProp=="value" && myAtt.max!="" && seedprop.data.data.automax!=""){
-                            //console.log("changemax");
-                            if(myAtt[attProp]>myAtt.max){
-                                myAtt[attProp]=myAtt.max;
-                                ithaschanged = true;
+                        if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
+                            console.log("emptying");
+                            if(!_mod.attribute.includes(".max")){
+                                attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
+                            }
+                            else{
+                                attributes[modAtt].max = Number(attributes[modAtt].max) - _mod.value;
                             }
 
+                            _mod.exec = false;
                         }
-
-                        //}
-
-                    }
-
-                    else{
-
-                        if((!citem.isreset || jumpmod) && !_citem.isactive){
-
-                            if(!myAtt.default && _mod.exec){
-                                //console.log("removing mod");
-                                myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
-                                ithaschanged = true;
-                            }
-
+                        //console.log(myAtt);
+                        if(myAtt.isset)
                             _mod.exec=false;
 
+
+                        //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
+                        if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
+
+                            //console.log(attProp + " :att/Prop - auto: " + seedprop.data.data.auto);
+                            //if(!_mod.exec || (myAtt[modvable] && !mod.once)){
+                            //if((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")){
+                            //console.log("activating mod");
+                            ithaschanged = true;
+                            _mod.exec=true;
+                            _mod.value=finalvalue;
+                            _mod.attribute=mod.attribute;
+
+                            myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
+
+                            if(attProp=="value" && myAtt.max!="" && seedprop.data.data.automax!=""){
+                                //console.log("changemax");
+                                if(myAtt[attProp]>myAtt.max){
+                                    myAtt[attProp]=myAtt.max;
+                                    ithaschanged = true;
+                                }
+
+                            }
+
+                            //}
+
                         }
+
+                        else{
+
+                            if((!citem.isreset || jumpmod) && !_citem.isactive){
+
+                                if(!myAtt.default && _mod.exec){
+                                    //console.log("removing mod");
+                                    myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
+                                    ithaschanged = true;
+                                }
+
+                                _mod.exec=false;
+
+                            }
+                        }
+                    }
+                    else{
+                        //Error on citem,just remove it
+                        citemIDs.splice(citemIDs.indexOf(citem),1);
                     }
 
                     //console.log("exec:" + _mod.exec + " name:" + citem.name + " default:" + myAtt.default + " isreset:" + citem.isreset + " value:" + finalvalue + " isset:" + myAtt.isset);
@@ -1022,7 +1041,12 @@ export class gActor extends Actor{
         const rollmods = mods.filter(y=>y.type=="ROLL");
         //
         for(let roll in rolls){
+            //ithaschanged = true;
+
             rolls[roll].modified = false;
+            rolls[roll].value="";
+
+
         }
 
         for(let i=0;i<rollmods.length;i++){
@@ -1043,11 +1067,15 @@ export class gActor extends Actor{
 
                 if(!hasProperty(rolls,rollID)){
                     setProperty(rolls,rollID,{});
-                    setProperty(rolls[rollID],"value",0);
-                    ithaschanged = true;
+                    setProperty(rolls[rollID],"value","");
+                    //ithaschanged = true;
                 }
 
+
+
                 let toadd = await auxMeth.autoParser(rollvaluemod,attributes,citem.attributes,false,false,citem.number);
+                //console.log(toadd);
+                let r_exp = "+(" + toadd + ")";
                 const _basecitem = await citemIDs.find(y=>y.id==citem.id && y.mods.find(x=>x.index==mod.index));
                 //console.log(mod.name);
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
@@ -1055,24 +1083,28 @@ export class gActor extends Actor{
 
                 if((_citem.usetype=="PAS" || citem.isactive)){
 
-                    if(!_mod.exec){
-                        _mod.exec=true;
-                        ithaschanged = true;
-                        rolls[rollID].value += parseInt(toadd);
+                    //if(!_mod.exec){
+                    _mod.exec=true;
+                    ithaschanged = true;
+                    //rolls[rollID].value += parseInt(toadd);
+                    console.log(rollID + " previo " + rolls[rollID].value)
+                    rolls[rollID].value += r_exp;
 
-                        //console.log("adding " + rollID + toadd +  "total " + rolls[rollID].value);
-                    }
-
-                }
-
-                else{
-                    if(_mod.exec){
-                        ithaschanged = true;
-                        rolls[rollID].value -= parseInt(toadd);
-                    }
-                    _mod.exec=false;
+                    console.log("adding " + rollID + toadd +  " total: " + rolls[rollID].value);
+                    //}
 
                 }
+
+                //                else{
+                //                    if(_mod.exec){
+                //                        ithaschanged = true;
+                //                        //rolls[rollID].value -= parseInt(toadd);
+                //                        rolls[rollID].value.replace(r_exp,"");
+                //                        console.log("removing " + rollID + toadd +  " total: " + rolls[rollID].value);
+                //                    }
+                //                    _mod.exec=false;
+                //
+                //                }
 
 
             }
@@ -1153,6 +1185,7 @@ export class gActor extends Actor{
         }
 
         //Set attribtues to new ones
+        //console.log(this);
         this.data.data.attributes = attributes;
         this.data.data.rolls = rolls;
 
@@ -1251,9 +1284,11 @@ export class gActor extends Actor{
             for (let j=0;j<targetexp.length;j++){
                 let idexpr = targetexp[j];
                 let idtoreplace = "#{target|" + targetexp[j]+ "}";
-
-                let targetattributes = target.actor.data.data.attributes;
-                let newid = await auxMeth.autoParser("__"+idexpr+"__",targetattributes,null,true);
+                let newid;
+                if(target!=null){
+                    let targetattributes = target.actor.data.data.attributes;
+                    newid = await auxMeth.autoParser("__"+idexpr+"__",targetattributes,null,true);
+                }
 
                 if(newid==null)
                     newid=0;
@@ -1470,6 +1505,18 @@ export class gActor extends Actor{
 
         }
 
+        //Add ROLL MODS
+        let extramod = 0;
+        let extramodstring="";
+        for (let k=0;k<rollid.length;k++){
+            if(rollid[k]!="" && hasProperty(actorrolls,rollid[k])){
+                rollformula += actorrolls[rollid[k]].value;
+                rollexp += actorrolls[rollid[k]].value;
+
+            }
+        }
+
+
         //console.log(rollexp);
         let partroll = new Roll(rollexp);
         roll = partroll.roll();
@@ -1488,15 +1535,15 @@ export class gActor extends Actor{
         //        console.log(rollexp);
 
         //Generate Roll data
-        let extramod = 0;
-        let extramodstring="";
-        for (let k=0;k<rollid.length;k++){
-            if(rollid[k]!="" && hasProperty(actorrolls,rollid[k])){
-                extramod += parseInt(actorrolls[rollid[k]].value);
-                if(extramod!=0)
-                    extramodstring = " + " + actorrolls[rollid[k]].value;
-            }
-        }
+        //        let extramod = 0;
+        //        let extramodstring="";
+        //        for (let k=0;k<rollid.length;k++){
+        //            if(rollid[k]!="" && hasProperty(actorrolls,rollid[k])){
+        //                extramod += parseInt(actorrolls[rollid[k]].value);
+        //                if(extramod!=0)
+        //                    extramodstring = " + " + actorrolls[rollid[k]].value;
+        //            }
+        //        }
 
         let formula = rollformula.replace(/\s[0]\s\+/g,"");
 
