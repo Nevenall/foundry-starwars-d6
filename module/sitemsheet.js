@@ -450,143 +450,146 @@ export class sItemSheet extends ItemSheet {
                     let ppObj = game.items.get(propertyId);
 
                     if(ppObj!=null){
-                        let property = ppObj.data.data;
+                        if(!ppObj.data.data.ishidden || game.user.isGM){
+                            let property = ppObj.data.data;
 
-                        let new_container = document.createElement("DIV");
-                        new_container.className = "new-row";
-                        new_container.setAttribute("id", "row-" + i);
+                            let new_container = document.createElement("DIV");
+                            new_container.className = "new-row";
+                            new_container.setAttribute("id", "row-" + i);
 
-                        let new_row = document.createElement("DIV");
-                        new_row.className = "flexblock-left";
-                        new_row.setAttribute("id", i);
+                            let new_row = document.createElement("DIV");
+                            new_row.className = "flexblock-left";
+                            new_row.setAttribute("id", i);
 
-                        if(property.datatype!="group" && property.datatype!="label"){
+                            if(property.datatype!="group" && property.datatype!="label"){
 
 
 
-                            let label = document.createElement("H3");
-                            label.className = "label-free";
-                            label.textContent = property.tag;
+                                let label = document.createElement("H3");
+                                label.className = "label-free";
+                                label.textContent = property.tag;
 
-                            let input;
+                                let input;
 
-                            if(!hasProperty(attributes,property.attKey)){
-                                setProperty(attributes,property.attKey, {});
-                                if(property.datatype==="simplenumeric"){
-                                    attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,false); 
-                                }
-
-                                else{
-                                    attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,true); 
-                                }
-
-                                tosave = true;
-                            }
-
-                            const attribute = attributes[property.attKey];
-
-                            if(attribute.value=="" || attribute.value==null){
-                                if(property.datatype==="simplenumeric"){
-                                    attribute.value = 0;
-                                }
-                                else{
-                                    attribute.value = property.defvalue;
-                                }
-                            }
-
-                            if(property.datatype!="list"){
-                                //console.log("editando");
-
-                                if(property.datatype=="textarea"){
-                                    input = document.createElement("TEXTAREA");
-                                    input.setAttribute("name", property.attKey);
-                                    input.textContent = attribute.value;
-
-                                    if(property.inputsize=="S"){
-                                        input.className = "texteditor-small";
+                                if(!hasProperty(attributes,property.attKey)){
+                                    setProperty(attributes,property.attKey, {});
+                                    if(property.datatype==="simplenumeric"){
+                                        attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,false); 
                                     }
 
-                                    else if(property.inputsize=="L"){
-                                        input.className = "texteditor-large";
+                                    else{
+                                        attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,true); 
+                                    }
+
+                                    tosave = true;
+                                }
+
+                                const attribute = attributes[property.attKey];
+
+                                if(attribute.value=="" || attribute.value==null){
+                                    if(property.datatype==="simplenumeric"){
+                                        attribute.value = 0;
                                     }
                                     else{
-                                        input.className = "texteditor-med";
+                                        attribute.value = property.defvalue;
                                     }
                                 }
-                                else{
-                                    input = document.createElement("INPUT");
-                                    input.setAttribute("name", property.attKey);
 
+                                if(property.datatype!="list"){
+                                    //console.log("editando");
 
+                                    if(property.datatype=="textarea"){
+                                        input = document.createElement("TEXTAREA");
+                                        input.setAttribute("name", property.attKey);
+                                        input.textContent = attribute.value;
 
-                                    if(property.datatype==="simplenumeric"){
+                                        if(property.inputsize=="S"){
+                                            input.className = "texteditor-small";
+                                        }
 
-                                        input.setAttribute("type", "number");
-                                        input.className = "input-smallmed";
-
-
-                                        if(property.auto!="" && property.auto!=null){
-                                            let atvalue = await auxMeth.autoParser(property.auto,null,attributes,false);
-                                            input.setAttribute("value", atvalue);
-                                            input.setAttribute("readonly", "true"); 
+                                        else if(property.inputsize=="L"){
+                                            input.className = "texteditor-large";
                                         }
                                         else{
+                                            input.className = "texteditor-med";
+                                        }
+                                    }
+                                    else{
+                                        input = document.createElement("INPUT");
+                                        input.setAttribute("name", property.attKey);
+
+
+
+                                        if(property.datatype==="simplenumeric"){
+
+                                            input.setAttribute("type", "number");
+                                            input.className = "input-smallmed";
+
+
+                                            if(property.auto!="" && property.auto!=null){
+                                                let atvalue = await auxMeth.autoParser(property.auto,null,attributes,false);
+                                                input.setAttribute("value", atvalue);
+                                                input.setAttribute("readonly", "true"); 
+                                            }
+                                            else{
+                                                input.setAttribute("value", attribute.value);
+                                            }
+
+                                        }
+                                        else if(property.datatype==="simpletext"){
+                                            input.setAttribute("type", "text");
+                                            input.className = "input-med";
                                             input.setAttribute("value", attribute.value);
                                         }
 
-                                    }
-                                    else if(property.datatype==="simpletext"){
-                                        input.setAttribute("type", "text");
-                                        input.className = "input-med";
-                                        input.setAttribute("value", attribute.value);
-                                    }
-
-                                    else if(property.datatype==="checkbox"){
-                                        input.setAttribute("type", "checkbox");
-                                        let setvalue = false;
-                                        if(attribute.value){
-                                            setvalue = true;
+                                        else if(property.datatype==="checkbox"){
+                                            input.setAttribute("type", "checkbox");
+                                            let setvalue = false;
+                                            if(attribute.value){
+                                                setvalue = true;
+                                            }
+                                            input.checked = setvalue;
                                         }
-                                        input.checked = setvalue;
                                     }
+
+                                }
+                                //LIST
+                                else{
+                                    input = document.createElement("SELECT");
+                                    input.className = "input-med";
+                                    input.setAttribute("name", property.attKey);
+                                    var rawlist = property.listoptions;
+                                    var listobjects = rawlist.split(',');
+
+                                    for(var n=0;n<listobjects.length;n++){
+                                        let n_option = document.createElement("OPTION");
+                                        n_option.setAttribute("value", listobjects[n]);
+                                        n_option.textContent = listobjects[n];
+                                        if(listobjects[n]==attribute.value)
+                                            n_option.setAttribute("selected", 'selected');
+
+                                        input.appendChild(n_option);
+                                    }
+
                                 }
 
-                            }
-                            //LIST
-                            else{
-                                input = document.createElement("SELECT");
-                                input.className = "input-med";
-                                input.setAttribute("name", property.attKey);
-                                var rawlist = property.listoptions;
-                                var listobjects = rawlist.split(',');
+                                input.className += " att-input";
+                                input.addEventListener("change", (event) => this.updateFormInput(event.target.name,event.target.value));
 
-                                for(var n=0;n<listobjects.length;n++){
-                                    let n_option = document.createElement("OPTION");
-                                    n_option.setAttribute("value", listobjects[n]);
-                                    n_option.textContent = listobjects[n];
-                                    if(listobjects[n]==attribute.value)
-                                        n_option.setAttribute("selected", 'selected');
-
-                                    input.appendChild(n_option);
+                                if(!game.user.isGM){
+                                    input.setAttribute("readonly", "true");
                                 }
 
+                                await new_row.appendChild(label);
+                                if(property.datatype!="label")
+                                    await new_row.appendChild(input);
+
+                                await new_container.appendChild(new_row);
+                                await html.appendChild(new_container);
+
                             }
-
-                            input.className += " att-input";
-                            input.addEventListener("change", (event) => this.updateFormInput(event.target.name,event.target.value));
-
-                            if(!game.user.isGM){
-                                input.setAttribute("readonly", "true");
-                            }
-
-                            await new_row.appendChild(label);
-                            if(property.datatype!="label")
-                                await new_row.appendChild(input);
-
-                            await new_container.appendChild(new_row);
-                            await html.appendChild(new_container);
-
                         }
+
                     }
 
                     else{
