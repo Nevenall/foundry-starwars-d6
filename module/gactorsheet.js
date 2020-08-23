@@ -199,7 +199,7 @@ export class gActorSheet extends ActorSheet {
                         label: "OK",
                         callback: async (html) => {
                             let diceexpr = html[0].childNodes[1].value;
-                            let finalroll = this.actor.rollSheetDice(diceexpr,"Tirada Libre","",this.actor.data.data.attributes,null);
+                            let finalroll = this.actor.rollSheetDice(diceexpr,"Free Roll","",this.actor.data.data.attributes,null);
                         }
                     },
                     two: {
@@ -2070,7 +2070,7 @@ export class gActorSheet extends ActorSheet {
                                             if(propdata.datatype=="label"){
                                                 if(propdata.labelformat=="D"){
                                                     cContent = "";
-                                                    console.log("adding roll");
+                                                    //console.log("adding roll");
                                                     let dieContainer = document.createElement("DIV");
                                                     dieContainer.setAttribute("title",propdata.tag);
 
@@ -2090,7 +2090,7 @@ export class gActorSheet extends ActorSheet {
                                             else{
 
                                                 if(propdata.datatype==="checkbox"){
-                                                    console.log("checkbox");
+                                                    //console.log("checkbox");
                                                     let cellvalue = document.createElement("INPUT");
                                                     //cellvalue.className = "table-input centertext";
 
@@ -2099,14 +2099,14 @@ export class gActorSheet extends ActorSheet {
                                                     cellvalue.className = "input-small";
                                                     cellvalue.setAttribute("type", "checkbox");
                                                     let setvalue= false;
-                                                    console.log(propKey);
+                                                    //console.log(propKey);
                                                     if(ciObject.attributes[propKey].value){
                                                         setvalue = true;
                                                     }
 
                                                     cellvalue.checked = setvalue;
                                                     cellvalue.setAttribute("disabled", "disabled");
-                                                    console.log("lol");
+                                                    //console.log("lol");
                                                     new_cell.appendChild(cellvalue);
 
                                                 }
