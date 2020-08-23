@@ -23,10 +23,6 @@ Hooks.once("init", async function() {
 	 * Set an initiative formula for the system
 	 * @type {String}
 	 */
-    CONFIG.Combat.initiative = {
-        formula: "1d20",
-        decimals: 2
-    };
 
     CONFIG.debug.hooks = true;
     CONFIG.Actor.entityClass = gActor;
@@ -109,6 +105,25 @@ Hooks.once("init", async function() {
         default: "",
         type: String,
     });
+
+    game.settings.register("sandbox", "initKey", {
+        name: "Initiative Attribute Key",
+        hint: "After editing, please refresh instance",
+        scope: "world",
+        config: true,
+        default: "",
+        type: String,
+    });
+
+    let initF = await game.settings.get("sandbox", "initKey");
+    let formvalue = "@attributes." + initF + ".value";
+
+    CONFIG.Combat.initiative = {
+        formula: formvalue,
+        decimals: 2
+    };
+
+
 
 });
 
@@ -284,7 +299,7 @@ Hooks.on("deleteToken", (scene, token) => {
 
 Hooks.on("updateToken", async (scene, token, updatedData, options, userId) => {
     console.log("updatingTokenActor");
-    console.log(token.actorData);
+    //console.log(token.actorData);
 });
 
 
