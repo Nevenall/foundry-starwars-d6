@@ -481,6 +481,10 @@ export class gActorSheet extends ActorSheet {
         var form = await parser.parseFromString(htmlcode, 'text/html').querySelector('form');
         //console.log(form);
         //Loops the inputs and creates the related attributes
+
+        if(form==null)
+            ui.notifications.warn("Please rebuild character sheet before assigning");
+
         var inputs = await form.querySelectorAll('input,select,textarea');
         for(let i = 0; i < inputs.length; i++){
             let newAtt = inputs[i];
