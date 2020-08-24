@@ -297,6 +297,8 @@ export class gActor extends Actor{
                 await attArray.push(moat);
             }
 
+
+
         }
         //console.log(attArray);
 
@@ -351,27 +353,37 @@ export class gActor extends Actor{
         const attributes = this.data.data.attributes;
         let mods=[];
         let newcitem=false;
-
+        let updatecItem=true;
         for(let n=0;n<citemIDs.length;n++){
 
             let ciID = citemIDs[n].id;
             let citemObjBase = await game.items.get(ciID);
+            //console.log(citemObjBase);
             if(citemObjBase!=null){
                 let citemObj = citemObjBase.data.data;
 
                 for(let i=0;i<citemObj.mods.length;i++){
-                    //                if(citemObj.mods[i].citem==null)
-                    //                    citemObj.mods[i].citem = citemObj.id;
+                    if(citemObj.mods[i].citem!=ciID){
+                        citemObj.mods[i].citem = ciID;
+                        updatecItem=true;
+                    }
+
                     //console.log(citemIDs[n].id + " " + citemIDs[n].name);
                     await mods.push(citemObj.mods[i]);
                 }
             }
 
+            if(updatecItem){
+                citemObjBase.update({data:citemObjBase.data.data},{diff:false});
+            }
+
         }
+
+        //console.log(mods);
 
         //ADD CI ITEMS 
         const itemmods = mods.filter(y=>y.type=="ITEM");
-        //console.log(itemmods);
+
         this.data.data.selector=false;
         for(let i=0;i<itemmods.length;i++){
             let mod = itemmods[i];
@@ -490,10 +502,11 @@ export class gActor extends Actor{
             //            }
         }
 
+        //console.log(mods);
+
         if(newcitem){
             mods = await this.getMods(citemIDs);
         }
-
 
         return mods;
     }
@@ -606,6 +619,7 @@ export class gActor extends Actor{
             let attdata = attributes[attribute];
             if(Array.isArray(attdata.value))
                 attdata.value = attdata.value[0];
+            //console.log(attdata.name + " " + attdata.value + " isset " + attdata.isset);
             setProperty(attdata,"isset",false);
             setProperty(attdata,"default",false);
             attributearray.push(attribute);
@@ -619,7 +633,8 @@ export class gActor extends Actor{
             newcitem=true;
             ithaschanged = true;
         }
-
+        //console.log(mods);
+        //console.log(attributes);
 
         await this.updateCItems();
 
@@ -669,8 +684,12 @@ export class gActor extends Actor{
 
 
             }
+            //console.log(attribute + " isset " + actorAtt.isset);
+            //actorAtt.isset = false;
 
         }
+
+        //console.log(attributes);
 
         //CI SET MODS
         const setmods = mods.filter(y=>y.type=="SET");
@@ -695,6 +714,7 @@ export class gActor extends Actor{
                 let value =mod.value;
                 let finalvalue =value;
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
+
                 let citem = citemIDs.find(y=>y.id==mod.citem);
 
                 let _citem = game.items.get(mod.citem).data.data;
@@ -713,6 +733,10 @@ export class gActor extends Actor{
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
                 const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
+
+                if(!citem.isactive)
+                    _mod.exec = false;
+
                 if(_mod==null)
                     console.log(citem);
                 if(_mod.exec)
@@ -741,6 +765,7 @@ export class gActor extends Actor{
 
                 else{
 
+
                     if((!citem.isreset)||(_mod.exec && jumpmod)){
                         if(!citem.ispermanent){
                             myAtt[attProp] = myAtt.prev;
@@ -749,7 +774,8 @@ export class gActor extends Actor{
                         }
 
                         _mod.exec = false;
-                        myAtt.isset= true;
+                        if(citem.isactive)
+                            myAtt.isset= true;
 
                     }
                     else{
@@ -759,7 +785,10 @@ export class gActor extends Actor{
                     }
 
 
+
+
                 }
+
             }
 
         }
@@ -808,23 +837,29 @@ export class gActor extends Actor{
 
                     //                    console.log(mod.citem);
                     //                    console.log(mod.index);
-                    //                    console.log(mod.name);
+
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                     const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
 
                     //console.log(_basecitem.name + " " + _mod.exec);
                     if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
-                        if(!_mod.attribute.includes(".max")){
-                            attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
-                        }
-                        else{
-                            attributes[_mod.attribute].max = Number(attributes[_mod.attribute].max) - _mod.value;
+                        console.log("resetting " + _mod.attribute);
+                        if(!citem.ispermanent){
+                            if(!_mod.attribute.includes(".max")){
+                                attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
+                            }
+                            else{
+                                attributes[_mod.attribute].max = Number(attributes[_mod.attribute].max) - _mod.value;
+                            }
                         }
 
                         _mod.exec = false;
                     }
 
-                    //console.log(_mod.name + " " + _mod.exec + " " + finalvalue);
+                    if(!citem.isactive)
+                        _mod.exec = false;
+
+                    console.log(mod.name + " exec: " + _mod.exec + " isactive " + citem.isactive);
                     if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                         if(!_mod.exec || (myAtt[modvable] && !mod.once)){
@@ -852,7 +887,7 @@ export class gActor extends Actor{
                     }
                     else{
                         //console.log(citem.isreset + " " + citem.isactive + " " + myAtt.default + " " + _mod.exec);
-                        if((!citem.isreset || (_mod.exec && jumpmod)) && !citem.isactive && !myAtt.default){
+                        if((!citem.isreset || (_mod.exec && jumpmod)) && !citem.isactive && !myAtt.default && !citem.ispermanent){
                             _mod.exec=false;
                             myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
                             ithaschanged = true;
@@ -870,12 +905,13 @@ export class gActor extends Actor{
             for (let i=0;i<attributearray.length;i++) {
                 let attribute = attributearray[i];
                 if(attribute!=null || attribute!=undefined){
-                    //console.log(attribute);
 
                     let attdata = attributes[attribute];
                     let rawexp="";
                     let property = await game.items.get(actorData.data.attributes[attribute].id);
                     const actorAtt = attributes[attribute];
+
+                    //console.log("checking " + attribute + " isset " + actorAtt.isset);
 
                     //Check the Auto value
                     if(property!=null && !actorAtt.isset){
@@ -945,7 +981,7 @@ export class gActor extends Actor{
                 if(((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")) && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
                     let value =mod.value;
                     let finalvalue=value;
-                    //console.log(citem.name + " num:" + citem.number);
+
                     if(isNaN(value)){
                         if(value.charAt(0)=="|"){
                             value = value.replace("|","");
@@ -956,6 +992,7 @@ export class gActor extends Actor{
                         }
                     }
                     //console.log("finalvalue:" + finalvalue);
+
                     const myAtt = attributes[modAtt];
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                     //console.log(_basecitem);
@@ -966,13 +1003,16 @@ export class gActor extends Actor{
                         //console.log(_basecitem.name + " _mod.exec:" + _mod.exec + " toadd:" + finalvalue);
 
                         if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
-                            console.log("emptying");
-                            if(!_mod.attribute.includes(".max")){
-                                attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
+                            console.log("resetting " + _mod.attribute);
+                            if(!citem.ispermanent){
+                                if(!_mod.attribute.includes(".max")){
+                                    attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
+                                }
+                                else{
+                                    attributes[modAtt].max = Number(attributes[modAtt].max) - _mod.value;
+                                }
                             }
-                            else{
-                                attributes[modAtt].max = Number(attributes[modAtt].max) - _mod.value;
-                            }
+
 
                             _mod.exec = false;
                         }
@@ -980,6 +1020,10 @@ export class gActor extends Actor{
                         if(myAtt.isset)
                             _mod.exec=false;
 
+                        //console.log("current value:" + attributes[_mod.attribute].value);
+
+                        if(!citem.isactive)
+                            _mod.exec = false;
 
                         //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
                         if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
@@ -1012,7 +1056,7 @@ export class gActor extends Actor{
 
                             if((!citem.isreset || jumpmod) && !_citem.isactive){
 
-                                if(!myAtt.default && _mod.exec){
+                                if(!myAtt.default && _mod.exec && !citem.ispermanent){
                                     //console.log("removing mod");
                                     myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
                                     ithaschanged = true;
@@ -1155,9 +1199,14 @@ export class gActor extends Actor{
         //CONSUMABLES ACTIVE TURN BACK INTO INACTIVE, AND DELETE SELFDESTRUCTIBLE
         for(let n=citemIDs.length-1;n>=0;n--){
             let citemObj = game.items.get(citemIDs[n].id).data.data;
-            if( citemIDs[n].isactive){
+
+            if(citemIDs[n].isactive){
                 if(citemObj.usetype == "CON"){
                     citemIDs[n].isactive =false;
+                    for(let j=0;j<citemIDs[n].mods.length;j++){
+
+                        citemIDs[n].mods[j].exec=false;
+                    }
 
                     if(!citemIDs[n].rechargable && citemIDs[n].number<=0){
                         //await citemIDs.splice(n,1);
