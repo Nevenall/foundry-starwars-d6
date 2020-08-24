@@ -734,9 +734,6 @@ export class gActor extends Actor{
                 const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
 
-                if(!citem.isactive)
-                    _mod.exec = false;
-
                 if(_mod==null)
                     console.log(citem);
                 if(_mod.exec)
@@ -855,9 +852,6 @@ export class gActor extends Actor{
 
                         _mod.exec = false;
                     }
-
-                    if(!citem.isactive)
-                        _mod.exec = false;
 
                     console.log(mod.name + " exec: " + _mod.exec + " isactive " + citem.isactive);
                     if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
@@ -1021,9 +1015,6 @@ export class gActor extends Actor{
                             _mod.exec=false;
 
                         //console.log("current value:" + attributes[_mod.attribute].value);
-
-                        if(!citem.isactive)
-                            _mod.exec = false;
 
                         //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
                         if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
