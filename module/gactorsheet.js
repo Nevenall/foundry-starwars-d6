@@ -422,13 +422,15 @@ export class gActorSheet extends ActorSheet {
         if(targets.length>0 && rollexp.includes("#{target|")){
             for(let i=0;i<targets.length;i++){
                 let tokenid = canvas.tokens.placeables.find(y=>y.id==targets[i]);
-                let finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number,tokenid);
+                finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number,tokenid);
             }
         }
 
         else{
-            let finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number);
+            finalroll = await this.actor.rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number);
         }
+
+        //console.log(finalroll);
 
         return finalroll;
 
