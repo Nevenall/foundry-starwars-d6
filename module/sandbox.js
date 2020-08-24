@@ -117,6 +117,8 @@ Hooks.once("init", async function() {
 
     let initF = await game.settings.get("sandbox", "initKey");
     let formvalue = "@attributes." + initF + ".value";
+    if(initF=="")
+        formvalue = "1d20";
 
     CONFIG.Combat.initiative = {
         formula: formvalue,
@@ -547,9 +549,43 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
 
 Hooks.on("renderChatMessage", async (app, html, data) => {
     //console.log(app);
-    //console.log(html[0].outerHTML);
+    //console.log(data);
+    //console.log(html);
+    let messageId = app.data._id;
+    let msg = game.messages.get(messageId);
+    let msgIndex = game.messages.entities.indexOf(msg);
 
-    let _html = html[0].outerHTML;
+    let _html = await html[0].outerHTML;
+
+    if(_html.includes("dice-roll")){
+        let rollData = {
+            flavor: "Roll",
+            formula: app._roll.formula,
+            mod: 0,
+            result: app._roll.total,
+            dice: app._roll.dice,
+            user: game.user.name
+        };
+
+        renderTemplate("systems/sandbox/templates/dice.html", rollData).then(async newhtml => {
+            let newmessage = ChatMessage.create({
+                content: newhtml
+            });
+
+            //if(game.user.isGM){
+            auxMeth.rollToMenu(newhtml);
+            //}
+
+
+        });
+
+        msg.delete();
+        return;
+
+    }
+
+    //console.log(html);
+
     if(!_html.includes("roll-template")){
         let containerDiv = document.createElement("DIV");
 
@@ -568,27 +604,46 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
     }
 
     //ROLL INSTRUCTIONS
-    let messageId = app.data._id;
-    let msg = game.messages.get(messageId);
-    let msgIndex = game.messages.entities.indexOf(msg);
+
 
     let header = $(html).find(".message-header");
     header.remove();
     //console.log("tirando");
-    let detail = $(html).find(".roll-detail")[0];
-    if(detail==null)
+    let detail = await $(html).find(".roll-detail")[0];
+    let result = $(html).find(".roll-result")[0];
+    let clickdetail = $(html).find(".roll-detail-button")[0];
+    let clickmain = $(html).find(".roll-main-button")[0];
+
+    if(detail == null){
+
         return;
+
+    }
+
+    if(result==null){
+        return;
+    }
+
+    if(clickdetail==null){
+        return;
+    }
+
+    if(clickmain==null){
+
+        return;
+    }
 
     let detaildisplay = detail.style.display;
     detail.style.display = "none";
-    let result = $(html).find(".roll-result")[0];
+
     let resultdisplay = result.style.display;
 
-    let clickdetail = $(html).find(".roll-detail-button")[0];
+
     let clickdetaildisplay = clickdetail.style.display;
-    let clickmain = $(html).find(".roll-main-button")[0];
+
     let clickmaindisplay = clickmain.style.display;
     clickmain.style.display = "none";
+
 
     $(html).find(".roll-detail-button").click(ev => {
         detail.style.display = detaildisplay;
