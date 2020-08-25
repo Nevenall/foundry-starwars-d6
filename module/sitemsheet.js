@@ -545,9 +545,11 @@ export class sItemSheet extends ItemSheet {
                                         else if(property.datatype==="checkbox"){
                                             input.setAttribute("type", "checkbox");
                                             let setvalue = false;
-                                            if(attribute.value){
+                                            console.log(attribute.value);
+                                            if(attribute.value==true || attribute.value=="true"){
                                                 setvalue = true;
                                             }
+                                            console.log(setvalue);
                                             input.checked = setvalue;
                                         }
                                     }
@@ -574,7 +576,7 @@ export class sItemSheet extends ItemSheet {
                                 }
 
                                 input.className += " att-input";
-                                input.addEventListener("change", (event) => this.updateFormInput(event.target.name,event.target.value));
+                                input.addEventListener("change", (event) => this.updateFormInput(event.target.name,event.target.value,propertyId));
 
                                 if(!game.user.isGM){
                                     input.setAttribute("readonly", "true");
@@ -614,21 +616,33 @@ export class sItemSheet extends ItemSheet {
 
     }
 
-    async updateFormInput(name, value){
+    async updateFormInput(name, value,propId){
         //console.log(value);
         let setvalue;
-        if(value=="on" || value=="off"){
+
+        let propObj = await game.items.get(propId);
+        if(propObj.data.data.datatype =="checkbox"){
             setvalue = true;
-            if(this.item.data.data.attributes[name].value){
-                setvalue = false;
+            let attKey = [propObj.data.data.attKey];
+
+            let currentvalue = this.item.data.data.attributes[attKey].value;
+
+            if(currentvalue==true || currentvalue=="true"){
+                setvalue=false; 
             }
+
+            this.item.data.data.attributes[propObj.data.data.attKey].value = setvalue;
+
         }
 
         else{
-            setvalue = value;
+            setvalue=value;
+            this.item.data.data.attributes[propObj.data.data.attKey].value=setvalue; 
+
         }
 
-        await this.item.update({[`data.attributes.${name}.value`]:setvalue});
+        //await this.item.update({[`data.attributes.${name}.value`]:setvalue});
+        await this.item.update({"data.attributes":this.item.data.data.attributes},{diff:false});
     }
 
 
