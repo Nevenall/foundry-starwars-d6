@@ -577,7 +577,7 @@ export class gActor extends Actor{
             //console.log(condAtt + " " + attIntValue + " " + condValue);
 
             if(mod.condop=="EQU"){
-                if(attributes[condAtt].value.toString()!=mod.condvalue.toString()){
+                if(attIntValue.toString()!=mod.condvalue.toString()){
                     jumpmod=true;
                 }
             }
@@ -853,7 +853,7 @@ export class gActor extends Actor{
                         _mod.exec = false;
                     }
 
-                    console.log(mod.name + " exec: " + _mod.exec + " isactive " + citem.isactive);
+                    //console.log(mod.name + " exec: " + _mod.exec + " isactive " + citem.isactive);
                     if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                         if(!_mod.exec || (myAtt[modvable] && !mod.once)){
