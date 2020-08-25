@@ -550,15 +550,20 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
 Hooks.on("renderChatMessage", async (app, html, data) => {
     //console.log(app);
     //console.log(data);
-    //console.log(html);
+    console.log(html);
     let messageId = app.data._id;
     let msg = game.messages.get(messageId);
     let msgIndex = game.messages.entities.indexOf(msg);
 
     let _html = await html[0].outerHTML;
 
-    if(_html.includes("dice-roll")){
+    if(_html.includes("dice-roll") && !_html.includes("table-draw")){
         let rollData = {
+            token:{
+                img:"icons/svg/d20-black.svg",
+                name:"Free Roll"
+            },
+            actor:game.user.name,
             flavor: "Roll",
             formula: app._roll.formula,
             mod: 0,
