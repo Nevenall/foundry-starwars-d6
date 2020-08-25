@@ -550,7 +550,7 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
 Hooks.on("renderChatMessage", async (app, html, data) => {
     //console.log(app);
     //console.log(data);
-    console.log(html);
+    //console.log(html);
     let messageId = app.data._id;
     let msg = game.messages.get(messageId);
     let msgIndex = game.messages.entities.indexOf(msg);
