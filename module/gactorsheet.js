@@ -1552,7 +1552,7 @@ export class gActorSheet extends ActorSheet {
         data.append('upload', blob, filename + '.html');
         data.append('source', 'data');
 
-        fetch('/upload', {method: 'POST', body: data});
+        fetch('upload', {method: 'POST', body: data});
 
     };
 
