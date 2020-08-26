@@ -572,20 +572,17 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
             user: game.user.name
         };
 
-        renderTemplate("systems/sandbox/templates/dice.html", rollData).then(async newhtml => {
-            let newmessage = ChatMessage.create({
-                content: newhtml
-            });
+        await renderTemplate("systems/sandbox/templates/dice.html", rollData).then(async newhtml => {
 
-            //if(game.user.isGM){
-            auxMeth.rollToMenu(newhtml);
-            //}
+            let container = html[0];
+
+            let content = html.find('.dice-roll');
+            content.replaceWith(newhtml);
+
+            _html = await html[0].outerHTML;
 
 
         });
-
-        msg.delete();
-        return;
 
     }
 
