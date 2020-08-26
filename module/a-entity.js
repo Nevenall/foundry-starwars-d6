@@ -1243,6 +1243,9 @@ export class gActor extends Actor{
 
     async actorUpdater(data=null){
         //console.log("updating");
+        if(!this.owner)
+            return;
+
         this.data.flags.ischeckingauto = true;       
 
         if(data==null)
