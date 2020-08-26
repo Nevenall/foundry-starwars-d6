@@ -571,7 +571,20 @@ export class gActor extends Actor{
             }
 
             else{
-                attIntValue = parseInt(attributes[condAtt].value);
+                if(attIntValue==false || attIntValue==true){
+                    attIntValue = attributes[condAtt].value;
+                }
+                else{
+                    if(!isNaN(attIntValue)){
+                        attIntValue = parseInt(attributes[condAtt].value);
+                    }
+                    else{
+                        attIntValue = attributes[condAtt].value;
+                    }
+                }
+
+
+
             }
 
             //console.log(condAtt + " " + attIntValue + " " + condValue);
