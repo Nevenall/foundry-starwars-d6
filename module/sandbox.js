@@ -169,7 +169,7 @@ Hooks.once('ready', async() => {
             setProperty(SBOX.diff,game.data.world.name,0);
         }
 
-        sInput.value = SBOX.diff[game.data.world.name];
+        sInput.value = game.settings.get("sandbox", "diff");
 
         sInput.addEventListener("keydown", async (event) => {
             event.preventDefault();
@@ -180,7 +180,7 @@ Hooks.once('ready', async() => {
             }
 
             else if(event.key=="Enter"){
-                SBOX.diff[game.data.world.name] = sInput.value;
+                //SBOX.diff[game.data.world.name] = sInput.value;
                 await game.settings.set("sandbox", "diff", sInput.value);
             }
 
@@ -195,7 +195,7 @@ Hooks.once('ready', async() => {
             event.preventDefault();
             event.stopPropagation();
 
-            SBOX.diff[game.data.world.name] = sInput.value;
+            //SBOX.diff[game.data.world.name] = sInput.value;
             await game.settings.set("sandbox", "diff", sInput.value);
 
         });
@@ -205,8 +205,10 @@ Hooks.once('ready', async() => {
 
         backgr.appendChild(form);
 
-        if(game.settings.get("sandbox", "showDC"))
+        if(game.settings.get("sandbox", "showDC")){
             await hotbar.appendChild(backgr);
+        }
+            
 
         await auxMeth.rollToMenu();
         SBOX.showshield = false;
