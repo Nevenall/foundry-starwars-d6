@@ -162,7 +162,7 @@ export class auxMeth {
 
         //PARSE ITEM ATTRIBUTES
         var itemresult = expr.match(/(?<=\#\{).*?(?=\})/g);
-        if(itemresult!=null){
+        if(itemresult!=null && itemattributes!=null){
 
             //Substitute string for current value
             for (let i=0;i<itemresult.length;i++){
@@ -173,7 +173,8 @@ export class auxMeth {
                 if(attvalue=="" || attvalue ==null)
                     attvalue=0;
 
-                expr = expr.replace(attname,attvalue);
+                if(!itemresult[i].includes("#{target|"))
+                    expr = expr.replace(attname,attvalue);
 
             }      
 
@@ -203,8 +204,9 @@ export class auxMeth {
                         attvalue = myatt[attProp];
                     }
 
-                    if(attvalue=="" || attvalue ==null)
+                    if((attvalue=="" || attvalue ==null)&&((attvalue!=false)&&(attvalue!=true)))
                         attvalue=0;
+
                 }
                 else{
                     attvalue=0;
@@ -297,8 +299,8 @@ export class auxMeth {
                 let conditionarray = limits[0].split(":");
                 let condition = conditionarray[0];
                 let conditioncheck = conditionarray[1];
-                //console.log(condition + " " + conditioncheck);
-                //                console.log(truevalue + " " + falsevalue);
+                //console.log(condition + " / " + conditioncheck);
+                //console.log(truevalue + " " + falsevalue);
                 if(condition==conditioncheck){
                     finalvalue = truevalue;
                 }
