@@ -1507,6 +1507,8 @@ export class gActorSheet extends ActorSheet {
 
         }
 
+        await parentRow.appendChild(div6);
+
         //ADD VISIBILITY RULES TO PANEL
         if(tabpanel.data.condop!="NON"){
             let attProp = ".value";
@@ -1518,7 +1520,8 @@ export class gActorSheet extends ActorSheet {
 
 
             if(tabpanel.data.condop=="EQU"){
-                if(tabpanel.data.condvalue == "true"||tabpanel.data.condvalue == "false" || typeof tabpanel.data.condvalue ==="boolean"){
+                console.log(div6);
+                if(tabpanel.data.condvalue == "true"||tabpanel.data.condvalue == "false" || tabpanel.data.condvalue==true || tabpanel.data.condvalue==false){
                     div6.insertAdjacentHTML( 'beforebegin', "{{#if actor.data.attributes." + tabpanel.data.condat + attProp + "}}" );
                     div6.insertAdjacentHTML( 'afterend', "{{/if}}" );
                 }
@@ -1541,7 +1544,7 @@ export class gActorSheet extends ActorSheet {
         }
 
         //console.log(flags.rwidth + " / row: " + flags.rows + " " + tabpanel.name);
-        await parentRow.appendChild(div6);
+
     }
 
     async exportHTML(htmlObject, filename) {
@@ -1580,8 +1583,56 @@ export class gActorSheet extends ActorSheet {
 
     }
 
+    async checkConsistency(){
+
+        let gamecItems = game.items.filter(y=>y.data.type=="cItem");
+        for(let i=0;i<gamecItems.length;i++){
+            const mycitem = gamecItems[i];
+            const mycitemmods = mycitem.data.data.mods;
+            for(let j=0;j<mycitemmods.length;j++){
+                let mymod = mycitemmods[j];
+                setProperty(mymod,"citem",mycitem.data._id);
+                if(!hasProperty(mymod,"index"))
+                    setProperty(mymod,"index",j);
+
+            }
+            await mycitem.update({"data":mycitem.data.data},{diff:false});
+        }
+
+        let gameactors = game.actors;
+        for(let i=0;i<gameactors.entities.length;i++){
+            console.log("fixing");
+            const myactor = gameactors.entities[i];
+            const myactorcitems = myactor.data.data.citems;
+            for(let j=myactorcitems.length-1;j>=0;j--){
+                let mycitem = myactorcitems[j];
+
+                let templatecItem = game.items.get(mycitem.id);
+                if(templatecItem!=null){
+                    let mymods = mycitem.mods;
+                    for(let r=0;r<mymods.length;r++){
+                        if(mycitem.id!=mymods[r].citem)
+                            mymods[r].citem=mycitem.id;
+                        if(!hasProperty(mymods[r],"index"))
+                            setProperty(mymods[r],"index",0);
+                    }
+                }
+
+                else{
+                    myactorcitems.split(myactorcitems[j],1);
+                }
+
+
+            }
+            await myactor.update({"data":myactor.data.data},{diff:false});
+        }
+    }
+
     async buildHTML(tabs){
         console.log("building HTML");
+
+        await this.checkConsistency();
+
         const flags = this.actor.data.flags;
         for (let y = 0; y < tabs.length; y++){
             const titem = game.items.get(tabs[y].id).data;
