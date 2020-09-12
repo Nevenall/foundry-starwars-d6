@@ -162,6 +162,7 @@ export class gActor extends Actor{
                 once:_mod.once,
                 exec:false,
                 attribute:_mod.attribute,
+                expr:_mod.value,
                 value:0
             });
         }
@@ -753,18 +754,24 @@ export class gActor extends Actor{
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
                 const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
+                console.log(_mod.exec);
 
                 if(_mod==null)
                     console.log(citem);
                 if(_mod.exec)
                     myAtt.isset=true;
 
-                //Checks if mod has not changed. TODO METHOD TO CHECK THIS AND MOD EXISTING
-                if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
+                //Checks if mod has not changed. TODO METHOD TO CHECK THIS AND MOD EXISTING IN BETTER WAY
+                //if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
+                if(_mod.exec && (_mod.attribute!=modAtt)){
                     _mod.exec = false;
                 }
 
-                //console.log(mod.name + " exec= " + _mod.exec + " citem= " + citem.name + " active= " + citem.isactive + " value= " + finalvalue + " isset=" + myAtt.isset);
+                if(mod.expr!=null)
+                    if(mod.expr != _mod.value)
+                        _mod.exec = false;
+
+                console.log(mod.name + " exec= " + _mod.exec + " citem= " + citem.name + " active= " + citem.isactive + " value= " + finalvalue + " isset=" + myAtt.isset);
                 if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                     if(attProp!="max" || (attProp=="max" && !myAtt.maxblocked)){
@@ -937,6 +944,8 @@ export class gActor extends Actor{
                         if(property.data.data.auto !==""){
                             //console.log("autochecking " + attribute);
                             rawexp = property.data.data.auto;
+                            //console.log(rawexp);
+                            //console.log(exprmode);
                             let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
 
                             if(actorAtt.value!=newvalue)
@@ -1309,7 +1318,7 @@ export class gActor extends Actor{
 
         //Parse roll difficulty in name, and general atts
         rollname = rollname.replace(/\#{diff}/g,diff);
-        rollname = await auxMeth.autoParser(rollname,actorattributes,null,true,false,number);
+        rollname = await auxMeth.autoParser(rollname,actorattributes,citemattributes,true,false,number);
 
         //Parse roll difficulty
         rollexp = rollexp.replace(/\#{diff}/g,diff);
@@ -1335,11 +1344,11 @@ export class gActor extends Actor{
             }  
         }
 
-        //console.log(rollexp);
         //Preparsing TO CHECK IF VALID!!!
-        if(rollexp.includes("!"))
+        if(rollexp.includes("!("))
             rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,false,false,number);
 
+        //console.log(rollexp);
         //Parse sub rolls !() into indexed string ··!1,··!2,etc
         let subrollsexp = rollexp.match(/(?<=\!\()\S*?(?=\))/g);
         if(subrollsexp!=null){
@@ -1386,6 +1395,41 @@ export class gActor extends Actor{
 
         //Remove rollIDs and save them
         let parseid = rollexp.match(/(?<=\~)\S*?(?=\~)/g);
+        //        if(parseid!=null){
+        //            for (let j=0;j<parseid.length;j++){
+        //                let idexpr = parseid[j];
+        //                let idtoreplace = "~" + parseid[j]+ "~";
+        //                let newid = await auxMeth.autoParser(idexpr,actorattributes,citemattributes,true,number);
+        //
+        //                if(newid!="")
+        //                    rollid.push(newid);
+        //
+        //                if(parseid[j]=="init")
+        //                    initiative=true;
+        //
+        //                if(parseid[j]=="ADV")
+        //                    rollmode = "ADV";
+        //
+        //                if(parseid[j]=="DIS")
+        //                    rollmode = "DIS";
+        //
+        //                rollexp = rollexp.replace(idtoreplace,"");
+        //            }  
+        //        }
+
+        /************************************ H3LSI - 09/11/2020 *********************************************/
+
+        var findIF = rollexp.search("if");
+        var findADV = rollexp.search("~ADV~");;
+        var findDIS = rollexp.search("~DIS~");
+
+        //Checks if it is an IF and does not have any ADV/DIS modifier in the formula
+        if(findADV == -1 && findDIS == -1){
+            //In this case it allows to parse the manual MOD in case there is any  
+            findIF = -1;
+
+        }
+        /*************************************************************************************************** */
         if(parseid!=null){
             for (let j=0;j<parseid.length;j++){
                 let idexpr = parseid[j];
@@ -1398,13 +1442,20 @@ export class gActor extends Actor{
                 if(parseid[j]=="init")
                     initiative=true;
 
-                if(parseid[j]=="ADV")
-                    rollmode = "ADV";
 
-                if(parseid[j]=="DIS")
-                    rollmode = "DIS";
+                /************************************ H3LSI - 09/11/2020 *********************************************/
+                if (findIF != -1){    
+                    //We don't do anything - We will parse this into the IF function inside autoParser   
+                }else{
+                    if(parseid[j]=="ADV")
+                        rollmode = "ADV";
 
-                rollexp = rollexp.replace(idtoreplace,"");
+                    if(parseid[j]=="DIS")
+                        rollmode = "DIS";
+
+                    rollexp = rollexp.replace(idtoreplace,"");
+                }
+
             }  
         }
 
@@ -1425,6 +1476,7 @@ export class gActor extends Actor{
         //Parse Roll
         rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
 
+        //console.log(rollexp);
         //Remove conditionalexp and save it
         let condid = rollexp.match(/(?<=\&\&)(.*?)(?=\&\&)/g);
         if(condid!=null){
