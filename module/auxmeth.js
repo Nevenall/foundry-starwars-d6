@@ -170,7 +170,16 @@ export class auxMeth {
                 let attvalue;
                 if(itemattributes[itemresult[i]]!=null)
                     attvalue = itemattributes[itemresult[i]].value;
-                if(attvalue=="" || attvalue ==null)
+                else{
+                    ui.notifications.warn("cItem property " + itemresult[i] + " of cItem " + itemattributes.name +" does not exist");
+                }
+
+                if((attvalue!==false)&&(attvalue!==true)){
+                    if((attvalue=="" || attvalue ==null))
+                        attvalue=0;
+                }
+
+                if(attvalue == null)
                     attvalue=0;
 
                 if(!itemresult[i].includes("#{target|"))
@@ -203,8 +212,16 @@ export class auxMeth {
                     if(myatt!=null){
                         attvalue = myatt[attProp];
                     }
+                    else{
+                        ui.notifications.warn("Property " + attProp + " does not exist");
+                    }
 
-                    if((attvalue=="" || attvalue ==null)&&((attvalue!=false)&&(attvalue!=true)))
+                    if((attvalue!==false)&&(attvalue!==true)){
+                        if((attvalue=="" || attvalue ==null))
+                            attvalue=0;
+                    }
+
+                    if(attvalue == null)
                         attvalue=0;
 
                 }
@@ -212,13 +229,13 @@ export class auxMeth {
                     attvalue=0;
                 }
 
-
                 expr = expr.replace(attname,attvalue);
             }         
 
         }
 
         //PARSE ITEM ATTRIBUTE
+        //console.log(expr);
         var attcresult = expr.match(/(?<=\-\-)\S*?(?=\-\-)/g);
         if(attcresult!=null){
 
@@ -248,8 +265,10 @@ export class auxMeth {
                 //                console.log(debugname);
                 let attname = "__" + attpresult[i]+ "__";
                 let attvalue=0;
-                if(attributes[attpresult[i]]!=null)
-                    attvalue = attributes[attpresult[i]].value;
+                if(attributes!=null){
+                    if(attributes[attpresult[i]]!=null)
+                        attvalue = attributes[attpresult[i]].value;
+                }
 
                 expr = expr.replace(attname,attvalue);
             }         
@@ -267,6 +286,9 @@ export class auxMeth {
                 let roll = new Roll(limits[0]).roll();
                 let value = roll.total;
                 let valuemod=0;
+
+                let limitArray = [];
+
                 for(let j=1;j<limits.length;j++){
                     let splitter = limits[j].split(":");
                     let scale = splitter[0];
@@ -274,9 +296,21 @@ export class auxMeth {
                         let newroll = new Roll(scale).roll();
                         scale = newroll.total; 
                     }
-                    let mod = splitter[1];
-                    if(value>=scale){
-                        valuemod=mod;
+
+                    let limitEl = {};
+                    limitEl.scale = scale;
+                    limitEl.value = splitter[1];
+                    await limitArray.push(limitEl);
+                }
+
+                await limitArray.sort(function (x, y) {
+                    return x.scale - y.scale;
+                });
+
+                for(let k=0;k<limitArray.length;k++){
+                    let checker = limitArray[k];
+                    if(value>=checker.scale){
+                        valuemod=checker.value;
                     }
                 }
 
@@ -286,35 +320,252 @@ export class auxMeth {
 
         }
         //console.log(expr);
-        //PARSE CONDITIONAL / ONLY FOR TEXT
-        var ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
-        if(ifresult!=null){
+        //PARSE CONDITIONAL / ONLY FOR TEXT ORIGINAL
+        //        var ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
+        //        if(ifresult!=null){
+        //
+        //            //Substitute string for current value
+        //            for (let i=0;i<ifresult.length;i++){
+        //                let limits = ifresult[i].split(",");
+        //                let truevalue = limits[1];
+        //                let falsevalue = limits[2];
+        //                let finalvalue;
+        //                let conditionarray = limits[0].split(":");
+        //                let condition = conditionarray[0];
+        //                let conditioncheck = conditionarray[1];
+        //                //console.log(condition + " / " + conditioncheck);
+        //                //console.log(truevalue + " " + falsevalue);
+        //                if(condition==conditioncheck){
+        //                    finalvalue = truevalue;
+        //                }
+        //
+        //                else{
+        //                    finalvalue = falsevalue;
+        //                }
+        //
+        //                let attname = "if[" + ifresult[i]+ "]";
+        //                expr = expr.replace(attname,finalvalue);
+        //                //console.log(expr);
+        //            }         
+        //
+        //        }
 
-            //Substitute string for current value
-            for (let i=0;i<ifresult.length;i++){
-                let limits = ifresult[i].split(",");
-                let truevalue = limits[1];
-                let falsevalue = limits[2];
-                let finalvalue;
-                let conditionarray = limits[0].split(":");
-                let condition = conditionarray[0];
-                let conditioncheck = conditionarray[1];
-                //console.log(condition + " / " + conditioncheck);
-                //console.log(truevalue + " " + falsevalue);
-                if(condition==conditioncheck){
-                    finalvalue = truevalue;
+        /********************************************* H3LS1 - 09/11/2020 ************************************************** */
+        /**************************** ADDED ORs, ANDs, NESTED IFs - TO BE CHECKED AND APPROVED *******************************/
+
+        /* FORMATS OF THE IF expressions ARE:
+        1. Single IF with no ANDs no ORs --> if[Field:condition,true_value, false_value]
+        2. Single IF with ORs only --> if[FIELD1:COND1 OR FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value]
+        3. Single IF with ANDs only --> if[FIELD1:COND1 AND FIELD2:COND2 AND....FIELDn:CONDn,true_value, false_value]
+        4. Single IF with ANDs and ORs (it always execute first ANDs) --> if[FIELD1:COND1 AND FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value]
+        5. Nested IFs with or without ANDs and ORs (it works with the same logic as before)
+            5.1 Example without ANDs and ORs  if[F:C,true_value, ELSE if[F:C, true_value, ELSE if[F:C,true_value,false_Value]]].....
+            5.2 Example with ANDs and ORs  if[F1:C1 OR F2:C2 AND F3:C3,true_value, ELSE if[F:C, true_value, ELSE if[F:C AND F4:C4,true_value,false_Value]]].....
+
+        */ 
+
+        //PARSE CONDITIONAL / **** IT WORKS ALSO FOR NUMBERS (comparing as equal not <,>) ****
+
+        var searchElse = expr.search("ELSE"); 
+        var countElses = (expr.match(/ELSE/g) || []).length;
+        var ifresult = [];
+        var ifsentence = [];
+
+        //Check if there are any ELSEs on the expression
+        if(searchElse!=-1){
+            //There are ELSES
+            var statement = expr.split(/ELSE/g); // Split all the nested ifs
+            for (let i=0;i<=countElses;i++){
+                //we modify the nested ifs to be considered as simple Ifs statements
+                if (i==countElses) {
+                    let toReplace="";
+                    for(let x=0;x<=countElses;x++){toReplace = toReplace + "]";}
+                    statement[i] = statement[i].replace(toReplace,"]"); 
                 }
-
-                else{
-                    finalvalue = falsevalue;
-                }
-
-                let attname = "if[" + ifresult[i]+ "]";
-                expr = expr.replace(attname,finalvalue);
-                //console.log(expr);
-            }         
-
+                else statement[i] = statement[i].replace(/,([^,]*)$/,"]");                
+                ifsentence = statement[i].match(/(?<=\if\[).*?(?=\])/g); 
+                ifresult[i] = ifsentence[0];
+            }
+        }else{
+            //There are no ELSEs
+            countElses = 1;
+            ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
         }
+
+
+        if(ifresult!=null){
+            //If there are any IFs
+            for (let i=0;i<ifresult.length;i++){
+                /*Calculate if the IF condition is true or false for all the nested IFs (if any). It finalizes either when it finds a true condition
+                returning the true statement or when it reaches the last false condition returing the false statement of the last nested IF (if any)*/
+                let limits = ifresult[i].split(","); //split condition and true, false statements
+                let general_cond = limits[0];
+                let truevalue = limits[1];
+                let falsevalue;
+                let findADV;
+                let findDIS;
+                let cond;
+                let val;
+                let result;
+
+                var findOR = general_cond.search("OR"); 
+                var findAND = general_cond.search("AND");
+                var findSpecial = general_cond.search("<"); //This will be used in the case we implement grouping AND/ORS like if(a and(b or c)) => if[a AND <b OR c>]
+
+                if (limits[2]!=null) falsevalue = limits[2] // in case there are no ELSEs, the false value is equal to the false statement
+                else falsevalue = "else"; //in case there are ELSEs, the false value is equal to CONST = else
+
+                /*Update formula for ADV or DIS*/
+                findADV = truevalue.search("~ADV~");
+                if (findADV != -1){
+
+                    truevalue =truevalue.replace("~ADV~","");
+                    truevalue =truevalue.replace("1d20","2d20kh");
+                }
+                findDIS = truevalue.search("~DIS~");
+                if (findDIS != -1){
+
+                    truevalue =truevalue.replace("~DIS~","");
+                    truevalue =truevalue.replace("1d20","2d20kl");
+                }
+                findADV = falsevalue.search("~ADV~");
+                if (findADV != -1){
+
+                    falsevalue =falsevalue.replace("~ADV~","");
+                    falsevalue =falsevalue.replace("1d20","2d20kh");
+                }
+                findDIS = falsevalue.search("~DIS~");
+                if (findDIS != -1){
+
+                    falsevalue =falsevalue.replace("~DIS~","");
+                    falsevalue =falsevalue.replace("1d20","2d20kl");
+                }
+
+
+
+                if (findSpecial == -1 && findAND == -1 && findOR == -1){
+                    //Single expression --> if[FIELD:VALUE,TRUE,FALSE]
+                    result = false;
+                    var comp = general_cond.split(":");
+                    cond = $.trim(comp[0]);
+                    val = $.trim(comp[1]);
+                    if(cond == val) result = true; else result = false;
+                }
+
+                if (findSpecial == -1 && findAND == -1 && findOR != -1){
+                    //Only ORs --> if[FIELD1:VALUE1 OR FIELD2:VALUE2......OR FIELDn:VALUEn,TRUE,FALSE]
+                    var ORconditions = general_cond.split("OR");
+                    if(ORconditions!=null){
+                        result = false;
+                        let j = 0;
+                        while(result != true && j<ORconditions.length ){
+                            var comp = ORconditions[j].split(":");
+                            cond = $.trim(comp[0]);
+                            val = $.trim(comp[1]);
+                            if(cond == val) result = true;
+                            j++;
+                        }
+
+                    }else{
+                        //** ERROR **/
+                    }       
+                }
+
+                if (findSpecial == -1 && findAND != -1 && findOR == -1){
+                    //Only ANDs --> if[FIELD1:VALUE1 AND FIELD2:VALUE2......AND FIELDn:VALUEn,TRUE,FALSE]
+                    var ANDconditions = general_cond.split("AND");
+                    if(ANDconditions!=null){
+                        result = true;
+                        let j = 0;
+                        while(result != false && j<ANDconditions.length ){
+                            var comp = ANDconditions[j].split(":");
+                            cond = $.trim(comp[0]);
+                            val = $.trim(comp[1]);
+                            if(cond != val) result = false;
+                            j++;
+                        }
+
+                    }else{
+                        //** ERROR **/
+                    }
+                }
+
+                if (findSpecial == -1 && findAND != -1 && findOR != -1){
+                    //ANDs && ORs without grouping - First we resolve ANDs --> if[FIELD1:VALUE1 OR FIELD2:VALUE2 AND FIELD3:VALUE3,TRUE,FALSE]
+                    //First we resolve F2:V2 AND F3:V3 (if this is true, no more checking since OR condition is met)
+                    var ORconditions = general_cond.split("OR");
+                    if(ORconditions!=null){
+                        result = false;
+                        let j = 0;
+                        while(result != true && j<ORconditions.length ){
+                            if (findAND = ORconditions[j].search("AND") != -1){
+                                var ANDconditions = ORconditions[j].split("AND");
+                                if(ANDconditions!=null){
+                                    result = true;
+                                    let k = 0;
+                                    while(result != false && k<ANDconditions.length ){
+                                        var comp = ANDconditions[k].split(":");
+                                        cond = $.trim(comp[0]);
+                                        val = $.trim(comp[1]);
+                                        if(cond != val) result = false;
+                                        k++;
+                                    }
+                                }   
+                            }else{
+                                var comp = ORconditions[j].split(":");
+                                cond = $.trim(comp[0]);
+                                val = $.trim(comp[1]);
+                                if(cond == val) result = true;
+                            }           
+                            j++;    
+                        }
+                    }
+                }
+                let finalvalue;
+                let attname="";
+                if(result == true){
+                    //In case the condition is met, we quit the nested IFs (if any) and return value on the true statement
+                    finalvalue = truevalue;
+                    if (searchElse!=-1)  {
+                        for (let z=0;z<countElses;z++){
+                            attname = attname + "if[" + ifresult[z]+ ",ELSE " ;    
+
+                        }
+
+                        attname = attname + "if[" + ifresult[countElses];
+                        for (let z=0;z<=countElses;z++){
+                            attname = attname + "]" ;    
+
+                        }
+
+
+                    }
+                    else attname = "if[" + ifresult[i]+ "]";
+
+                    expr = expr.replace(attname,finalvalue);
+                    i=ifresult.length;
+
+
+                }else{
+                    //in case the condition is not met
+                    if (falsevalue == "else"){
+                        //in case the false statement is a nested IF
+                        ifresult[i] = ifresult[i] + ",ELSE " ; //adapt the expression to be identifiable by the rutine
+                        attname = "if[" + ifresult[i];
+                        expr = expr.replace(attname,""); //"delete" the nested IF that is not met from the expression
+                    }
+                    else{
+                        //in case the false statement is a valid value
+                        finalvalue = falsevalue;
+                        attname = "if[" + ifresult[i]+ "]";
+                        expr = expr.replace(attname,finalvalue);
+                    } 
+                }
+
+            }
+        }
+
+        /************************************************************************************************************************** */
 
         //PARSE MAX ROLL
         var maxresult = expr.match(/(?<=\max\().*?(?=\))/g);
@@ -351,8 +602,9 @@ export class auxMeth {
             if(!exprmode){
                 try{
                     let final = new Roll(expr);
-                    //console.log(expr);
+
                     final.roll();
+
                     if(isNaN(final.total)||final.total==null)
                     {
                         toreturn = expr;
@@ -362,6 +614,9 @@ export class auxMeth {
                     }
                 }
                 catch(err){
+                    //console.log("Following Roll expression can not parse to number. String returned");
+                    //console.log(expr);
+                    //ui.notifications.warn("Roll expression can not parse to number");
                     toreturn = expr;
                 }
 
