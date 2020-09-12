@@ -1911,6 +1911,16 @@ export class gActorSheet extends ActorSheet {
 
     async refreshCItems(basehtml){
         console.log("refreshingCItems");
+        //TEST
+        var parser = new DOMParser();
+        let htmlcode = await this.getTempHTML();
+        var _basehtml = await parser.parseFromString(htmlcode, 'text/html').querySelector('form');
+        if(_basehtml==null){
+            ui.notifications.warn("Please rebuild character sheet before assigning");
+            return;
+        }
+
+        //console.log(basehtml);
         //GET CITEMS
         const actorID = this.actor._id;
         const citems = this.actor.data.data.citems;
@@ -1918,35 +1928,68 @@ export class gActorSheet extends ActorSheet {
 
         //SET TABLES INFO
         const html = await basehtml.find(".table");
+        const _html = await _basehtml.querySelectorAll('table');
+
         //Gets all game properties
         const propitems = game.items.filter(y=>y.data.type=="property" && y.data.data.datatype == "table");
 
-        for(let i=0;i<html.length;i++){
-            //console.log(html[i]); 
-            let table = html[i];
-            table.innerHTML = '';
-            const propTable = await propitems.find(y=>y._id == html[i].id);
-            const groupID = propTable.data.data.group;
+        let totalTables = [];
 
-            let group = game.items.get(groupID.id);
-            //console.log("Grupo: " + group.name);
+        for(let y=0;y<html.length;y++){
+            let tableID = html[y].id;
+            let tableVisible = true;
+            let newElement = {tableID,tableVisible};
+            totalTables.push(newElement);
+        }
+
+        for(let y=0;y<_html.length;y++){
+            let tableID = _html[y].getAttribute("attid");
+            let tableVisible = false;
+            let existingTable = totalTables.find(y=>y.tableID==tableID);
+            let newElement = {tableID,tableVisible};
+            if(existingTable==null){
+                totalTables.push(newElement);
+            }
+
+        }
+
+        //console.log(totalTables);
+
+        for(let i=0;i<totalTables.length;i++){
+            //console.log(html);
+            let tableID = totalTables[i].tableID;
+            let table = html[i];
+            //let table = html.find(y=>y.id==tableID);
+            //console.log(tableID);
+            //console.log(table);
+            if(table!=null)
+                table.innerHTML = '';
+            const propTable = await propitems.find(y=>y._id == tableID);
+            //const propTable = await propitems.find(y=>y._id == html[i].getAttribute("attid"));
+            let group;
+            let groupID;
+
+            if(propTable!=null){
+                groupID = propTable.data.data.group;
+                group = game.items.get(groupID.id);
+            }
 
             if(group!=null){
 
                 let groupprops = group.data.data.properties;
-                let groupcitems = citems.filter(y=>y.groups.find(item=>item.id==groupID.id));
+                let groupcitems = await citems.filter(y=>y.groups.find(item=>item.id==groupID.id));
                 groupcitems = groupcitems.sort(auxMeth.dynamicSort("name"));
-                //console.log(groupcitems);
 
                 for (let n=0;n<groupcitems.length;n++){
                     let ciObject = groupcitems[n];
                     let ciTemplate = game.items.get(ciObject.id);
-                    //console.log(ciObject);
+
                     let new_row = document.createElement("TR");
                     new_row.className="table-row";
                     new_row.setAttribute("name", ciObject.name);
                     new_row.setAttribute("id", ciObject.id);
-                    table.appendChild(new_row);
+                    if(table!=null)
+                        table.appendChild(new_row);
 
                     if(ciObject!=null && ciTemplate!=null){
                         //Link Element
@@ -2335,8 +2378,8 @@ export class gActorSheet extends ActorSheet {
                         }
 
                     }
-
-                    table.appendChild(new_row);
+                    if(table!=null)
+                        table.appendChild(new_row);
                 }
 
             }
