@@ -1462,14 +1462,21 @@ export class gActor extends Actor{
         //console.log(rollexp);
         //console.log(rollid);
 
-        //Set ADV or DIS
-        if(rollmode=="ADV"){
-            rollexp = rollexp.replace("1d20","2d20kh");
-        }
 
-        if(rollmode=="DIS"){
-            rollexp = rollexp.replace("1d20","2d20kl");
+        //Set ADV or DIS
+        if (findIF != -1){    
+            //We don't do anything - We will parse this into the IF function inside autoParser   
+        }else{
+
+            if(rollmode=="ADV"){
+                rollexp = rollexp.replace(/1d20/g,"2d20kh");
+            }
+
+            if(rollmode=="DIS"){
+                rollexp = rollexp.replace(/1d20/g,"2d20kl");
+            }
         }
+        /*************************************************************************************************** */
 
         //console.log(rollexp);
 
