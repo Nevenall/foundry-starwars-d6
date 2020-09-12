@@ -208,7 +208,7 @@ Hooks.once('ready', async() => {
         if(game.settings.get("sandbox", "showDC")){
             await hotbar.appendChild(backgr);
         }
-            
+
 
         await auxMeth.rollToMenu();
         SBOX.showshield = false;
@@ -558,6 +558,8 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
     let msgIndex = game.messages.entities.indexOf(msg);
 
     let _html = await html[0].outerHTML;
+    let realuser = game.users.get(data.message.user);
+    //console.log(realuser);
 
     if(_html.includes("dice-roll") && !_html.includes("table-draw")){
         let rollData = {
@@ -565,13 +567,13 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
                 img:"icons/svg/d20-black.svg",
                 name:"Free Roll"
             },
-            actor:game.user.name,
+            actor:realuser.data.name,
             flavor: "Roll",
             formula: app._roll.formula,
             mod: 0,
             result: app._roll.total,
             dice: app._roll.dice,
-            user: game.user.name
+            user: realuser.data.name
         };
 
         await renderTemplate("systems/sandbox/templates/dice.html", rollData).then(async newhtml => {
