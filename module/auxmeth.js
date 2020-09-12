@@ -213,7 +213,7 @@ export class auxMeth {
                         attvalue = myatt[attProp];
                     }
                     else{
-                        ui.notifications.warn("Property " + attProp + " does not exist");
+                        ui.notifications.warn("Property " + rawattname + " does not exist");
                     }
 
                     if((attvalue!==false)&&(attvalue!==true)){
