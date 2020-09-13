@@ -974,381 +974,390 @@ export class gActorSheet extends ActorSheet {
 
 
             let property = game.items.get(rawproperty.id).data;
-            if(count==0){
-
-                new_row.className = "new-row";
-                divtemp = deftemplate.createElement("DIV");
-
-                if(tabpanel.data.contentalign=="center"){
-                    divtemp.className = "flexblock-center";
-                }
-                else{
-                    divtemp.className = "flexblock-left";
-                }
-
-
-                div6.appendChild(new_row);
-                new_row.appendChild(divtemp);
+            if(property==null){
+                ui.notifications.warn("A property in your sheet does not exist anymore. Please remove the reference to it");
             }
 
-            //Attribute input
-            var sInput;
-            var sInputMax;
-
-            //Set Label
-            if(property.data.haslabel && property.data.datatype!="textarea" && property.data.datatype!="table"  && property.data.datatype!="badge"){
-                //Attribute label
-                var sLabel = deftemplate.createElement("H3");
-
-                if(property.data.labelsize=="F"){
-                    labelwidth += " label-free";
-                }
-
-                else if(property.data.labelsize=="S"){
-                    labelwidth += " label-small";
-                }
-
-                else if(property.data.labelsize=="M"){
-                    labelwidth += " label-med";
-                }
-
-                else if(property.data.labelsize=="L"){
-                    labelwidth += " label-medlarge";
-                }
-
-                sLabel.className = labelwidth;
-                sLabel.textContent = property.data.tag;
-                divtemp.appendChild(sLabel);
-
-                //Adds identifier
-                sLabel.setAttribute("id", property.data.attKey);
-                sLabel.setAttribute("attid", rawproperty.id);
-
-                if(property.data.labelformat=="B"){
-                    sLabel.className += " boldtext";
-                }
-
-                else if(property.data.labelformat=="D"){
-                    sLabel.textContent = "";
-
-                    let dieContainer = deftemplate.createElement("DIV");
-                    dieContainer.setAttribute("title",property.data.tag);
-
-                    let dieSymbol = deftemplate.createElement('i');
-                    dieSymbol.className = "fas fa-dice-d20";
-                    dieContainer.appendChild(dieSymbol);
-
-                    sLabel.appendChild(dieContainer);
-
-                }
-
-                else if(property.data.labelformat=="S"){
-                    sLabel.className += " smalltext";
-
-                }
-
-                //Sets class required for rolling
-                if(property.data.hasroll){
-                    sLabel.className += " rollable";
-                }
-
-            }
-
-            //Check property type
-            if(property.data.datatype==="checkbox"){
-
-                sInput = deftemplate.createElement("INPUT");
-                sInput.className = "input-small";
-                sInput.setAttribute("name", "data.attributes." + property.data.attKey + ".value");
-                sInput.setAttribute("type", "checkbox");
-                sInput.setAttribute("toparse", "{{checked actor.data.attributes." + property.data.attKey + ".value}}~~");
-            }
-
-            //Check property type
-            else if(property.data.datatype==="radio"){
-
-                sInput = deftemplate.createElement("DIV"); 
-                sInput.className = "radio-input";
-                sInput.setAttribute("name", property.data.attKey);
-
-            }
-
-            else if(property.data.datatype==="textarea"){
-
-                sInput = deftemplate.createElement("TEXTAREA");
-                if(property.data.inputsize=="S"){
-                    sInput.className = "texteditor-small";
-                }
-
-                else if(property.data.inputsize=="L"){
-                    sInput.className = "texteditor-large";
-                }
-                else{
-                    sInput.className = "texteditor-med";
-                }
-
-                sInput.setAttribute("name", "data.attributes." + property.data.attKey + ".value");
-                sInput.textContent = "{{" + "data.attributes." + property.data.attKey + ".value}}";
-
-            }
-
-            else if(property.data.datatype==="badge"){
-
-                sInput = deftemplate.createElement("DIV");
-                sInput.className = "badge-block centertext";
-                sInput.setAttribute("name", property.data.attKey);
-
-                let badgelabel = document.createElement("LABEL");
-                badgelabel.className = "boldtext";
-                badgelabel.textContent = property.data.tag;
-
-                sInput.appendChild(badgelabel);
-
-                let extraDiv = deftemplate.createElement("DIV");
-                extraDiv.className = "badge-container";
-
-                let badgea = document.createElement('a');
-                badgea.className = "badge-image";
-
-                let badgei = document.createElement('i');
-                badgei.className = "badge-click";
-                badgei.setAttribute("attKey",property.data.attKey);
-                badgei.setAttribute("attId", property._id);
-                badgea.appendChild(badgei);
-
-                extraDiv.appendChild(badgea);
-
-                if(game.user.isGM){
-                    let gmbadgea = document.createElement('a');
-                    gmbadgea.setAttribute("attKey",property.data.attKey);
-                    gmbadgea.setAttribute("attId", property._id);
-                    gmbadgea.className = "badge-clickgm";
-
-                    let gmbadgei = document.createElement('i');
-                    gmbadgei.className = "fas fa-plus-circle";
-
-                    gmbadgea.appendChild(gmbadgei);
-                    extraDiv.appendChild(gmbadgea);
-                }
-
-                sInput.appendChild(extraDiv);
-            }
-
-            else if(property.data.datatype==="list"){
-
-                sInput = deftemplate.createElement("SELECT");
-                sInput.className = "input-med";
-                sInput.setAttribute("name", "data.attributes." + property.data.attKey + ".value");
-                sInput.insertAdjacentHTML( 'beforeend', "{{#select data.attributes." + property.data.attKey + ".value}}" );
-
-                //IM ON IT
-                var rawlist = property.data.listoptions;
-                var listobjects = rawlist.split(',');
-
-                for(var i=0;i<listobjects.length;i++){
-                    let n_option = deftemplate.createElement("OPTION");
-                    n_option.setAttribute("value", listobjects[i]);
-                    n_option.textContent = listobjects[i];
-                    sInput.appendChild(n_option);
-                }
-
-                sInput.insertAdjacentHTML( 'beforeend', "{{/select}}" );
-            }
-
-            else if(property.data.datatype==="table"){
-                new_row.className = "table-row";
-
-                //TABLE LAYOUT
-                sInput = deftemplate.createElement("TABLE");
-                if(property.data.tableheight=="S"){
-                    sInput.className = "table-small";
-                }
-                else if(property.data.tableheight=="M"){
-                    sInput.className = "table-med";
-                }
-                else if(property.data.tableheight=="T"){
-                    sInput.className = "table-tall";
-                }
-                else{
-                    sInput.className = "table-free";
-                }
-
-                sInput.setAttribute("name", "data.attributes." + property.data.attKey);
-                sInput.setAttribute("value", "{{data.attributes." + property.data.attKey + ".value}}");
-                sInput.innerHTML = '';
-
-                //get group
-                const group = game.items.get(property.data.group.id);
-
-                //Create header
-                let header = deftemplate.createElement("THEAD");
-                if(!property.data.hasheader)
-                    header.style.display = "none";
-                sInput.appendChild(header);
-                let header_row = deftemplate.createElement("TR");
-                header.appendChild(header_row);
-
-                //Add name ta
-                if(property.data.onlynames=="DEFAULT" || property.data.onlynames=="ONLY_NAMES"){
-                    let hnameCell = deftemplate.createElement("TH");
-                    hnameCell.className = "input-free";
-                    hnameCell.textContent = "Item";
-                    header_row.appendChild(hnameCell);
-                }
+            else{
 
 
-                if(property.data.onlynames!="ONLY_NAMES"){
-                    if(property.data.hasactivation){
-                        let hactiveCell = deftemplate.createElement("TH");
-                        hactiveCell.className = "input-min";
-                        hactiveCell.textContent = "Active";
-                        header_row.appendChild(hactiveCell);
+                if(count==0){
+
+                    new_row.className = "new-row";
+                    divtemp = deftemplate.createElement("DIV");
+
+                    if(tabpanel.data.contentalign=="center"){
+                        divtemp.className = "flexblock-center";
+                    }
+                    else{
+                        divtemp.className = "flexblock-left";
                     }
 
-                    if(property.data.hasunits){
-                        let hnumberCell = deftemplate.createElement("TH");
-                        hnumberCell.className = "input-min";
-                        hnumberCell.textContent = "Num";
-                        header_row.appendChild(hnumberCell);
+
+                    div6.appendChild(new_row);
+                    new_row.appendChild(divtemp);
+                }
+
+                //Attribute input
+                var sInput;
+                var sInputMax;
+
+                //Set Label
+                if(property.data.haslabel && property.data.datatype!="textarea" && property.data.datatype!="table"  && property.data.datatype!="badge"){
+                    //Attribute label
+                    var sLabel = deftemplate.createElement("H3");
+
+                    if(property.data.labelsize=="F"){
+                        labelwidth += " label-free";
                     }
 
-                    //if(property.data.hasactivation && property.data.hasunits){
-                    if(property.data.hasactivation){
-                        let husesCell = deftemplate.createElement("TH");
-                        husesCell.className = "input-med";
-                        husesCell.textContent = "Uses";
-                        header_row.appendChild(husesCell);
+                    else if(property.data.labelsize=="S"){
+                        labelwidth += " label-small";
                     }
 
-                    if(group!=null){
+                    else if(property.data.labelsize=="M"){
+                        labelwidth += " label-med";
+                    }
 
-                        const groupprops = group.data.data.properties;
+                    else if(property.data.labelsize=="L"){
+                        labelwidth += " label-medlarge";
+                    }
 
-                        for(let i=0;i<groupprops.length;i++){
-                            let propTable = game.items.get(groupprops[i].id);
-                            let hCell = deftemplate.createElement("TH");
+                    sLabel.className = labelwidth;
+                    sLabel.textContent = property.data.tag;
+                    divtemp.appendChild(sLabel);
 
-                            if(propTable.data.data.datatype=="simplenumeric"){
-                                hCell.className ="input-min";
+                    //Adds identifier
+                    sLabel.setAttribute("id", property.data.attKey);
+                    sLabel.setAttribute("attid", rawproperty.id);
+
+                    if(property.data.labelformat=="B"){
+                        sLabel.className += " boldtext";
+                    }
+
+                    else if(property.data.labelformat=="D"){
+                        sLabel.textContent = "";
+
+                        let dieContainer = deftemplate.createElement("DIV");
+                        dieContainer.setAttribute("title",property.data.tag);
+
+                        let dieSymbol = deftemplate.createElement('i');
+                        dieSymbol.className = "fas fa-dice-d20";
+                        dieContainer.appendChild(dieSymbol);
+
+                        sLabel.appendChild(dieContainer);
+
+                    }
+
+                    else if(property.data.labelformat=="S"){
+                        sLabel.className += " smalltext";
+
+                    }
+
+                    //Sets class required for rolling
+                    if(property.data.hasroll){
+                        sLabel.className += " rollable";
+                    }
+
+                }
+
+                //Check property type
+                if(property.data.datatype==="checkbox"){
+
+                    sInput = deftemplate.createElement("INPUT");
+                    sInput.className = "input-small";
+                    sInput.setAttribute("name", "data.attributes." + property.data.attKey + ".value");
+                    sInput.setAttribute("type", "checkbox");
+                    sInput.setAttribute("toparse", "{{checked actor.data.attributes." + property.data.attKey + ".value}}~~");
+                }
+
+                //Check property type
+                else if(property.data.datatype==="radio"){
+
+                    sInput = deftemplate.createElement("DIV"); 
+                    sInput.className = "radio-input";
+                    sInput.setAttribute("name", property.data.attKey);
+
+                }
+
+                else if(property.data.datatype==="textarea"){
+
+                    sInput = deftemplate.createElement("TEXTAREA");
+                    if(property.data.inputsize=="S"){
+                        sInput.className = "texteditor-small";
+                    }
+
+                    else if(property.data.inputsize=="L"){
+                        sInput.className = "texteditor-large";
+                    }
+                    else{
+                        sInput.className = "texteditor-med";
+                    }
+
+                    sInput.setAttribute("name", "data.attributes." + property.data.attKey + ".value");
+                    sInput.textContent = "{{" + "data.attributes." + property.data.attKey + ".value}}";
+
+                }
+
+                else if(property.data.datatype==="badge"){
+
+                    sInput = deftemplate.createElement("DIV");
+                    sInput.className = "badge-block centertext";
+                    sInput.setAttribute("name", property.data.attKey);
+
+                    let badgelabel = document.createElement("LABEL");
+                    badgelabel.className = "boldtext";
+                    badgelabel.textContent = property.data.tag;
+
+                    sInput.appendChild(badgelabel);
+
+                    let extraDiv = deftemplate.createElement("DIV");
+                    extraDiv.className = "badge-container";
+
+                    let badgea = document.createElement('a');
+                    badgea.className = "badge-image";
+
+                    let badgei = document.createElement('i');
+                    badgei.className = "badge-click";
+                    badgei.setAttribute("attKey",property.data.attKey);
+                    badgei.setAttribute("attId", property._id);
+                    badgea.appendChild(badgei);
+
+                    extraDiv.appendChild(badgea);
+
+                    if(game.user.isGM){
+                        let gmbadgea = document.createElement('a');
+                        gmbadgea.setAttribute("attKey",property.data.attKey);
+                        gmbadgea.setAttribute("attId", property._id);
+                        gmbadgea.className = "badge-clickgm";
+
+                        let gmbadgei = document.createElement('i');
+                        gmbadgei.className = "fas fa-plus-circle";
+
+                        gmbadgea.appendChild(gmbadgei);
+                        extraDiv.appendChild(gmbadgea);
+                    }
+
+                    sInput.appendChild(extraDiv);
+                }
+
+                else if(property.data.datatype==="list"){
+
+                    sInput = deftemplate.createElement("SELECT");
+                    sInput.className = "input-med";
+                    sInput.setAttribute("name", "data.attributes." + property.data.attKey + ".value");
+                    sInput.insertAdjacentHTML( 'beforeend', "{{#select data.attributes." + property.data.attKey + ".value}}" );
+
+                    //IM ON IT
+                    var rawlist = property.data.listoptions;
+                    var listobjects = rawlist.split(',');
+
+                    for(var i=0;i<listobjects.length;i++){
+                        let n_option = deftemplate.createElement("OPTION");
+                        n_option.setAttribute("value", listobjects[i]);
+                        n_option.textContent = listobjects[i];
+                        sInput.appendChild(n_option);
+                    }
+
+                    sInput.insertAdjacentHTML( 'beforeend', "{{/select}}" );
+                }
+
+                else if(property.data.datatype==="table"){
+                    new_row.className = "table-row";
+
+                    //TABLE LAYOUT
+                    sInput = deftemplate.createElement("TABLE");
+                    if(property.data.tableheight=="S"){
+                        sInput.className = "table-small";
+                    }
+                    else if(property.data.tableheight=="M"){
+                        sInput.className = "table-med";
+                    }
+                    else if(property.data.tableheight=="T"){
+                        sInput.className = "table-tall";
+                    }
+                    else{
+                        sInput.className = "table-free";
+                    }
+
+                    sInput.setAttribute("name", "data.attributes." + property.data.attKey);
+                    sInput.setAttribute("value", "{{data.attributes." + property.data.attKey + ".value}}");
+                    sInput.innerHTML = '';
+
+                    //get group
+                    const group = game.items.get(property.data.group.id);
+
+                    //Create header
+                    let header = deftemplate.createElement("THEAD");
+                    if(!property.data.hasheader)
+                        header.style.display = "none";
+                    sInput.appendChild(header);
+                    let header_row = deftemplate.createElement("TR");
+                    header.appendChild(header_row);
+
+                    //Add name ta
+                    if(property.data.onlynames=="DEFAULT" || property.data.onlynames=="ONLY_NAMES"){
+                        let hnameCell = deftemplate.createElement("TH");
+                        hnameCell.className = "input-free";
+                        hnameCell.textContent = "Item";
+                        header_row.appendChild(hnameCell);
+                    }
+
+
+                    if(property.data.onlynames!="ONLY_NAMES"){
+                        if(property.data.hasactivation){
+                            let hactiveCell = deftemplate.createElement("TH");
+                            hactiveCell.className = "input-min";
+                            hactiveCell.textContent = "Active";
+                            header_row.appendChild(hactiveCell);
+                        }
+
+                        if(property.data.hasunits){
+                            let hnumberCell = deftemplate.createElement("TH");
+                            hnumberCell.className = "input-min";
+                            hnumberCell.textContent = "Num";
+                            header_row.appendChild(hnumberCell);
+                        }
+
+                        //if(property.data.hasactivation && property.data.hasunits){
+                        if(property.data.hasactivation){
+                            let husesCell = deftemplate.createElement("TH");
+                            husesCell.className = "input-med";
+                            husesCell.textContent = "Uses";
+                            header_row.appendChild(husesCell);
+                        }
+
+                        if(group!=null){
+
+                            const groupprops = group.data.data.properties;
+
+                            for(let i=0;i<groupprops.length;i++){
+                                let propTable = game.items.get(groupprops[i].id);
+                                let hCell = deftemplate.createElement("TH");
+
+                                if(propTable.data.data.datatype=="simplenumeric"){
+                                    hCell.className ="input-min";
+                                }
+
+                                else {
+                                    hCell.className ="input-med";
+                                }
+
+                                hCell.textContent = propTable.data.data.tag;
+
+                                if(!propTable.data.data.ishidden)
+                                    header_row.appendChild(hCell);
                             }
-
-                            else {
-                                hCell.className ="input-med";
-                            }
-
-                            hCell.textContent = propTable.data.data.tag;
-
-                            if(!propTable.data.data.ishidden)
-                                header_row.appendChild(hCell);
                         }
                     }
-                }
 
 
 
-                //Add name ta
-                let deleteCell = deftemplate.createElement("TH");
-                deleteCell.className = "cell-empty";
-                header_row.appendChild(deleteCell);
+                    //Add name ta
+                    let deleteCell = deftemplate.createElement("TH");
+                    deleteCell.className = "cell-empty";
+                    header_row.appendChild(deleteCell);
 
-                let tbody = deftemplate.createElement("TBODY");
-                tbody.className = "table";
-                tbody.setAttribute("id", property._id);
-                sInput.appendChild(tbody);
+                    let tbody = deftemplate.createElement("TBODY");
+                    tbody.className = "table";
+                    tbody.setAttribute("id", property._id);
+                    sInput.appendChild(tbody);
 
-            }
-
-            else {
-
-                sInput = deftemplate.createElement("INPUT");
-
-                sInput.setAttribute("name", "data.attributes." + property.data.attKey  + ".value");
-                sInput.setAttribute("value", "{{data.attributes." + property.data.attKey + ".value}}");
-
-                if(property.data.datatype==="simplenumeric"){
-
-                    sInput.setAttribute("type", "text");
-                    sInput.className = "input-min";
-
-                    if(!hasProperty(property.data,"maxvisible")){
-                        property.data.maxvisible=true;
-                    }
-
-                    if(property.data.automax!="" && property.data.maxvisible){
-                        sInputMax = deftemplate.createElement("INPUT");
-                        sInputMax.setAttribute("type", "text");
-                        sInput.className = "input-ahalf ";
-                        sInputMax.className = "input-bhalf input-disabled inputGM " + property.data.attKey + ".max";
-                        sInputMax.setAttribute("name", "data.attributes." + property.data.attKey  + ".max");
-                        sInputMax.setAttribute("value", "{{data.attributes." + property.data.attKey + ".max}}");
-                    }
-
-
-                }
-
-                else if(property.data.datatype=="label"){
-                    sInput.setAttribute("type", "text");
-                    sInput.className = "input-free";
-                    sInput.style.display = "none";
                 }
 
                 else {
-                    sInput.setAttribute("type", "text");
-                    sInput.className = "";
-                    if(property.data.inputsize!=null){
-                        if(property.data.inputsize=="F"){
+
+                    sInput = deftemplate.createElement("INPUT");
+
+                    sInput.setAttribute("name", "data.attributes." + property.data.attKey  + ".value");
+                    sInput.setAttribute("value", "{{data.attributes." + property.data.attKey + ".value}}");
+
+                    if(property.data.datatype==="simplenumeric"){
+
+                        sInput.setAttribute("type", "text");
+                        sInput.className = "input-min";
+
+                        if(!hasProperty(property.data,"maxvisible")){
+                            property.data.maxvisible=true;
+                        }
+
+                        if(property.data.automax!="" && property.data.maxvisible){
+                            sInputMax = deftemplate.createElement("INPUT");
+                            sInputMax.setAttribute("type", "text");
+                            sInput.className = "input-ahalf ";
+                            sInputMax.className = "input-bhalf input-disabled inputGM " + property.data.attKey + ".max";
+                            sInputMax.setAttribute("name", "data.attributes." + property.data.attKey  + ".max");
+                            sInputMax.setAttribute("value", "{{data.attributes." + property.data.attKey + ".max}}");
+                        }
+
+
+                    }
+
+                    else if(property.data.datatype=="label"){
+                        sInput.setAttribute("type", "text");
+                        sInput.className = "input-free";
+                        sInput.style.display = "none";
+                    }
+
+                    else {
+                        sInput.setAttribute("type", "text");
+                        sInput.className = "";
+                        if(property.data.inputsize!=null){
+                            if(property.data.inputsize=="F"){
+                                sInput.className = "input-free";
+                            }
+
+                            else if(property.data.inputsize=="S"){
+                                sInput.className = "input-small";
+                            }
+
+                            else if(property.data.inputsize=="M"){
+                                sInput.className = "input-med";
+                            }
+
+                            else if(property.data.inputsize=="L"){
+                                sInput.className = "input-large";
+                            }
+                        }
+                        else{
                             sInput.className = "input-free";
                         }
-
-                        else if(property.data.inputsize=="S"){
-                            sInput.className = "input-small";
-                        }
-
-                        else if(property.data.inputsize=="M"){
-                            sInput.className = "input-med";
-                        }
-
-                        else if(property.data.inputsize=="L"){
-                            sInput.className = "input-large";
-                        }
                     }
-                    else{
-                        sInput.className = "input-free";
+
+                    if(property.data.auto!=""){
+                        sInput.setAttribute("readonly", "true");
+                        sInput.className += " input-disabled";
                     }
+
                 }
 
-                if(property.data.auto!=""){
-                    sInput.setAttribute("readonly", "true");
-                    sInput.className += " input-disabled";
+                //Adds identifier
+                sInput.className += " " + property.data.attKey;
+                sInput.setAttribute("attId", property._id);
+
+                if(!property.data.editable)
+                    sInput.className += " inputGM";
+
+                if(property.data.ishidden){
+                    sInput.style.display = "none";
+                    if(sLabel!=null)
+                        sLabel.style.display = "none";
                 }
 
-            }
 
-            //Adds identifier
-            sInput.className += " " + property.data.attKey;
-            sInput.setAttribute("attId", property._id);
+                if(property.data.datatype!="label")
+                    divtemp.appendChild(sInput);
 
-            if(!property.data.editable)
-                sInput.className += " inputGM";
-
-            if(property.data.ishidden){
-                sInput.style.display = "none";
-                if(sLabel!=null)
-                    sLabel.style.display = "none";
-            }
+                if(sInputMax!=null)
+                    divtemp.appendChild(sInputMax);
 
 
-            if(property.data.datatype!="label")
-                divtemp.appendChild(sInput);
+                count++;
 
-            if(sInputMax!=null)
-                divtemp.appendChild(sInputMax);
+                if(count == columns){
+                    count=0;
+                }
 
-
-            count++;
-
-            if(count == columns){
-                count=0;
             }
         },this);
 
@@ -2200,7 +2209,7 @@ export class gActorSheet extends ActorSheet {
                                                     cellvalue.setAttribute("type", "checkbox");
                                                     let setvalue= false;
                                                     //console.log(propKey);
-                                                    if(ciObject.attributes[propKey].value){
+                                                    if(ciObject.attributes[propKey].value===true || ciObject.attributes[propKey].value==="true"){
                                                         setvalue = true;
                                                     }
 
@@ -2236,7 +2245,7 @@ export class gActorSheet extends ActorSheet {
                                                 cellvalue.setAttribute("type", "checkbox");
                                                 let setvalue= false;
                                                 //console.log(propKey);
-                                                if(ciObject.attributes[propKey].value){
+                                                if(ciObject.attributes[propKey].value===true || ciObject.attributes[propKey].value==="true"){
                                                     setvalue = true;
                                                 }
 
