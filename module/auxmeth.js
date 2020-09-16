@@ -291,7 +291,7 @@ export class auxMeth {
             //Substitute string for current value
             for (let i=0;i<scaleresult.length;i++){
                 let limits = scaleresult[i].split(",");
-                console.log(limits[0]);
+                //console.log(limits[0]);
                 let roll = new Roll(limits[0]).roll();
                 let value = roll.total;
                 let valuemod=0;
