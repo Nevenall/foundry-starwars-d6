@@ -1610,29 +1610,34 @@ export class gActorSheet extends ActorSheet {
 
         let gameactors = game.actors;
         for(let i=0;i<gameactors.entities.length;i++){
-            console.log("fixing");
+
             const myactor = gameactors.entities[i];
             const myactorcitems = myactor.data.data.citems;
-            for(let j=myactorcitems.length-1;j>=0;j--){
-                let mycitem = myactorcitems[j];
+            //console.log("checking actor " + myactor.name);
+            if(myactorcitems!=null){
+                for(let j=myactorcitems.length-1;j>=0;j--){
+                    let mycitem = myactorcitems[j];
 
-                let templatecItem = game.items.get(mycitem.id);
-                if(templatecItem!=null){
-                    let mymods = mycitem.mods;
-                    for(let r=0;r<mymods.length;r++){
-                        if(mycitem.id!=mymods[r].citem)
-                            mymods[r].citem=mycitem.id;
-                        if(!hasProperty(mymods[r],"index"))
-                            setProperty(mymods[r],"index",0);
+                    let templatecItem = game.items.get(mycitem.id);
+                    if(templatecItem!=null){
+                        let mymods = mycitem.mods;
+                        for(let r=0;r<mymods.length;r++){
+                            if(mycitem.id!=mymods[r].citem)
+                                mymods[r].citem=mycitem.id;
+                            if(!hasProperty(mymods[r],"index"))
+                                setProperty(mymods[r],"index",0);
+                        }
                     }
+
+                    else{
+                        //myactorcitems.split(myactorcitems[j],1);
+                        delete myactorcitems[j];
+                    }
+
+
                 }
-
-                else{
-                    myactorcitems.split(myactorcitems[j],1);
-                }
-
-
             }
+
             await myactor.update({"data":myactor.data.data},{diff:false});
         }
     }
@@ -2158,11 +2163,13 @@ export class gActorSheet extends ActorSheet {
 
                                         new_cell.appendChild(textiContainer);
                                         new_row.appendChild(new_cell);
-                                        if(!isconstant){
-                                            textiContainer.addEventListener("click", (event) => {
-                                                this.showTextAreaDialog(ciObject.id,propKey);
-                                            }); 
-                                        }
+                                        let isdisabled = false;
+                                        if(isconstant)
+                                            isdisabled = true;
+                                        textiContainer.addEventListener("click", (event) => {
+                                            this.showTextAreaDialog(ciObject.id,propKey,isdisabled);
+                                        }); 
+                                        //}
 
                                     }
 
@@ -2397,20 +2404,26 @@ export class gActorSheet extends ActorSheet {
 
     }
 
-    showTextAreaDialog(citemID,citemAttribute){
+    showTextAreaDialog(citemID,citemAttribute,disabled){
         let citem = this.actor.data.data.citems.find(y=>y.id == citemID);
+        let isdisabled = ""
+        if(disabled)
+            isdisabled = "disabled";
+
 
         let d = new Dialog({
             title: citem.name + "-" + citemAttribute,
-            content: '<textarea id="dialog-textarea" class="texteditor-large">' + citem.attributes[citemAttribute].value + '</textarea>',
+            content: '<textarea id="dialog-textarea" class="texteditor-large"' + isdisabled + '>' + citem.attributes[citemAttribute].value + '</textarea>',
             buttons: {
                 one: {
                     icon: '<i class="fas fa-check"></i>',
                     label: "Save",
                     callback: async (html) => {
+                        if(!disabled){
+                            citem.attributes[citemAttribute].value = d.data.dialogValue;
+                            await this.actor.update({"data.citems":this.actor.data.data.citems}, {diff: false});
+                        }
 
-                        citem.attributes[citemAttribute].value = d.data.dialogValue;
-                        await this.actor.update({"data.citems":this.actor.data.data.citems}, {diff: false});
                     }
                 },
                 two: {
