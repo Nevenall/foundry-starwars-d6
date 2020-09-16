@@ -754,7 +754,6 @@ export class gActor extends Actor{
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
                 const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
-                console.log(_mod.exec);
 
                 if(_mod==null)
                     console.log(citem);
@@ -771,7 +770,7 @@ export class gActor extends Actor{
                     if(mod.expr != _mod.value)
                         _mod.exec = false;
 
-                console.log(mod.name + " exec= " + _mod.exec + " citem= " + citem.name + " active= " + citem.isactive + " value= " + finalvalue + " isset=" + myAtt.isset);
+                //console.log(mod.name + " exec= " + _mod.exec + " citem= " + citem.name + " active= " + citem.isactive + " value= " + finalvalue + " isset=" + myAtt.isset);
                 if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                     if(attProp!="max" || (attProp=="max" && !myAtt.maxblocked)){
