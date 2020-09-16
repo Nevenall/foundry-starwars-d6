@@ -53,6 +53,7 @@
             "tableheight":"F",
             "rollname":"",
             "rollexp":"",
+            "rollid":"",
             "group":{},
             "tag":""
         },
