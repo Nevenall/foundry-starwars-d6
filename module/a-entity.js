@@ -920,62 +920,13 @@ export class gActor extends Actor{
         }
 
         //AUTO PROPERTIES PRE CALCULATIONS, 2 ROUNDS!!
-        for (let j=0;j<2;j++){
-            //Checking AUTO ATTRIBUTES -- KEEP DEFAULT VALUE EMPTY THEN!!
-            for (let i=0;i<attributearray.length;i++) {
-                let attribute = attributearray[i];
-                if(attribute!=null || attribute!=undefined){
+        //        for (let j=0;j<2;j++){
+        //
+        //
+        //        }
 
-                    let attdata = attributes[attribute];
-                    let rawexp="";
-                    let property = await game.items.get(actorData.data.attributes[attribute].id);
-                    const actorAtt = attributes[attribute];
-
-                    //console.log("checking " + attribute + " isset " + actorAtt.isset);
-
-                    //Check the Auto value
-                    if(property!=null && !actorAtt.isset){
-                        let exprmode = false;
-                        if(property.data.data.datatype!="simplenumeric" && property.data.data.datatype!="radio"){
-                            exprmode = true;
-                        }
-
-                        if(property.data.data.auto !==""){
-                            //console.log("autochecking " + attribute);
-                            rawexp = property.data.data.auto;
-                            //console.log(rawexp);
-                            //console.log(exprmode);
-                            let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
-
-                            if(actorAtt.value!=newvalue)
-                                ithaschanged = true;
-                            actorAtt.default= true;
-
-                            actorAtt.value = newvalue;
-                            //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
-                        }
-
-                        if(property.data.data.automax !==""){
-                            rawexp = property.data.data.automax;
-                            let maxval = await auxMeth.autoParser(rawexp,attributes,null,false);
-
-                            //if(actorAtt.max!=maxval){
-                            if(actorAtt.max=="" || !actorAtt.maxblocked){
-                                actorAtt.max = parseInt(maxval);
-                                actorAtt.maxblocked = false;
-                                ithaschanged = true;
-
-                                //console.log(attribute + " max: " + actorAtt.maxblocked);
-                                if(parseInt(actorAtt.value)>actorAtt.max){
-                                    actorAtt.value=actorAtt.max;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
+        ithaschanged = await this.autoCalculateAttributes(actorData,attributearray,attributes);
+        ithaschanged = await this.autoCalculateAttributes(actorData,attributearray,attributes);
 
 
         //CI ADD TO AUTO ATTR
@@ -1055,6 +1006,7 @@ export class gActor extends Actor{
                             _mod.exec=true;
                             _mod.value=finalvalue;
                             _mod.attribute=mod.attribute;
+                            myAtt.isset = true;
 
                             myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
 
@@ -1082,6 +1034,7 @@ export class gActor extends Actor{
                                 }
 
                                 _mod.exec=false;
+                                myAtt.isset = false;
 
                             }
                         }
@@ -1098,7 +1051,7 @@ export class gActor extends Actor{
             }
         }
 
-
+        ithaschanged = await this.autoCalculateAttributes(actorData,attributearray,attributes);
 
         //ADD ROLLS
         const rollmods = mods.filter(y=>y.type=="ROLL");
@@ -1267,6 +1220,64 @@ export class gActor extends Actor{
 
         //return actorData;
 
+    }
+
+    async autoCalculateAttributes(actorData,attributearray,attributes){
+        //Checking AUTO ATTRIBUTES -- KEEP DEFAULT VALUE EMPTY THEN!!
+        let ithaschanged = false;
+        for (let i=0;i<attributearray.length;i++) {
+            let attribute = attributearray[i];
+            if(attribute!=null || attribute!=undefined){
+
+                let attdata = attributes[attribute];
+                let rawexp="";
+                let property = await game.items.get(actorData.data.attributes[attribute].id);
+                const actorAtt = attributes[attribute];
+
+                //console.log("checking " + attribute + " isset " + actorAtt.isset);
+
+                //Check the Auto value
+                if(property!=null && !actorAtt.isset){
+                    let exprmode = false;
+                    if(property.data.data.datatype!="simplenumeric" && property.data.data.datatype!="radio"){
+                        exprmode = true;
+                    }
+
+                    if(property.data.data.auto !==""){
+                        //console.log("autochecking " + attribute);
+                        rawexp = property.data.data.auto;
+                        //console.log(rawexp);
+                        //console.log(exprmode);
+                        let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
+
+                        if(actorAtt.value!=newvalue)
+                            ithaschanged = true;
+                        actorAtt.default= true;
+
+                        actorAtt.value = newvalue;
+                        //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
+                    }
+
+                    if(property.data.data.automax !==""){
+                        rawexp = property.data.data.automax;
+                        let maxval = await auxMeth.autoParser(rawexp,attributes,null,false);
+
+                        //if(actorAtt.max!=maxval){
+                        if(actorAtt.max=="" || !actorAtt.maxblocked){
+                            actorAtt.max = parseInt(maxval);
+                            actorAtt.maxblocked = false;
+                            ithaschanged = true;
+
+                            //console.log(attribute + " max: " + actorAtt.maxblocked);
+                            if(parseInt(actorAtt.value)>actorAtt.max){
+                                actorAtt.value=actorAtt.max;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return ithaschanged;
     }
 
     async actorUpdater(data=null){
