@@ -1614,19 +1614,28 @@ export class gActorSheet extends ActorSheet {
             const myactor = gameactors.entities[i];
             const myactorcitems = myactor.data.data.citems;
             //console.log("checking actor " + myactor.name);
+            //console.log(myactorcitems);
             if(myactorcitems!=null){
                 for(let j=myactorcitems.length-1;j>=0;j--){
                     let mycitem = myactorcitems[j];
 
-                    let templatecItem = game.items.get(mycitem.id);
-                    if(templatecItem!=null){
-                        let mymods = mycitem.mods;
-                        for(let r=0;r<mymods.length;r++){
-                            if(mycitem.id!=mymods[r].citem)
-                                mymods[r].citem=mycitem.id;
-                            if(!hasProperty(mymods[r],"index"))
-                                setProperty(mymods[r],"index",0);
+                    if(mycitem!=null){
+                        let templatecItem = game.items.get(mycitem.id);
+
+                        if(templatecItem!=null){
+                            let mymods = mycitem.mods;
+                            for(let r=0;r<mymods.length;r++){
+                                if(mycitem.id!=mymods[r].citem)
+                                    mymods[r].citem=mycitem.id;
+                                if(!hasProperty(mymods[r],"index"))
+                                    setProperty(mymods[r],"index",0);
+                            }
                         }
+
+                        else{
+                            delete myactorcitems[j];
+                        }
+
                     }
 
                     else{
