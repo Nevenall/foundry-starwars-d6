@@ -1,746 +1,736 @@
 /**
- * Extend the basic ItemSheet with some very simple modifications
- * @extends {ItemSheet}
+ * A system to create any RPG ruleset without needing to code
+ * Author: Seregras
+ * Software License: GNU GPLv3
  */
 
+// Import Modules
+import { gActorSheet } from "./gactorsheet.js";
+import { sItemSheet } from "./sitemsheet.js";
+import { gActor } from "./a-entity.js";
+import { gItem } from "./i-entity.js";
+import { SBOX } from "./config.js";
 import { auxMeth } from "./auxmeth.js";
-export class sItemSheet extends ItemSheet {
 
-    /** @override */
-    static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
-            classes: ["sandbox", "sheet", "item"],
-            width: 520,
-            height: 500,
-            tabs: [{navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description"}]
-        });
+/* -------------------------------------------- */
+/*  Hooks                 */
+/* -------------------------------------------- */
+
+Hooks.once("init", async function() {
+    console.log(`Initializing Sandbox System`);
+
+    /**
+	 * Set an initiative formula for the system
+	 * @type {String}
+	 */
+
+    CONFIG.debug.hooks = true;
+    CONFIG.Actor.entityClass = gActor;
+    CONFIG.Item.entityClass = gItem;
+
+    auxMeth.buildSheetHML();
+    auxMeth.registerIfHelper();
+    auxMeth.registerIfNotHelper();
+    auxMeth.registerIfGreaterHelper();
+    auxMeth.registerIfLessHelper();
+    auxMeth.registerIsGM();
+    auxMeth.registerShowMod();
+    auxMeth.registerShowSimpleRoll();
+
+    // Register sheet application classes
+    Actors.unregisterSheet("core", ActorSheet);
+    Actors.registerSheet("dnd5e", gActorSheet, { makeDefault: true });
+    Items.unregisterSheet("core", ItemSheet);
+    Items.registerSheet("dnd5e", sItemSheet, {makeDefault: true});
+
+    game.settings.register("sandbox", "showADV", {
+        name: "Show Roll with Advantage option",
+        hint: "If checked, 1d20,ADV,DIS options will be displayed under the Actor's name",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "showSimpleRoller", {
+        name: "Show d20 Roll icon option",
+        hint: "If checked a d20 icon will be displayed under the Actor's name",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "showDC", {
+        name: "Show DC window",
+        hint: "If checked a DC box will appear at the bottom of the screen",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "showLastRoll", {
+        name: "Show Last Roll window",
+        hint: "If checked a box displaying the results of the last Roll will appear at the bottom of the screen",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "diff", {
+        name: "GM difficulty",
+        hint: "This is linked to the DC Box at the bottom of the screen",
+        scope: "world",
+        config: false,
+        default: 0,
+        type: Number,
+    });
+
+    game.settings.register("sandbox", "tokenOptions", {
+        name: "Token Options",
+        hint: "You can specify bar1 under token on the template Token tab",
+        scope: "world",
+        config: true,
+        default: 0,
+        type: Boolean,
+    });
+
+    game.settings.register("sandbox", "customStyle", {
+        name: "CSS Style file",
+        hint: "You can specify a custom styling file. If default wanted, leave blank",
+        scope: "world",
+        config: true,
+        default: "",
+        type: String,
+    });
+
+    game.settings.register("sandbox", "initKey", {
+        name: "Initiative Attribute Key",
+        hint: "After editing, please refresh instance",
+        scope: "world",
+        config: true,
+        default: "",
+        type: String,
+    });
+
+    let initF = await game.settings.get("sandbox", "initKey");
+    let formvalue = "@attributes." + initF + ".value";
+    if(initF=="")
+        formvalue = "1d20";
+
+    CONFIG.Combat.initiative = {
+        formula: formvalue,
+        decimals: 2
+    };
+
+
+
+});
+
+Hooks.once('ready', async() => {
+    //console.log("ready!");
+    //Custom styling
+    if(game.settings.get("sandbox", "customStyle")!=""){
+        const link = document.createElement('link');
+        link.type = 'text/css';
+        link.rel = 'stylesheet';
+        link.href = game.settings.get("sandbox", "customStyle");
+        await document.getElementsByTagName('head')[0].appendChild(link);
     }
 
-    /* -------------------------------------------- */
 
-    /** @override */
-    get template() {
-        const path = "systems/sandbox/templates/";
-        return `${path}/${this.item.data.type}.html`;
-    }
+    //Gets current sheets
+    await auxMeth.getSheets();
 
+    //GM ROLL MENU TEMPLATE
+    //Sets roll menu close to hotbar THIS IS SOMETHING FOR ME STREAMS, TO REMOVE IF YOU LIKE
+    if(game.user.isGM){
 
-    /** @override */
-    async getData() {
+        game.data.rolldc = 3;
 
-        if(this.item.data.type=="cItem")
-            await this.checkStillUnique();
+        let hotbar = document.getElementById("hotbar");
+        let backgr = document.createElement("DIV");
+        backgr.className = "dc-input";
 
-        const item = this.item;
-        const data = super.getData();
-        data.flags = item.data.flags;
+        let header = document.createElement("DIV");
+        header.className = "dc-header";
+        header.textContent = "DC";
 
-        //BEHOLD THE BEST DEBUGGER LINE ON SANDBOX!
-        console.log(data);
+        let form = document.createElement("FORM");
+        let sInput = document.createElement("INPUT");
+        sInput.setAttribute("type", "text");
+        sInput.setAttribute("name", "dc");
+        sInput.setAttribute("value", "");
 
-        return data;
-
-    }
-
-    /* -------------------------------------------- */
-
-    /** @override */
-
-    activateListeners(html) {
-        super.activateListeners(html);
-
-        // Activate tabs
-        let tabs = html.find('.tabs');
-        let initial = this._sheetTab;
-        new TabsV2(tabs, {
-            initial: initial,
-            callback: clicked => this._sheetTab = clicked.data("tab")
-        });
-
-        //Drag end event 
-        this.form.ondrop = ev => this._onDrop(ev);
-
-        // Checks if the attribute of the cItem is variable, or it's value stays constant on each cItem
-        html.find('.check-isconstant').click(ev => {
-            const li = $(ev.currentTarget);
-            const value = ev.target.value;
-            let obj = li.attr("name");
-            let namechain = obj.split(".");
-            let name = namechain[1];
-            let index = namechain[0];
-            const prop = this.item.data.data.properties[index];
-
-            if(prop.isconstant){
-                prop.isconstant=false;
-            }
-            else{
-                prop.isconstant=true;
-            }
-
-            this.item.update({"data.properties":this.item.data.data.properties},{diff:false});
-        });
-
-        // Checks if a Mod is executable only one
-        html.find('.check-once').click(ev => {
-            const li = $(ev.currentTarget);
-            const value = ev.target.value;
-            let index = li.attr("index");
-            const mod = this.item.data.data.mods[index];
-
-            if(mod.once){
-                mod.once=false;
-            }
-            else{
-                mod.once=true;
-            }
-
-            this.item.update({"data.mods":this.item.data.data.mods},{diff:false});
-        });
-
-        html.find('.mod-add').click(ev => {
-            this.adnewCIMod();
-        });
-
-        html.find('.mod-input').change(ev => {
-            const li = $(ev.currentTarget);
-            const value = ev.target.value;
-            let obj = li.attr("name");
-            let namechain = obj.split(".");
-            let name = namechain[1];
-            let index = namechain[0];
-
-            this.editmodInput(index, name, value);
-        });
-
-        html.find('.mod-delete').click(ev => {
-            const li = $(ev.currentTarget);
-            const value = ev.target.value;
-            let obj = li.attr("name");
-            let namechain = obj.split(".");
-            let index = namechain[0];
-            console.log(index);
-            this.deletemodInput(index);
-        });
-
-        html.find('.modcitem-edit').click(ev => {
-
-            let citemId = ev.target.parentElement.getAttribute("citemId");
-            let citem = game.items.get(citemId);
-            citem.sheet.render(true);
-        });
-
-        html.find('.modcitem-delete').click(ev => {
-            const mods = this.item.data.data.mods;
-            let cindex = ev.target.parentElement.parentElement.getAttribute("cindex");
-            let modId =  ev.target.parentElement.parentElement.getAttribute("mod");
-            this.item.data.data.mods[modId].items.splice(cindex,1);
-            this.scrollbarSet();
-            this.item.update({"data.mods": mods}, {diff: false});
-        });
-
-        // Everything below here is only needed if the sheet is editable
-        if (!this.options.editable) return;
-
-        let subitems = this.getsubItems();
-        if(subitems==null){
-
-            return;
+        let initvalue = 0;
+        if(!hasProperty(SBOX.diff,game.data.world.name)){
+            setProperty(SBOX.diff,game.data.world.name,0);
         }
 
-        // Edit Tab item
-        html.find('.item-edit').click(ev => {
-            const li = $(ev.currentTarget).parents(".property");
-            const toedit = subitems[li.data("itemId")];
-            const item = game.items.get(toedit.id);
-            item.sheet.render(true);
-        });
+        sInput.value = game.settings.get("sandbox", "diff");
 
-        // Delete tab Item
-        html.find('.item-delete').click(ev => {
-            const li = $(ev.currentTarget).parents(".property");
-            let todelete = li.data("itemId");
-            let obj = subitems[todelete];
-            if(this.item.data.type=="cItem"){
-                let group = game.items.get(obj.id);
-                if(group.data.data.isUnique){
-                    this.item.data.data.isUnique=false;
-                }
+        sInput.addEventListener("keydown", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if(event.key=="Backspace" || event.key=="Delete"){
+                sInput.value = "";
             }
-            const prop = subitems.splice(todelete,1);
-            li.slideUp(200, () => this.render(false));
-            this.updateLists(subitems);
+
+            else if(event.key=="Enter"){
+                //SBOX.diff[game.data.world.name] = sInput.value;
+                await game.settings.set("sandbox", "diff", sInput.value);
+            }
+
+            else{
+                if(!isNaN(event.key))
+                    sInput.value += event.key;
+            }
+
         });
 
-        // Top Item
-        html.find('.item-top').click(ev => {
-            const li = $(ev.currentTarget).parents(".property");
-            let itemindex = li.data("itemId");
-            if(itemindex>0)
-                subitems.splice(itemindex-1, 0, subitems.splice(itemindex, 1)[0]);
-            this.updateLists(subitems);
+        sInput.addEventListener("focusout", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            //SBOX.diff[game.data.world.name] = sInput.value;
+            await game.settings.set("sandbox", "diff", sInput.value);
+
         });
 
-        // Bottom Item
-        html.find('.item-bottom').click(ev => {
-            const li = $(ev.currentTarget).parents(".property");
-            let itemindex = li.data("itemId");
-            if(itemindex<subitems.length-1)
-                subitems.splice(itemindex+1, 0, subitems.splice(itemindex, 1)[0]);
-            this.updateLists(subitems);
-        });
+        form.appendChild(sInput);
+        backgr.appendChild(header);
+
+        backgr.appendChild(form);
+
+        if(game.settings.get("sandbox", "showDC")){
+            await hotbar.appendChild(backgr);
+        }
+
+
+        await auxMeth.rollToMenu();
+        SBOX.showshield = false;
+
+        if(game.settings.get("sandbox", "tokenOptions")){
+            document.addEventListener("keydown", (event) => {
+                if(event.key=="Control"){
+                    SBOX.showshield = true;
+                }
+
+            });
+
+            document.addEventListener("keyup", (event) => {
+                SBOX.showshield = false;
+
+            });
+        }
+
+
+
+
+        let macrosheet = document.getElementById("hotbar");
 
     }
 
-    async checkItemsExisting(){
+    //    let gamecItems = game.items.filter(y=>y.data.description!="");
+    //    for(let i=0;i<gamecItems.length;i++){
+    //        const mycitem = gamecItems[i];
+    //        await mycitem.update({"data.attributes.description":mycitem.data.data.description});
+    //    }
 
-        let panels = this.item.data.flags.panelarray;
-        let changed = false;
+    //    let gameActors = game.actors;
+    //    //console.log(gameActors);
+    //    for(let j=0;j<gameActors.entities.length;j++){
+    //        const myactor = gameActors.entities[j];
+    //        await myactor.update({"data.attributes.biography":myactor.data.data.biography},{diff:false});
+    //    }
 
-        for (let i = 0; i < panels.length; i++) {
-            if (!game.items.get(panels[i]._id)) {
-                let index = panels.indexOf(panels[i]);
-                if (index > -1) {
-                    panels.splice(index, 1);
-                    changed = true;
-                }
+});
+
+//COPIED FROM A MODULE. TO SHOW A SHIELD ON A TOKEN AND LINK THE ATTRIBUTE. TO REMOVE
+Hooks.on("hoverToken", (token, hovered) => {
+
+    if(!game.settings.get("sandbox", "tokenOptions"))
+        return;
+
+    if(token.actor==null)
+        return;
+
+    if(token.actor.data.data.tokenshield == null)
+        return;
+
+    let shieldprop = token.actor.data.data.tokenshield;
+    //console.log(shieldprop);
+
+    if(token.actor.data.data.attributes[shieldprop]==null)
+        return;
+
+    let ca = token.actor.data.data.attributes[shieldprop].value;
+
+    let template = $(`
+<div class="section">
+<div class="value"><i class="fas fa-shield-alt"></i>${ca}</div>
+</div>
+`);
+
+    if (hovered && SBOX.showshield) {
+        let canvasToken = canvas.tokens.placeables.find((tok) => tok.id === token.data._id);
+        let dmtktooltip = $(`<div class="dmtk-tooltip"></div>`);
+        dmtktooltip.css('left', (canvasToken.worldTransform.tx + ((token.width) * canvas.scene._viewPosition.scale)) + 'px');
+        dmtktooltip.css('top', (canvasToken.worldTransform.ty) + 'px');
+        dmtktooltip.html(template);
+        $('body.game').append(dmtktooltip);
+    } else {
+        $('.dmtk-tooltip').remove();
+    }
+
+});
+
+Hooks.on("createToken", (scene,token,options,userId) => {
+    let actor = game.actors.get(token.actorId);
+    if(!hasProperty(token.dataactorData,"citems"))
+        setProperty(token.actorData,"citems",actor.data.data.citems);
+
+    if(!hasProperty(token.actorData,"attributes"))
+        setProperty(token.actorData,"attributes",actor.data.data.attributes);
+});
+
+Hooks.on("deleteToken", (scene, token) => {
+    $('.dmtk-tooltip').remove();
+});
+
+Hooks.on("updateToken", async (scene, token, updatedData, options, userId) => {
+    console.log("updatingTokenActor");
+    //console.log(token.actorData);
+});
+
+
+Hooks.on("preUpdateActor", async (data, updateData) => {
+
+    if(game.settings.get("sandbox", "tokenOptions")){
+        if(updateData.data){
+            if(updateData.data.displayName){
+                data.data.token.displayName = updateData.data.displayName;
+                data.data.token.displayBars = updateData.data.displayName;
+            }
+            if(updateData.data.tokenbar1){
+                data.data.token.bar1.attribute = updateData.data.tokenbar1;
             }
         }
 
-        if(changed)
-            this.updatePanels();
+        if(updateData.img){
+            updateData["token.img"] = updateData.img;
+            data.data.token.img = updateData.img;
+        }
     }
 
-    async _onDrop(event) {
-        //Initial checks
+
+
+
+});
+
+Hooks.on("preCreateToken", async (scene, tokenData, options, userId) =>{
+    //console.log(tokenData);
+
+    if(game.settings.get("sandbox", "tokenOptions")){
+        const sameTokens = game.scenes.get(scene.id).data.tokens.filter(e => e.actorId === tokenData.actorId) || [];
+        let tokennumber = 0;
+        if (sameTokens.length !== 0) { 
+            tokennumber = sameTokens.length + 1;
+        }
+
+        if(tokennumber!=0){
+            tokenData.name += " " + tokennumber;
+        }
+    }
+
+
+});
+
+Hooks.on('createCombatant', (combat, combatantId, options) => {
+    combatantId.initiative=1;
+});
+
+Hooks.on("preCreateActor", (createData) =>{
+    if(createData.token!=null)
+        createData.token.name = createData.name;
+
+});
+
+Hooks.on("deleteActor", (actor) =>{
+    //console.log(actor);
+
+});
+
+Hooks.on("updateActor", async (actor, updateData,options,userId) => {
+
+    //console.log("updatingactor");
+    //console.log(actor);
+    //console.log(updateData);
+    if(updateData){
+
+        actor.data.flags.lastupdatedBy = await userId;
+        //actor.data.flags.haschanged = true;
+    }
+    else{
+        //actor.data.flags.haschanged = false;
+        //console.log("not changed");
+    }
+
+    if(game.settings.get("sandbox", "tokenOptions")){
+        if(actor.data.token.name!=actor.data.name){
+            actor.data.token.name = actor.data.name;
+            actor.data.token.displayName = actor.data.data.displayName;
+            actor.data.token.displayBars = actor.data.data.displayName;
+            actor.data.token.bar1.attribute = actor.data.data.tokenbar1;
+            actor.update({"token":actor.data.token},{diff:false});
+        }
+    }
+
+
+    //console.log("updated");
+
+});
+
+Hooks.on("closegActorSheet", (entity, eventData) => {
+    //console.log(entity);
+    //console.log(eventData);
+
+    let character = entity.object.data;
+    if(character.flags.ischeckingauto)
+        character.flags.ischeckingauto=false;
+
+    //entity.object.update({"token":entity.object.data.token},{diff:false});
+
+
+});
+
+Hooks.on("preCreateItem", (entity, options, userId) => {
+    let image="";
+    if(!entity.img){
+        if(entity.type=="cItem"){
+            image="systems/sandbox/docs/icons/sh_citem_icon.png";
+        }
+
+        if(entity.type=="sheettab"){
+            image="systems/sandbox/docs/icons/sh_tab_icon.png";
+        }
+
+        if(entity.type=="group"){
+            image="systems/sandbox/docs/icons/sh_group_icon.png";
+        }
+
+        if(entity.type=="panel"){
+            image="systems/sandbox/docs/icons/sh_panel_icon.png";
+        }
+
+        if(entity.type=="multipanel"){
+            image="systems/sandbox/docs/icons/sh_panel_icon.png";
+        }
+
+        if(entity.type=="property"){
+            image="systems/sandbox/docs/icons/sh_prop_icon.png";
+        }
+
+        if(image!="")
+            entity.img = image;
+    }
+
+
+
+});
+
+Hooks.on("createItem", (entity) => {
+    let do_update=false;
+    let image="";
+    if(entity.type=="cItem"){
+        //console.log(entity);
+        for(let i=0;i<entity.data.data.mods.length;i++){
+            const mymod=entity.data.data.mods[i];
+            if(mymod.citem!=entity.data._id){
+                mymod.citem = entity.data._id;
+                do_update=true;
+            }
+
+        }
+
+        if(do_update)
+            entity.update();
+    }
+
+});
+
+Hooks.on("updateItem", (entity) => {
+
+    let do_update=false;
+    if(entity.type=="cItem"){
+        //console.log(entity);
+        for(let i=0;i<entity.data.data.mods.length;i++){
+            const mymod=entity.data.data.mods[i];
+            if(mymod.citem!=entity.data._id){
+                mymod.citem = entity.data._id;
+                do_update=true;
+            }
+
+        }
+        if(do_update)
+            entity.update();
+    }
+});
+
+Hooks.on("closesItemSheet", (entity, eventData) => {
+    let item = entity.object.data;
+    //console.log("closing");
+    setProperty(item.flags,"rerender",true);
+
+});
+
+Hooks.on("rendersItemSheet", (app, html, data) => {
+    //console.log(html[0].outerHTML);
+
+    if(app.object.data.type == "cItem"){
+        app.refreshCIAttributes(html);
+    }
+
+    app.scrollBarTest(html);
+
+    html.find('.window-resizable-handle').mouseup(ev => {
         event.preventDefault();
-        event.stopPropagation();
-        let dropitem;
-        let dropmod = false;
-        let modId;
-        if(event.toElement.classList.contains("itemdrop-area")){
-            console.log("dropping on mod");
-            dropmod = true;
-            modId = event.toElement.getAttribute("mod");
-        }
+        app.scrollBarTest(html);
+    });
 
-        else if(event.target.parentElement.classList.contains("itemdrop-area")){
-            console.log("NOT dropping on mod");
-            dropmod = true;
-            modId = event.target.parentElement.getAttribute("mod");
-        }
+});
 
-        let dropmodcitem=false;
+Hooks.on("rendergActorSheet", async (app, html, data) => {
+    //console.log("rendering");
+    //console.log(app);
+    //console.log(data);
+    const actor = app.actor;
+    let _html = await app.getTemplateHTML(html);
 
-        try {
-            let dropdata = JSON.parse(event.dataTransfer.getData('text/plain'));
-            dropitem = game.items.get(dropdata.id);
+    if(actor.data.data.istemplate && hasProperty(actor.data.data,"_html")){
+        html = actor.data.data._html;
+    }
+    else{
+        html = $(_html);
+    }
 
-            let acceptableObj="";
-            if(this.item.data.type=="panel" || this.item.data.type=="group"){
-                acceptableObj = "property";
-            }
+    if(actor.data.flags.lastupdatedBy==null){
+        actor.data.flags.lastupdatedBy = game.user._id;
+        actor.data.flags.haschanged = true;
+    }
 
-            else if(this.item.data.type=="sheettab" || this.item.data.type=="multipanel"){
-                acceptableObj = "panel";
-            }
+    if(actor.data.flags.lastupdatedBy == game.user._id && actor.data.flags.haschanged){
+        if(!app.actor.data.flags.ischeckingauto)
+            app.actor.actorUpdater(data);
 
-            //else if(this.item.data.type=="cItem" && !this.item.data.data.isUnique){
-            else if(this.item.data.type=="cItem"){
-                acceptableObj = "group";
-            }
+    }
 
-            else if(this.item.data.type=="property" && this.item.data.data.datatype=="table"){
-                acceptableObj = "group";
-            }
+    actor.listSheets();
+    if(!actor.data.data.istemplate){
+        app.refreshCItems(html);
+        app.handleGMinputs(html);
+        app.refreshBadge(html);
+        app.populateRadioInputs(html);
+        app.scrollBarTest(html);
+        actor.setInputColor();
 
-            else{
-                console.log("object not allowed");
-                return false; 
-            }
+        html.find('.window-resizable-handle').mouseup(ev => {
+            event.preventDefault();
+            app.scrollBarTest(html);
+        });
+    }
 
-            if (dropitem.data.type !== acceptableObj) {
-                if(this.item.data.type=="sheettab" && (dropitem.data.type == "multipanel"||dropitem.data.type == "panel")){
+    app.displaceTabs();
 
+
+
+});
+
+Hooks.on("renderChatMessage", async (app, html, data) => {
+    //console.log(app);
+    //console.log(data);
+    //console.log(html);
+    let messageId = app.data._id;
+    let msg = game.messages.get(messageId);
+    let msgIndex = game.messages.entities.indexOf(msg);
+
+    let _html = await html[0].outerHTML;
+    let realuser = game.users.get(data.message.user);
+    //console.log(realuser);
+
+    if(_html.includes("dice-roll") && !_html.includes("table-draw")){
+        let rollData = {
+            token:{
+                img:"icons/svg/d20-black.svg",
+                name:"Free Roll"
+            },
+            actor:realuser.data.name,
+            flavor: "Roll",
+            formula: app._roll.formula,
+            mod: 0,
+            result: app._roll.total,
+            dice: app._roll.dice,
+            user: realuser.data.name
+        };
+
+        await renderTemplate("systems/sandbox/templates/dice.html", rollData).then(async newhtml => {
+
+            let container = html[0];
+
+            let content = html.find('.dice-roll');
+            content.replaceWith(newhtml);
+
+            _html = await html[0].outerHTML;
+
+
+        });
+
+    }
+
+    //console.log(html);
+
+    if(!_html.includes("roll-template")){
+        let containerDiv = document.createElement("DIV");
+
+        let headerDiv = document.createElement("HEADER");
+        let headertext = await fetch("systems/sandbox/templates/sbmessage.html").then(resp => resp.text());
+        headerDiv.innerHTML = headertext;
+
+        let msgcontent = html;
+        let messageDiv = document.createElement("DIV");
+        messageDiv.innerHTML = msgcontent;
+
+        containerDiv.appendChild(headerDiv);
+        containerDiv.appendChild(messageDiv);
+
+        html = headerDiv;
+    }
+
+    //ROLL INSTRUCTIONS
+
+
+    let header = $(html).find(".message-header");
+    header.remove();
+    //console.log("tirando");
+    let detail = await $(html).find(".roll-detail")[0];
+    let result = $(html).find(".roll-result")[0];
+    let clickdetail = $(html).find(".roll-detail-button")[0];
+    let clickmain = $(html).find(".roll-main-button")[0];
+
+    if(detail == null){
+
+        return;
+
+    }
+
+    if(result==null){
+        return;
+    }
+
+    if(clickdetail==null){
+        return;
+    }
+
+    if(clickmain==null){
+
+        return;
+    }
+
+    let detaildisplay = detail.style.display;
+    detail.style.display = "none";
+
+    let resultdisplay = result.style.display;
+
+
+    let clickdetaildisplay = clickdetail.style.display;
+
+    let clickmaindisplay = clickmain.style.display;
+    clickmain.style.display = "none";
+
+
+    $(html).find(".roll-detail-button").click(ev => {
+        detail.style.display = detaildisplay;
+        result.style.display = "none";
+        $(html).find(".roll-detail-button").hide();
+        $(html).find(".roll-main-button").show();
+    });
+
+    $(html).find(".roll-main-button").click(ev => {
+        result.style.display = resultdisplay;
+        detail.style.display = "none";
+        $(html).find(".roll-detail-button").show();
+        $(html).find(".roll-main-button").hide();
+    });
+
+
+
+    if(game.user.isGM){
+        $(html).find(".roll-message-delete").click(async ev => {
+            msg.delete();
+        });
+        auxMeth.rollToMenu();
+    }
+
+
+});
+
+Hooks.on("renderDialog",(app,html,data)=>{
+    const htmlDom = html[0];
+
+    if (app.data.citemdialog){
+
+        let checkbtns = htmlDom.getElementsByClassName("dialog-check");
+        let dialogDiv = htmlDom.getElementsByClassName("item-dialog");
+        let button = htmlDom.getElementsByClassName("dialog-button")[0];
+
+        let actorId = dialogDiv[0].getAttribute("actorId");
+        let selectnum = dialogDiv[0].getAttribute("selectnum");
+        const actor = game.actors.get(actorId);
+        setProperty(actor.data.flags,"selection",[]);
+        button.disabled=true;
+
+        for(let i=0;i<checkbtns.length;i++){
+            let check = checkbtns[i];
+            check.addEventListener("change", (event) => {
+
+                let itemId = event.target.getAttribute("itemId");
+                if(event.target.checked){
+                    actor.data.flags.selection.push(itemId);
                 }
-
-                else if(this.item.data.type=="cItem" && dropitem.data.type == "cItem" && dropmod){
-                    dropmodcitem=true;
-                    await this.addItemToMod(modId,dropitem.data._id);
-                }
-                //TODO- IF YOU THINK YOURSELF PRO, HELP ME PUT MULTIPANELS INTO MULTIPANELS XD
 
                 else{
-                    console.log("object not allowed");
-                    return false;
+                    actor.data.flags.selection.splice(actor.data.flags.selection.indexOf(itemId),1);
                 }
 
-            }
+                let selected = actor.data.flags.selection.length;
 
-
-        }
-        catch (err) {
-            console.log("ItemCollection | drop error")
-            console.log(event.dataTransfer.getData('text/plain'));
-            console.log(err);
-            return false;
-        }
-
-        this.scrollbarSet();
-
-        if(dropmodcitem)
-            return;
-
-        let keyCode = this.getitemKey(dropitem.data);
-        let itemKey = dropitem.data.data[keyCode];
-        const itemData = this.item.data.data;
-        //console.log(itemKey + " " + keyCode);
-        let newItem = {}
-        setProperty(newItem,itemKey,{});
-        newItem[itemKey].id=dropitem.data._id;
-        newItem[itemKey].name=dropitem.data.name;
-        newItem[itemKey].ikey=itemKey;
-        if(this.item.data.type=="group" && dropitem.data.type == "property"){
-            newItem[itemKey].isconstant=true;
-        }
-        //console.log(newItem);
-
-        if(this.item.data.type!="property" && this.item.data.data.datatype!="table"){
-            //Add element id to panel
-            const subitems = this.getsubItems();
-
-            for (let i=0;i<subitems.length;i++) {
-                if (subitems[i].id == dropitem.data._id) {
-                    return;
+                if(selected!=selectnum){
+                    button.disabled=true;
                 }
-            }
-
-            await subitems.push(newItem[itemKey]);
-
-            if(this.item.data.type=="cItem" && dropitem.data.type == "group" && dropitem.data.data.isUnique){
-                itemData.isUnique=true;
-                itemData.uniqueGID=dropitem.data._id;
-                await this.item.update({"data": itemData}, {diff: false}); 
-            }
-
-            else{
-                await this.updateLists(subitems);
-            }
-
-
-
-        }
-
-        else{
-            const myitem = this.item.data.data;
-            myitem.group.id = dropitem.data._id;
-            //TODO --- No sería Title?
-            myitem.group.name = dropitem.data.name;
-            myitem.group.ikey = itemKey;
-
-            await this.item.update({"data.group": myitem.group}, {diff: false}); 
-        }
-
-    }
-
-    getsubItems(){
-
-        let subitems;
-
-        if(this.item.data.type=="panel"|| this.item.data.type=="group"){
-            subitems = this.item.data.data.properties;
-        }
-
-        else if(this.item.data.type=="sheettab" || this.item.data.type=="multipanel"){
-            subitems = this.item.data.data.panels; 
-        }
-
-        else if(this.item.data.type=="cItem"){
-            subitems = this.item.data.data.groups; 
-        }
-
-        return subitems;
-    }
-
-    getitemKey(itemdata){
-
-        let objKey;
-        //console.log(itemdata.type);
-        if(itemdata.type=="property"){
-            objKey = "attKey";
-        }
-
-        else if(itemdata.type=="panel" || itemdata.type=="multipanel"){
-            objKey = "panelKey";
-        }
-
-        else if(itemdata.type=="group"){
-            objKey = "groupKey";
-        }
-
-        return objKey;
-    }
-
-    async updateLists(subitems){
-        if(this.item.data.type=="panel"|| this.item.data.type=="group"){
-            await this.item.update({"data.properties": subitems}, {diff: false});
-        }
-
-        else if(this.item.data.type=="sheettab" || this.item.data.type=="multipanel"){
-            await this.item.update({"data.panels": subitems}, {diff: false}); 
-        }
-
-        else if(this.item.data.type=="cItem"){
-            await this.item.update({"data.groups": subitems}, {diff: false}); 
-        }
-
-        return subitems;
-    }
-
-    async checkStillUnique(){
-        let isUnique = false;
-        const groups = this.item.data.data.groups;
-        for(let j=groups.length-1;j>=0;j--){
-            let groupId = groups[j].id;
-            let groupObj = game.items.get(groupId);
-
-            //Checks if group still exist
-            if(groupObj!=null){
-                if(groupObj.data.data.isUnique){
-                    isUnique = true;
-                } 
-            }
-            else{
-                groups.splice(j,1);
-            }
-
-        }
-        //console.log(isUnique);
-        if(isUnique){
-            if(!this.item.data.data.isUnique){
-                this.item.data.data.isUnique=true;
-            }
-        }
-        else{
-            if(this.item.data.data.isUnique){
-                this.item.data.data.isUnique = false;
-            }
-        }
-    }
-
-    async refreshCIAttributes(basehtml){
-        console.log("updating CItem attr");
-
-        const html = await basehtml.find(".attribute-list")[0];
-        html.innerHTML = '';
-
-        let attrArray = [];
-        let tosave = false;
-
-        const attributes = this.item.data.data.attributes;
-        const groups = this.item.data.data.groups;
-        for(let j=groups.length-1;j>=0;j--){
-            let groupId = groups[j].id;
-            let propObj = game.items.get(groupId);
-
-            if(propObj!=null){
-                let propertyIds = propObj.data.data.properties;
-
-                for(let i=propertyIds.length-1;i>=0;i--){
-                    let propertyId = propertyIds[i].id;
-                    let ppObj = game.items.get(propertyId);
-
-                    if(ppObj!=null){
-                        if(!ppObj.data.data.ishidden || game.user.isGM){
-                            let property = ppObj.data.data;
-
-                            let new_container = document.createElement("DIV");
-                            new_container.className = "new-row";
-                            new_container.setAttribute("id", "row-" + i);
-
-                            let new_row = document.createElement("DIV");
-                            new_row.className = "flexblock-left";
-                            new_row.setAttribute("id", i);
-
-                            if(property.datatype!="group" && property.datatype!="label"){
-
-
-
-                                let label = document.createElement("H3");
-                                label.className = "label-free";
-                                label.textContent = property.tag;
-
-                                let input;
-
-                                if(!hasProperty(attributes,property.attKey)){
-                                    setProperty(attributes,property.attKey, {});
-                                    if(property.datatype==="simplenumeric"){
-                                        attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,false); 
-                                    }
-
-                                    else{
-                                        attributes[property.attKey].value = await auxMeth.autoParser(property.defvalue,null,attributes,true); 
-                                    }
-
-                                    tosave = true;
-                                }
-
-                                const attribute = attributes[property.attKey];
-
-                                if(attribute.value=="" || attribute.value==null){
-                                    if(property.datatype==="simplenumeric"){
-                                        attribute.value = 0;
-                                    }
-                                    else{
-                                        attribute.value = property.defvalue;
-                                    }
-                                }
-
-                                if(property.datatype!="list"){
-                                    //console.log("editando");
-
-                                    if(property.datatype=="textarea"){
-                                        input = document.createElement("TEXTAREA");
-                                        input.setAttribute("name", property.attKey);
-                                        input.textContent = attribute.value;
-
-                                        if(property.inputsize=="S"){
-                                            input.className = "texteditor-small";
-                                        }
-
-                                        else if(property.inputsize=="L"){
-                                            input.className = "texteditor-large";
-                                        }
-                                        else{
-                                            input.className = "texteditor-med";
-                                        }
-                                    }
-                                    else{
-                                        input = document.createElement("INPUT");
-                                        input.setAttribute("name", property.attKey);
-
-
-
-                                        if(property.datatype==="simplenumeric"){
-
-                                            input.setAttribute("type", "number");
-                                            input.className = "input-smallmed";
-
-
-                                            if(property.auto!="" && property.auto!=null){
-                                                let atvalue = await auxMeth.autoParser(property.auto,null,attributes,false);
-                                                input.setAttribute("value", atvalue);
-                                                input.setAttribute("readonly", "true"); 
-                                            }
-                                            else{
-                                                input.setAttribute("value", attribute.value);
-                                            }
-
-                                        }
-                                        else if(property.datatype==="simpletext"){
-                                            input.setAttribute("type", "text");
-                                            input.className = "input-med";
-                                            input.setAttribute("value", attribute.value);
-                                        }
-
-                                        else if(property.datatype==="checkbox"){
-                                            input.setAttribute("type", "checkbox");
-                                            let setvalue = false;
-                                            console.log(attribute.value);
-                                            if(attribute.value==true || attribute.value=="true"){
-                                                setvalue = true;
-                                            }
-                                            console.log(setvalue);
-                                            input.checked = setvalue;
-                                        }
-                                    }
-
-                                }
-                                //LIST
-                                else{
-                                    input = document.createElement("SELECT");
-                                    input.className = "input-med";
-                                    input.setAttribute("name", property.attKey);
-                                    var rawlist = property.listoptions;
-                                    var listobjects = rawlist.split(',');
-
-                                    for(var n=0;n<listobjects.length;n++){
-                                        let n_option = document.createElement("OPTION");
-                                        n_option.setAttribute("value", listobjects[n]);
-                                        n_option.textContent = listobjects[n];
-                                        if(listobjects[n]==attribute.value)
-                                            n_option.setAttribute("selected", 'selected');
-
-                                        input.appendChild(n_option);
-                                    }
-
-                                }
-
-                                input.className += " att-input";
-                                input.addEventListener("change", (event) => this.updateFormInput(event.target.name,event.target.value,propertyId));
-
-                                if(!game.user.isGM){
-                                    input.setAttribute("readonly", "true");
-                                }
-
-                                await new_row.appendChild(label);
-                                if(property.datatype!="label")
-                                    await new_row.appendChild(input);
-
-                                await new_container.appendChild(new_row);
-                                await html.appendChild(new_container);
-
-                            }
-                        }
-
-                    }
-
-                    else{
-                        propertyIds.splice(i,1);
-                    }
-
-
-
+                else{
+                    button.disabled=false;
                 }
-            }
 
-            else{
-                groups.splice(j,1);
-            }
-
+            });
         }
-        //console.log(html);
-        if(tosave){
-            this.item.update({"data.attributes": attributes}, {diff: false});
-        }
-
-
     }
 
-    async updateFormInput(name, value,propId){
-        //console.log(value);
-        let setvalue;
+    if(app.data.citemText){
 
-        let propObj = await game.items.get(propId);
-        if(propObj.data.data.datatype =="checkbox"){
-            setvalue = true;
-            let attKey = [propObj.data.data.attKey];
+        htmlDom.addEventListener("keydown", function (event) {
+            event.stopPropagation();
+        }, true);
 
-            let currentvalue = this.item.data.data.attributes[attKey].value;
+        let t_area = htmlDom.getElementsByClassName("texteditor-large");
+        //console.log(t_area);
+        t_area[0].addEventListener("change", (event) => {
+            app.data.dialogValue = event.target.value;
 
-            if(currentvalue==true || currentvalue=="true"){
-                setvalue=false; 
-            }
-
-            this.item.data.data.attributes[propObj.data.data.attKey].value = setvalue;
-
-        }
-
-        else{
-            setvalue=value;
-            this.item.data.data.attributes[propObj.data.data.attKey].value=setvalue; 
-
-        }
-
-        //await this.item.update({[`data.attributes.${name}.value`]:setvalue});
-        await this.item.update({"data.attributes":this.item.data.data.attributes},{diff:false});
+        });
     }
+});
 
 
-    async adnewCIMod(){
-        const mods = this.item.data.data.mods;
-
-        let newindex = mods.length-1;
-        if (newindex<0){
-            newindex=0;
-        }
-        else{
-
-            newindex = mods[mods.length-1].index+1;
-        }
-
-        let newMod = {};
-        newMod.name= "New Mod";
-        newMod.index = newindex;
-        newMod.type= "ADD";
-        newMod.attribute= "";
-        newMod.selectnum= "";
-        newMod.items= [];
-        newMod.citem = this.item.data._id;
-
-
-        await mods.push(newMod);
-
-        await this.item.update({"data.mods": mods}, {diff: false});
-
-        console.log(mods);
-    }
-
-    editmodInput(index,name,value){
-        const mods = this.item.data.data.mods;
-        const obj = mods[index];
-        obj[name] = value;
-
-        this.item.update({"data.mods": mods}, {diff: false});
-    }
-
-    async deletemodInput(index){
-        const mods = this.item.data.data.mods;
-        mods.splice(index,1);
-        await this.scrollbarSet();
-
-        this.item.update({"data.mods": mods}, {diff: false});
-    }
-
-    addItemToMod(modId,citemId){
-        const mods = this.item.data.data.mods;
-        const mod = mods[modId];
-        let citem = game.items.get(citemId);
-        let arrayItem ={};
-        arrayItem.id = citemId;
-        arrayItem.name = citem.name;
-
-        if(!mod.items.includes(citemId))
-            mod.items.push(arrayItem);
-        this.item.update({"data.mods": mods}, {diff: false});
-    }
-
-    async scrollBarTest(basehtml){
-        const wcontent = await this._element[0].getElementsByClassName("window-content");
-        let newheight = parseInt(wcontent[0].offsetHeight) - 152;
-
-        const html = await basehtml.find(".scrollable");
-        for(let i=0;i<html.length;i++){
-            let scrollNode = html[i];
-            scrollNode.style.height = newheight + "px";
-
-            if(scrollNode.classList.contains("active")){
-                let thisuser = game.user._id;
-                scrollNode.scrollTop = this.item.data.flags.scrolls[thisuser];
-            }
-
-        }
-
-    }
-
-    async scrollbarSet(){
-        let scrolls = this._element[0].getElementsByClassName("scrollable");
-        let scrollTop = 0;
-        for(let i=0;i<scrolls.length;i++){
-            if(scrolls[i].classList.contains("active")){
-                scrollTop = await scrolls[i].scrollTop;
-            }
-
-        }
-
-        setProperty(this.item.data.flags.scrolls,game.user._id,scrollTop);
-    }
-
-    /** @override */
-    _updateObject(event, formData) {
-
-        this.scrollbarSet();
-
-        super._updateObject(event, formData);
-
-    }
-}
