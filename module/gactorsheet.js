@@ -2333,7 +2333,17 @@ export class gActorSheet extends ActorSheet {
                                                 }
 
                                                 if(propdata.auto!=""){
-                                                    cellvalue.value = await auxMeth.autoParser(propdata.auto,attributes,ciObject.attributes,false);
+                                                    let rawvalue = await auxMeth.autoParser(propdata.auto,attributes,ciObject.attributes,false);
+
+                                                    if(isNaN(rawvalue)){
+
+                                                        let afinal = new Roll(rawvalue).roll();
+                                                        if(!isNaN(afinal.total))
+                                                            rawvalue = afinal.total;
+
+                                                    }
+
+                                                    cellvalue.value =rawvalue;
 
                                                     if(ciObject.attributes[propKey].value!=cellvalue.value){
                                                         this.saveNewCIAtt(ciObject.id,groupprops[k].id,cellvalue.value);
