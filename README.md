@@ -4,15 +4,24 @@ Build any system, without coding a single line in Javascript.
 
 ## Important
 
-This system has been developed by me, Seregras (IsmaGM), after extensive hours of brain damage caused by thinking too much. If you like this system, please consider helping me promote ttrpgs in Spanish speaking countries by subscribing to my Youtube/Twitch channels below, or sharing them on social networks. Please consider helping me even if you don't speak Spanish, because I really want my favourite hobby to be generally seen in Spain & Latinamerica as it is actually seen in English speaking countries:
+This system has been developed by me, Seregras (IsmaGM), after extensive hours of brain damage caused by thinking too much. If you like this system, please consider helping me by:
+
+A) Subscribing to my Patreon here [PATREON](https://www.patreon.com/seregras?fan_landing=true)
+
+Only 3.5$ get you the following perks:
+- Access to WIP versions where you can test changes before they get publicly released
+- Voting power for functionalities, changes, and suggestions
+- Priority for bugs/worlds resolution. If you are a patron, I will try to answer you asap and look at your world/system.
+
+B) Promoting ttrpgs in Spanish speaking countries by subscribing to my Youtube/Twitch channels below, or sharing them on social networks. Please consider helping me even if you don't speak Spanish, because I really want my favourite hobby to be generally seen in Spain & Latinamerica as it is actually seen in English speaking countries:
 
 [Rol NL - Youtube](https://www.youtube.com/c/RolNL)
 
 [Rol NL - Twitch](https://www.twitch.tv/rolnl)
 
-Also, consider donating if you want to help me, I will have to work a lot if we want to improve this:
+C) Donating. You can do it Through:
 
-[Rol NL - Donate](https://streamlabs.com/rolnl/tip)
+[Donate](https://streamlabs.com/rolnl/tip)
 
 ## Disclaimer
 I am not a programmer. I am just a poor chemical engineer, and a big fan of ttrpgs. So yes, the code might look like Chaos (which is fine, I am a Tzeench follower myself). It might be difficult to understand why I structured things this way, and there might be a better way of organising it, I know. Just bear with me, if you tell me how and help me, we can all get a great version of Sandbox. If you need clarification, just ask me, I am @Seregras in the Foundry discord channel.
