@@ -655,7 +655,7 @@ export class auxMeth {
 
                     final.roll();
 
-                    if(isNaN(final.total)||final.total==null||!final.total)
+                    if(isNaN(final.total)||final.total==null||final.total===false)
                     {
                         toreturn = expr;
                     }
