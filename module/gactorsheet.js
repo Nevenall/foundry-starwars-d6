@@ -2335,7 +2335,7 @@ export class gActorSheet extends ActorSheet {
                                                 if(propdata.auto!=""){
                                                     let rawvalue = await auxMeth.autoParser(propdata.auto,attributes,ciObject.attributes,false);
 
-                                                    if(isNaN(rawvalue)){
+                                                    if(isNaN(rawvalue) && propdata.datatype != "simpletext"){
 
                                                         let afinal = new Roll(rawvalue).roll();
                                                         if(!isNaN(afinal.total))
