@@ -844,13 +844,15 @@ export class gActor extends Actor{
 
                     let value =mod.value;
                     let finalvalue=value;
-                    if(isNaN(value)){
-                        if(value.charAt(0)=="|"){
-                            value = value.replace("|","");
-                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
-                        }
-                        else{
-                            finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,citem.number);
+                    if(value!=null){
+                        if(isNaN(value)){
+                            if(value.charAt(0)=="|"){
+                                value = value.replace("|","");
+                                finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
+                            }
+                            else{
+                                finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,citem.number);
+                            }
                         }
                     }
 
@@ -1355,6 +1357,7 @@ export class gActor extends Actor{
         }
 
         //Preparsing TO CHECK IF VALID!!!
+        //console.log(rollexp);
         if(rollexp.includes("!("))
             rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,false,false,number);
 
