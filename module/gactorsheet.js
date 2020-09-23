@@ -1240,7 +1240,24 @@ export class gActorSheet extends ActorSheet {
                                 }
 
                                 else {
-                                    hCell.className ="input-med";
+                                  if(propTable.data.data.labelsize=="F"){
+                                    hCell.className = "label-free";
+                                  }
+                                  else if(propTable.data.data.labelsize=="S"){
+                                    hCell.className = "label-small";
+                                  }
+                                  else if(propTable.data.data.labelsize=="L" && propTable.data.data.inputsize=="M"){
+                                    hCell.className = "label-medlarge";
+                                  }
+                                  else if(propTable.data.data.labelsize=="L" && propTable.data.data.inputsize=="L"){
+                                    hCell.className = "label-big";
+                                  }
+                                  else if(propTable.data.data.labelsize=="L"){
+                                    hCell.className = "label-large";
+                                  }
+                                  else {
+                                    hCell.className = "label-med";
+                                  }
                                 }
 
                                 hCell.textContent = propTable.data.data.tag;
