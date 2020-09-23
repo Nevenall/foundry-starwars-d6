@@ -1156,6 +1156,17 @@ export class gActor extends Actor{
                     actorAtt.max = parseInt(actorAtt.max);
                 }
 
+                if(property.data.data.datatype=="checkbox"){
+
+                    if(actorAtt.value==="false"){
+                        actorAtt.value = false;
+                    }
+
+                    else{
+                        actorAtt.value = true;
+                    }
+                }
+
             }
 
             else{
