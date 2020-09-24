@@ -965,8 +965,10 @@
 }
 
 .sandbox.sheet th.input-free {
+    display: flex;
     width:100%;
     text-align: left;
+    padding: 5px 5px;
 
 }
 
