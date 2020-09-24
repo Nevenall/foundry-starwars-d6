@@ -1162,7 +1162,7 @@ export class gActor extends Actor{
                         actorAtt.value = false;
                     }
 
-                    else{
+                    if(actorAtt.value==="true"){
                         actorAtt.value = true;
                     }
                 }
