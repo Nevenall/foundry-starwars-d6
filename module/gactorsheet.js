@@ -1197,9 +1197,12 @@ export class gActorSheet extends ActorSheet {
 
                     //Add name ta
                     if(property.data.onlynames=="DEFAULT" || property.data.onlynames=="ONLY_NAMES"){
+                        if (!property.data.nameColumn) {
+                            property.data.nameColumn = "Item";
+                        }
                         let hnameCell = deftemplate.createElement("TH");
                         hnameCell.className = "input-free";
-                        hnameCell.textContent = "Item";
+                        hnameCell.textContent = property.data.nameColumn;
                         header_row.appendChild(hnameCell);
                     }
 
