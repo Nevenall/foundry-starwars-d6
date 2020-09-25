@@ -643,6 +643,8 @@ export class gActor extends Actor{
             //console.log(attdata.name + " " + attdata.value + " isset " + attdata.isset);
             setProperty(attdata,"isset",false);
             setProperty(attdata,"default",false);
+            setProperty(attdata,"autoadd",0);
+            setProperty(attdata,"maxadd",0);
             attributearray.push(attribute);
         }
 
@@ -1008,9 +1010,14 @@ export class gActor extends Actor{
                             _mod.exec=true;
                             _mod.value=finalvalue;
                             _mod.attribute=mod.attribute;
-                            myAtt.isset = true;
 
-                            myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
+                            //myAtt.isset = true;
+                            //myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
+
+                            if(attProp=="value")
+                                myAtt["autoadd"] += Number(finalvalue);
+                            if(attProp=="max")
+                                myAtt["maxadd"] += Number(finalvalue);
 
                             if(attProp=="value" && myAtt.max!="" && seedprop.data.data.automax!=""){
                                 //console.log("changemax");
@@ -1031,12 +1038,17 @@ export class gActor extends Actor{
 
                                 if(!myAtt.default && _mod.exec && !citem.ispermanent){
                                     //console.log("removing mod");
-                                    myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
+                                    //myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
+                                    ithaschanged = true;
+                                    if(attProp=="value")
+                                        myAtt["autoadd"] -=Number(finalvalue);
+                                    if(attProp=="max")
+                                        myAtt["maxadd"] -=Number(finalvalue);
                                     ithaschanged = true;
                                 }
 
                                 _mod.exec=false;
-                                myAtt.isset = false;
+                                //myAtt.isset = false;
 
                             }
                         }
@@ -1268,12 +1280,14 @@ export class gActor extends Actor{
                         actorAtt.default= true;
 
                         actorAtt.value = newvalue;
+                        actorAtt.value = Number(newvalue) + Number(actorAtt.autoadd);
                         //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
                     }
 
                     if(property.data.data.automax !==""){
                         rawexp = property.data.data.automax;
                         let maxval = await auxMeth.autoParser(rawexp,attributes,null,false);
+                        maxval = Number(maxval) + + Number(actorAtt.maxadd);
 
                         //if(actorAtt.max!=maxval){
                         if(actorAtt.max=="" || !actorAtt.maxblocked){
