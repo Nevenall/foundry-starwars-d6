@@ -1280,14 +1280,16 @@ export class gActor extends Actor{
                         actorAtt.default= true;
 
                         actorAtt.value = newvalue;
-                        actorAtt.value = Number(newvalue) + Number(actorAtt.autoadd);
+                        if(property.data.data.datatype!="simpletext")
+                            actorAtt.value = Number(newvalue) + Number(actorAtt.autoadd);
                         //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
                     }
 
                     if(property.data.data.automax !==""){
                         rawexp = property.data.data.automax;
                         let maxval = await auxMeth.autoParser(rawexp,attributes,null,false);
-                        maxval = Number(maxval) + + Number(actorAtt.maxadd);
+                        if(property.data.data.datatype!="simpletext")
+                            maxval = Number(maxval) + + Number(actorAtt.maxadd);
 
                         //if(actorAtt.max!=maxval){
                         if(actorAtt.max=="" || !actorAtt.maxblocked){
