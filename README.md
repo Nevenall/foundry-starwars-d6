@@ -329,6 +329,16 @@ There is a list of functions to use with roll expressions. Now you will hate me 
 ![Referring cItem attribute](docs/images/tuto40.png)
 
 - if[expression:compared_value,return_iftrue,return_iffalse]: very useful expression especially for text attributes. Let's say you have a system in which you want to check if the attribute called "ismagical" of a specific cItem is true, and in case it is you want to return 2 to the roll chat. So the expression you need is [#{ismagical}:true,2,0]
+    
+NOTE: Thanks to our friend @H3ls1 now If can accept nested expressions. The following are the expressions:
+    + Single IF with no ANDs no ORs --> if\[Field:condition,true_value, false_value\]
+    + Single IF with ORs only --> if\[FIELD1:COND1 OR FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value\] 
+    + Single IF with ANDs only --> if\[FIELD1:COND1 AND FIELD2:COND2 AND....FIELDn:CONDn,true_value, false_value\]
+    + Single IF with ANDs and ORs (it always execute first ANDs) --> if\[FIELD1:COND1 AND FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value\] 
+    + Nested IFs with or without ANDs and ORs (it works with the same logic as before)
+    Example without ANDs and ORs if\[F:C,true_value,ELSE if\[F:C, true_value, ELSE if\[F:C,true_value,false_Value\]\]\].....
+    Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, true_value,ELSE if\[F:C AND F4:C4,true_value,false_Value\]\]\]
+    
 - --cItem_attribute_name--: This function returns the value of a cItem attribute if you pase the attribute's Key to it. Lets imagine we set Torch (the cItem created earlier as an example) as a CONSUMABLE MOD and fill the Roll Options fields. If we set its roll expression as "1d6 + --weight--" it will roll to chat 1d6 plus the value of its Weight attribute (remember we defined it as part of the Group object).
 - __ Actor_attribute_name __: This function returns the value of an Actor attribute if you pase the attribute's Key to it. Imagine you have a list type Property of Key "selectedskill" on your character sheet, and this list has as options all the available skills in the system (i.e: climb, deception, swim, etc). You want to make this property rollable, and when clicked you want the sheet to roll 1d6+the value of the selected skill. You need then to reference the skills (which are attributes), so you can do this with "1d6 + __ @{selectedskill} __" . How does this work? When you select, let's say the "climb" option, this function will return __ climb __, that is equivalent to @{climb}. By the way, no spaces, I just included them to avoid bold formatting here...
 - |Expression : This functions prevent Sandbox from parsing roll expressions, returning them as text. For example, lets say you just want to return to the chat "1d6", without rolling the 1d6, you just want a text saying "1d6". You then have to use |1d6 in your roll expressions.
@@ -365,6 +375,17 @@ In the _TEMPLATE folder I create 3 folders: _TABS, _PANELS, _PROPERTIES. On some
 
 Well, that's all. It can feel like chaotic and a mess, but it works. I have been creating systems, playing, and streaming them in my channel for these past 3 months, and it works great. I will do my bust to update the tool and create English tutorials as frequently as possible. Thanks for your understanding and enjoy!!
 
+## ADDITIONS
+
+Check on Game Settings>Configure Settings>System Settings
+- Show Roll with Advantage option: the 1d20 text below the Actor name will appear or not
+- Show d20 Roll icon option: the d20 icon below the actor name lets you roll an expression like in chat. This will be deprecated soon
+- Show DC window: if your system uses difficulties, mark this one and the box to fill #{diff} will appear. It requires a created scene.
+- Show Last Roll window: if ou want to have the las game roll always visible at the bottom of the screen, check this one.
+- Token options: Sandbox has some specific token options. in the Template Actor, the Token tabs lets you choose which properties do you want to display as bars, and the level of access required to see one. This checkbox in settings lets you activate these options.
+- CSS Style file: this is your custom CSS file location, to change the styling of your character sheet.
+- Initiative attribute key: if you want your initiative to be global, just include your roll initiative expression formula in the value of a simpletext property. Something like "1d20 + @{dexterity}" in a property with "initexpression" key for example. Then, in this settings field you only have to write "initexpression". You wont need to use ~init~ again and all actor will use Founry's general combat tracker roller.
+
 ## TODO LIST
 - Check release notes
 
@@ -372,5 +393,6 @@ Well, that's all. It can feel like chaotic and a mess, but it works. I have been
 - To James, Mikel, Enrique, Viletus. You guys are the best, and we together will put our hobby in the place it deserves. 
 - To Goblin Enmascarado: Thanks man, you rock, your Sandbox D&D compendium in Spanish is amazing!
 - To Dr.Slump: Thanks for the ideas and the help! You learnt this chaos too fast!
+- To H3ls1 for his great work coding!
 - The Rol NL discord community: because your support has been instrumental to achieve the objective. Thanks for your help!!
 - The Foundry discord community: for answering all my questions, I know they could sound strange XD
