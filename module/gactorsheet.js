@@ -2657,7 +2657,7 @@ export class gActorSheet extends ActorSheet {
                 value = attributes[attKey].value;
 
                 radioNode.innerHTML='';
-                console.log(value);
+                //console.log(value);
                 if(maxRadios>0){
                     for(let j=0;j<=parseInt(maxRadios);j++){
                         let radiocontainer = document.createElement('a');
@@ -2714,7 +2714,7 @@ export class gActorSheet extends ActorSheet {
         const attributes = this.actor.data.data.attributes;
         attributes[attKey].value =  clickValue;
         //await this.actor.actorUpdater(this.actor.data);
-        this.actor.update({"data.attributes":attributes}, {diff: false});
+        await this.actor.update({"data.attributes":attributes}, {diff: false});
         if(clickValue>0){
             target.className="fas fa-circle";
             target.style = "font-size:14px;";
