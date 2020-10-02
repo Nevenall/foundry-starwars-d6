@@ -145,7 +145,7 @@ export class auxMeth {
 
     static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false,number=1){
         var toreturn = expr;
-        console.log(expr);
+        //console.log(expr);
         //console.log(itemattributes);
         //console.log(number);
 
@@ -345,7 +345,7 @@ export class auxMeth {
 
         }
 
-        console.log(expr);
+        //console.log(expr);
         //PARSE SCALED AUTO VALUES
         var scaleresult = expr.match(/(?<=\%\[).*?(?=\])/g);
         if(scaleresult!=null){
