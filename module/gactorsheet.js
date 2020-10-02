@@ -1003,7 +1003,7 @@ export class gActorSheet extends ActorSheet {
                 var sInputMax;
 
                 //Set Label
-                if(property.data.haslabel && property.data.datatype!="textarea" && property.data.datatype!="table"  && property.data.datatype!="badge"){
+                if(property.data.haslabel && property.data.datatype!="table"  && property.data.datatype!="badge"){
                     //Attribute label
                     var sLabel = deftemplate.createElement("H3");
 
@@ -1198,6 +1198,7 @@ export class gActorSheet extends ActorSheet {
                     //Add name ta
                     if(property.data.onlynames=="DEFAULT" || property.data.onlynames=="ONLY_NAMES"){
                         let hnameCell = deftemplate.createElement("TH");
+                        //hnameCell.className = "input-free";
                         hnameCell.className = "label-large";
                         hnameCell.textContent = "Item";
                         header_row.appendChild(hnameCell);
@@ -1240,24 +1241,27 @@ export class gActorSheet extends ActorSheet {
                                 }
 
                                 else {
-                                  if(propTable.data.data.labelsize=="F"){
-                                    hCell.className = "label-free";
-                                  }
-                                  else if(propTable.data.data.labelsize=="S"){
-                                    hCell.className = "label-small";
-                                  }
-                                  else if(propTable.data.data.labelsize=="L" && propTable.data.data.inputsize=="M"){
-                                    hCell.className = "label-medlarge";
-                                  }
-                                  else if(propTable.data.data.labelsize=="L" && propTable.data.data.inputsize=="L"){
-                                    hCell.className = "label-big";
-                                  }
-                                  else if(propTable.data.data.labelsize=="L"){
-                                    hCell.className = "label-large";
-                                  }
-                                  else {
-                                    hCell.className = "label-med";
-                                  }
+                                    hCell.className ="input-med";
+
+                                    if(propTable.data.data.labelsize=="F"){
+                                        hCell.className = "label-free";
+                                    }
+                                    else if(propTable.data.data.labelsize=="S"){
+                                        hCell.className = "label-small";
+                                    }
+                                    else if(propTable.data.data.labelsize=="L" && propTable.data.data.inputsize=="M"){
+                                        hCell.className = "label-medlarge";
+                                    }
+                                    else if(propTable.data.data.labelsize=="L" && propTable.data.data.inputsize=="L"){
+                                        hCell.className = "label-big";
+                                    }
+                                    else if(propTable.data.data.labelsize=="L"){
+                                        hCell.className = "label-large";
+                                    }
+                                    else {
+                                        hCell.className = "label-med";
+                                    }
+
                                 }
 
                                 hCell.textContent = propTable.data.data.tag;
@@ -2246,6 +2250,10 @@ export class gActorSheet extends ActorSheet {
                                                         setvalue = true;
                                                     }
 
+                                                    if(ciObject.attributes[propKey].value===false || ciObject.attributes[propKey].value==="false"){
+                                                        ciObject.attributes[propKey].value=false;
+                                                    }
+
                                                     cellvalue.checked = setvalue;
                                                     cellvalue.setAttribute("disabled", "disabled");
                                                     //console.log("lol");
@@ -2277,7 +2285,7 @@ export class gActorSheet extends ActorSheet {
                                                 cellvalue.className = "input-small";
                                                 cellvalue.setAttribute("type", "checkbox");
                                                 let setvalue= false;
-                                                //console.log(propKey);
+                                                //console.log(ciObject.attributes[propKey].value);
                                                 if(ciObject.attributes[propKey].value===true || ciObject.attributes[propKey].value==="true"){
                                                     setvalue = true;
                                                 }
@@ -2631,7 +2639,7 @@ export class gActorSheet extends ActorSheet {
     }
 
     async populateRadioInputs(basehtml){
-        //console.log("reinput");
+        console.log("reinput");
         const html = await basehtml.find(".radio-input");
         for(let i=0;i<html.length;i++){
 
@@ -2642,33 +2650,47 @@ export class gActorSheet extends ActorSheet {
             let propId = radioNode.getAttribute("attId");
             let property = game.items.get(propId);
             let attKey = property.data.data.attKey;
+            let radiotype = property.data.data.radiotype;
 
             if(attributes[attKey]!=null){
                 let maxRadios = attributes[attKey].max;
                 value = attributes[attKey].value;
 
                 radioNode.innerHTML='';
-                //console.log(maxRadios);
+                console.log(value);
                 if(maxRadios>0){
                     for(let j=0;j<=parseInt(maxRadios);j++){
                         let radiocontainer = document.createElement('a');
                         let clickValue = j;
                         radiocontainer.setAttribute("clickValue",clickValue);
                         radiocontainer.className = "radio-element";
+                        radiocontainer.style = "font-size:14px;";
+                        if(radiotype=="S")
+                            radiocontainer.style = "font-size:16px;";
+
 
                         let radiobutton = document.createElement('i');
 
-                        if(value>=clickValue){
-                            if(j==0){
-                                radiobutton.className = "far fa-times-circle";
+                        if(j==0){
+                            radiobutton.className = "far fa-times-circle";
+                        }
+
+                        else if(value>=clickValue){
+                            radiobutton.className = "fas fa-circle";
+                            if(radiotype=="S"){
+
+                                radiobutton.className = "fas fa-square";
                             }
-                            else{
-                                radiobutton.className = "fas fa-circle";
-                            }
+
 
                         }
                         else{
                             radiobutton.className = "far fa-circle";
+                            if(radiotype=="S"){
+                                radiobutton.className = "far fa-square";
+                            }
+
+
                         }
 
                         radiocontainer.appendChild(radiobutton);
@@ -2685,15 +2707,23 @@ export class gActorSheet extends ActorSheet {
         }
     }
 
-    clickRadioInput(clickValue,propId,target){
+    async clickRadioInput(clickValue,propId,target){
         let property = game.items.get(propId);
+        let radiotype = property.data.data.radiotype;
         let attKey = property.data.data.attKey;
         const attributes = this.actor.data.data.attributes;
         attributes[attKey].value =  clickValue;
-        this.actor.actorUpdater();
-        //this.actor.update({"data.attributes":attributes}, {diff: false});
-        if(clickValue>0)
+        //await this.actor.actorUpdater(this.actor.data);
+        this.actor.update({"data.attributes":attributes}, {diff: false});
+        if(clickValue>0){
             target.className="fas fa-circle";
+            target.style = "font-size:14px;";
+            if(radiotype=="S"){
+                target.style = "font-size:16px;";
+                target.className = "fas fa-square";
+            }
+        }
+
     }
 
     displaceTabs(prev){
