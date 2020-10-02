@@ -101,17 +101,9 @@ export class auxMeth {
         });
     }
 
-    static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false,number=1){
-        var toreturn = expr;
-        //console.log(expr);
-        //console.log(itemattributes);
-        //console.log(number);
-
-        //Expression register. Recommended to avoid REgex shennanigans
+    static async regParser(expr,attributes,itemattributes){
         let regArray =[];
-        let expreg;
-        if(!noreg)
-            expreg = expr.match(/(?<=\$\<).*?(?=\>)/g);
+        let expreg = expr.match(/(?<=\$\<).*?(?=\>)/g);
         if(expreg!=null){
 
             //Substitute string for current value
@@ -148,6 +140,75 @@ export class auxMeth {
             }
         }
 
+        return expr;
+    }
+
+    static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false,number=1){
+        var toreturn = expr;
+        console.log(expr);
+        //console.log(itemattributes);
+        //console.log(number);
+
+        //Expression register. Recommended to avoid REgex shennanigans
+        let regArray =[];
+        let expreg;
+        if(!noreg)
+            expreg = expr.match(/(?<=\$\<).*?(?=\>)/g);
+        if(expreg!=null){
+
+            //Substitute string for current value
+            for (let i=0;i<expreg.length;i++){
+                let attname = "$<" + expreg[i]+ ">";
+                let attvalue="";
+
+                let regblocks = expreg[i].split(";");
+
+                let regobject = {};
+                regobject.index = regblocks[0];
+                regobject.expr = regblocks[1];
+                //console.log(regobject.expr);
+                let internalvBle = regobject.expr.match(/(?<=\$)[0-9]/g);
+                if(internalvBle!=null){
+                    for (let k=0;k<internalvBle.length;k++){
+                        let regindex = internalvBle[k];
+                        let regObj = await regArray.find(y=>y.index==regindex);
+                        let vbvalue="";
+                        if(regObj!=null)
+                            vbvalue = regObj.result;
+                        regobject.expr = regobject.expr.replace("$"+regindex,vbvalue);
+                    }
+
+                }
+                //console.log(regobject.expr);
+
+                regobject.result = await auxMeth.autoParser(regobject.expr,attributes,itemattributes,false,true);
+                await regArray.push(regobject);
+
+                expr = expr.replace(attname,attvalue);
+
+            }
+
+            let exprparse = expr.match(/(?<=\$)[0-9]/g);
+            if(exprparse!=null){
+                for (let i=0;i<exprparse.length;i++){
+                    let regindex = exprparse[i];
+
+                    let attname = "$" + regindex;
+                    let regObj = regArray.find(y=>y.index==regindex);
+
+                    let attvalue="";
+                    if(regObj!=null)
+                        attvalue = regObj.result;
+
+                    //console.log(attvalue);
+                    expr = expr.replace(attname,attvalue);
+                }
+            }
+
+        }
+
+        //console.log(expr);
+
         //Parses last roll
         if(itemattributes!=null && expr.includes("#{roll}")){
             expr=expr.replace("#{roll}",itemattributes._lastroll);
@@ -159,6 +220,7 @@ export class auxMeth {
         }
 
         //console.log(expr);
+        expr=expr.toString();
 
         //PARSE ITEM ATTRIBUTES
         var itemresult = expr.match(/(?<=\#\{).*?(?=\})/g);
@@ -283,11 +345,11 @@ export class auxMeth {
 
         }
 
-        //console.log(expr);
+        console.log(expr);
         //PARSE SCALED AUTO VALUES
         var scaleresult = expr.match(/(?<=\%\[).*?(?=\])/g);
         if(scaleresult!=null){
-
+            console.log(expr);
             //Substitute string for current value
             for (let i=0;i<scaleresult.length;i++){
                 let limits = scaleresult[i].split(",");
@@ -303,7 +365,9 @@ export class auxMeth {
                     let scale = splitter[0];
                     if(isNaN(scale) || scale.includes('+')|| scale.includes('-')|| scale.includes('/')|| scale.includes('*')){
                         let newroll = new Roll(scale).roll();
-                        scale = newroll.total; 
+                        //expr = expr.replace(scale,newroll.total);
+                        scale = newroll.total;
+
                     }
 
                     let limitEl = {};
@@ -325,7 +389,8 @@ export class auxMeth {
 
                 let attname = "%[" + scaleresult[i]+ "]";
                 expr = expr.replace(attname,valuemod);
-            }         
+            }
+            console.log(expr);
 
         }
         //console.log(expr);
@@ -607,12 +672,21 @@ export class auxMeth {
                 let blocks = maxResult[i].split(",");
                 let finalvalue=0;
                 let valueToMax = Array();
+                let nonumber=false;
                 for (let n=0;n<blocks.length;n++){
-                    valueToMax.push(parseInt(blocks[n]));
+                    if(!isNaN(blocks[n])){
+                        valueToMax.push(parseInt(blocks[n]));
+                    }
+                    else{
+                        nonumber=true;
+                    }
                 }
-                finalvalue = Math.max.apply(Math, valueToMax);
-                let tochange = "max(" + maxResult[i]+ ")";
-                expr = expr.replace(tochange,parseInt(finalvalue));
+                if(!nonumber){
+                    finalvalue = Math.max.apply(Math, valueToMax);
+                    let tochange = "max(" + maxResult[i]+ ")";
+                    expr = expr.replace(tochange,parseInt(finalvalue)); 
+                }
+
             }
         }
         //MINOF
@@ -626,12 +700,162 @@ export class auxMeth {
                 let blocks = minResult[i].split(",");
                 let finalvalue;
                 let valueToMin = Array();
+                let nonumber=false;
                 for (let n=0;n<blocks.length;n++){
-                    valueToMin.push(parseInt(blocks[n]));
+                    if(!isNaN(blocks[n])){
+                        valueToMin.push(parseInt(blocks[n]));
+                    }
+                    else{
+                        nonumber=true;
+                    }
                 }
-                finalvalue = Math.min.apply(Math, valueToMin);
-                let tochange = "min(" + minResult[i]+ ")";
-                expr = expr.replace(tochange,parseInt(finalvalue));
+                if(!nonumber){
+                    finalvalue = Math.min.apply(Math, valueToMin);
+                    let tochange = "min(" + minResult[i]+ ")";
+                    expr = expr.replace(tochange,parseInt(finalvalue)); 
+                }
+
+
+            }
+        }
+        //COUNTIF
+        var countIfResult = expr.match(/(?<=\bcountE\b\().*?(?=\))/g);
+        if(countIfResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<countIfResult.length;i++){
+                //                let debugname = attpresult[i];
+
+
+                let splitter = countIfResult[i].split(";");
+                let comparer = splitter[1];
+                let blocks = splitter[0].split(",");
+                let finalvalue=0;
+                let valueIf = Array();
+                let nonumber=false;
+                for (let n=0;n<blocks.length;n++){
+                    if(!isNaN(blocks[n])){
+                        valueIf.push(parseInt(blocks[n]));
+                    }
+                    else{
+                        nonumber=true;
+                    }
+
+                }
+
+                if(!nonumber){
+                    for(let j=0;j<valueIf.length;j++){
+                        if(valueIf[j]==comparer)
+                            finalvalue+=1;
+                    }
+
+                    let tochange = "countE(" + countIfResult[i]+ ")";
+                    expr = expr.replace(tochange,parseInt(finalvalue)); 
+                }
+
+
+            }
+        }
+
+        //COUNTHIGHER
+        var countHighResult = expr.match(/(?<=\bcountH\b\().*?(?=\))/g);
+        if(countHighResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<countHighResult.length;i++){
+                //                let debugname = attpresult[i];
+
+
+                let splitter = countHighResult[i].split(";");
+                let comparer = splitter[1];
+                let blocks = splitter[0].split(",");
+                let finalvalue=0;
+                let valueIf = Array();
+                let nonumber=false;
+                for (let n=0;n<blocks.length;n++){
+                    if(!isNaN(blocks[n])){
+                        valueIf.push(parseInt(blocks[n]));
+                    }
+                    else{
+                        nonumber=true;
+                    }
+                }
+                if(!nonumber){
+                    for(let j=0;j<valueIf.length;j++){
+                        if(valueIf[j]>comparer)
+                            finalvalue+=1;
+                    }
+
+                    let tochange = "countH(" + countHighResult[i]+ ")";
+                    expr = expr.replace(tochange,parseInt(finalvalue));
+                }
+
+
+            }
+        }
+
+        //COUNTLOWER
+        var countLowResult = expr.match(/(?<=\bcountL\b\().*?(?=\))/g);
+        if(countLowResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<countLowResult.length;i++){
+                //                let debugname = attpresult[i];
+
+
+                let splitter = countLowResult[i].split(";");
+                let comparer = splitter[1];
+                let blocks = splitter[0].split(",");
+                let finalvalue=0;
+                let valueIf = Array();
+                let nonumber=false;
+                for (let n=0;n<blocks.length;n++){
+                    if(!isNaN(blocks[n])){
+                        valueIf.push(parseInt(blocks[n]));
+                    }
+                    else{
+                        nonumber=true;
+                    }
+                }
+                if(!nonumber){
+                    for(let j=0;j<valueIf.length;j++){
+                        if(valueIf[j]<comparer)
+                            finalvalue+=1;
+                    }
+
+                    let tochange = "countL(" + countLowResult[i]+ ")";
+                    expr = expr.replace(tochange,parseInt(finalvalue));
+                }
+
+
+            }
+        }
+
+        //SUM
+        var sumResult = expr.match(/(?<=\bsum\b\().*?(?=\))/g);
+        if(sumResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<sumResult.length;i++){
+                //                let debugname = attpresult[i];
+
+
+                let splitter = sumResult[i].split(";");
+                let comparer = splitter[1];
+                let blocks = splitter[0].split(",");
+                let finalvalue=0;
+                let valueIf = Array();
+                let nonumber=false;
+                for (let n=0;n<blocks.length;n++){
+                    if(!isNaN(blocks[n])){
+                        finalvalue += parseInt(blocks[n]);
+                    }
+                    else{
+                        nonumber=true;
+                    }
+
+                }
+                if(!nonumber){
+                    let tochange = "sum(" + sumResult[i]+ ")";
+                    expr = expr.replace(tochange,parseInt(finalvalue));
+                }
+
 
             }
         }
@@ -639,7 +863,6 @@ export class auxMeth {
         //console.log(expr);
 
         toreturn = expr;
-        //console.log(expr);
 
         //PARSE TO TEXT
         if(expr.includes("|")){
@@ -654,6 +877,7 @@ export class auxMeth {
                     let final = new Roll(expr);
 
                     final.roll();
+                    //console.log(final);
 
                     if(isNaN(final.total)||final.total==null||final.total===false)
                     {
@@ -687,6 +911,10 @@ export class auxMeth {
 
                 toreturn = expr;
             }   
+        }
+        else{
+            if(exprmode)
+                toreturn = expr;
         }
         //console.log(toreturn);
         return toreturn;
