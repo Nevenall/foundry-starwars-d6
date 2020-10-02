@@ -54,6 +54,7 @@
             "rollname":"",
             "rollexp":"",
             "rollid":"",
+            "radiotype":"",
             "group":{},
             "tag":""
         },
