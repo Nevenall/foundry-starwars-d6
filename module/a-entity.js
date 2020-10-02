@@ -1321,11 +1321,11 @@ export class gActor extends Actor{
                 sheetAtts.push(properKey.data.data.attKey);
 
         }
-        console.log(sheetAtts);
+        //console.log(sheetAtts);
         for (let i=0;i<attributearray.length;i++) {
             let attribute = attributearray[i];
             let findme = sheetAtts.filter(y=>y==attribute);
-            console.log(attribute + " " + findme);
+            //console.log(attribute + " " + findme);
             if((attribute!=null || attribute!=undefined)&&findme.length>0){
                 let attdata = attributes[attribute];
                 let rawexp="";
