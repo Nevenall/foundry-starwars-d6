@@ -154,6 +154,20 @@ Hooks.once('ready', async() => {
         let backgr = document.createElement("DIV");
         backgr.className = "dc-input";
 
+        //        let compendiumexport = document.getElementsByClassName("directory-footer");
+        //        let sboxcomp = document.createElement("BUTTON");
+        //        sboxcomp.className = "create-sbcompendium";
+        //        sboxcomp.type = "submit";
+        //        sboxcomp.addEventListener("click", async (event) => {
+        //            event.preventDefault();
+        //            event.stopPropagation();
+        //
+        //            const compdata = await fetch("worlds/" + game.data.world.name + "world.json").then(r => r.json()) // Load your JSON data
+        //            const pack = game.packs.find(p => p.collection === "yoursystem.packname"); // Get the created compendium by its name
+        //            await pack.createEntity(compdata);
+        //
+        //        });
+
         let header = document.createElement("DIV");
         header.className = "dc-header";
         header.textContent = "DC";
