@@ -307,6 +307,24 @@
                 </div>
             </div>
             {{/ifCond}}
+            
+            {{#ifCond item.data.datatype "radio"}}
+            <div class="flexblock">
+                <div class="col-1-2">
+                    <div class="new-row">
+                        <div class="flexblock-left">
+                            <label class="label-medlarge">Radio type</label>
+                            <select  name="data.radiotype"  data-type="String">
+                                {{#select item.data.radiotype}}
+                                <option  value="C">Circle</option>
+                                <option  value="S">Square</option>
+                                {{/select}}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/ifCond}}
 
 
         </div>
