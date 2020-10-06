@@ -2445,7 +2445,7 @@ export class gActorSheet extends ActorSheet {
             }
 
         }
-
+        console.log("refreshcItem finished");
     }
 
     showTextAreaDialog(citemID,citemAttribute,disabled){
@@ -2639,7 +2639,7 @@ export class gActorSheet extends ActorSheet {
     }
 
     async populateRadioInputs(basehtml){
-        console.log("reinput");
+        //console.log("reinput");
         const html = await basehtml.find(".radio-input");
         for(let i=0;i<html.length;i++){
 
@@ -2712,9 +2712,10 @@ export class gActorSheet extends ActorSheet {
         let radiotype = property.data.data.radiotype;
         let attKey = property.data.data.attKey;
         const attributes = this.actor.data.data.attributes;
-        attributes[attKey].value =  clickValue;
-        //await this.actor.actorUpdater(this.actor.data);
-        await this.actor.update({"data.attributes":attributes}, {diff: false});
+        //attributes[attKey].value =  clickValue;
+        await this.actor.update({[`data.attributes.${attKey}.value`] : clickValue});
+        await this.actor.actorUpdater();
+        //await this.actor.update({"data.attributes":attributes}, {diff: false});
         if(clickValue>0){
             target.className="fas fa-circle";
             target.style = "font-size:14px;";
