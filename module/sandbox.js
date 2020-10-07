@@ -154,6 +154,20 @@ Hooks.once('ready', async() => {
         let backgr = document.createElement("DIV");
         backgr.className = "dc-input";
 
+        //        let compendiumexport = document.getElementsByClassName("directory-footer");
+        //        let sboxcomp = document.createElement("BUTTON");
+        //        sboxcomp.className = "create-sbcompendium";
+        //        sboxcomp.type = "submit";
+        //        sboxcomp.addEventListener("click", async (event) => {
+        //            event.preventDefault();
+        //            event.stopPropagation();
+        //
+        //            const compdata = await fetch("worlds/" + game.data.world.name + "world.json").then(r => r.json()) // Load your JSON data
+        //            const pack = game.packs.find(p => p.collection === "yoursystem.packname"); // Get the created compendium by its name
+        //            await pack.createEntity(compdata);
+        //
+        //        });
+
         let header = document.createElement("DIV");
         header.className = "dc-header";
         header.textContent = "DC";
@@ -366,11 +380,10 @@ Hooks.on("deleteActor", (actor) =>{
 
 Hooks.on("updateActor", async (actor, updateData,options,userId) => {
 
-    //console.log("updatingactor");
+
     //console.log(actor);
     //console.log(updateData);
     if(updateData){
-
         actor.data.flags.lastupdatedBy = await userId;
         //actor.data.flags.haschanged = true;
     }
@@ -553,6 +566,7 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
     //console.log(app);
     //console.log(data);
     //console.log(html);
+    let hide=false;
     let messageId = app.data._id;
     let msg = game.messages.get(messageId);
     let msgIndex = game.messages.entities.indexOf(msg);
@@ -560,6 +574,9 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
     let _html = await html[0].outerHTML;
     let realuser = game.users.get(data.message.user);
     //console.log(realuser);
+
+    if(data.message.type==1 && game.user._id!=data.message.user && !game.user.isgM)
+        hide=true;
 
     if(_html.includes("dice-roll") && !_html.includes("table-draw")){
         let rollData = {
@@ -576,6 +593,7 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
             user: realuser.data.name
         };
 
+
         await renderTemplate("systems/sandbox/templates/dice.html", rollData).then(async newhtml => {
 
             let container = html[0];
@@ -588,11 +606,24 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
 
         });
 
+        if(!game.user.isGM && hide){
+            console.log(html);
+            html.hide();
+        }
+
     }
 
     //console.log(html);
 
     if(!_html.includes("roll-template")){
+        if(_html.includes("table-draw")){
+            let mytableID = data.message.flags.core.RollTable;
+            let mytable = game.tables.get(mytableID);
+            console.log(mytable.data.permission.default);
+            if(mytable.data.permission.default==0)
+                hide=true;
+        }
+
         let containerDiv = document.createElement("DIV");
 
         let headerDiv = document.createElement("HEADER");
@@ -600,18 +631,25 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
         headerDiv.innerHTML = headertext;
 
         let msgcontent = html;
-        let messageDiv = document.createElement("DIV");
-        messageDiv.innerHTML = msgcontent;
+        let messageDiv = await document.createElement("DIV");
+        messageDiv.innerHTML = _html;
 
-        containerDiv.appendChild(headerDiv);
-        containerDiv.appendChild(messageDiv);
+        //containerDiv.appendChild(headerDiv);
+        await containerDiv.appendChild(headerDiv);
+        await containerDiv.appendChild(messageDiv);
 
-        html = headerDiv;
+        if(!game.user.isGM && hide){
+            console.log(html);
+            html.hide();
+        }
+
+        html = html[0].insertBefore(headerDiv,html[0].childNodes[0]);
+
     }
 
+
+
     //ROLL INSTRUCTIONS
-
-
     let header = $(html).find(".message-header");
     header.remove();
     //console.log("tirando");
@@ -672,6 +710,11 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
             msg.delete();
         });
         auxMeth.rollToMenu();
+    }
+
+    else{
+        if(game.user._id!=data.message.user)
+            $(html).find(".roll-message-delete").hide();
     }
 
 

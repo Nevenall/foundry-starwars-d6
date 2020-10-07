@@ -315,10 +315,23 @@ The fields mean the following:
 - Roll ID: this is the main roll ID, an identifier or Key that the roll will belong to. It doesnt have to be unique, so if your system has a lot of skills and this is a roll fo one of them, you just can use "skill" as roll ID.
 - Roll Expression: the roll itself, like 1d6 or 1d20 + 5, etc.
 
-There is a list of functions to use with roll expressions. Now you will hate me for this, but I am horrible with Regex, so these functions are ugly, very bad looking. Bear with me, if you help me we can improve them. You can also use them in MOD value definition fields. The functions are the following:
+There is a list of functions to use with roll expressions. Now you will hate me for this, but I am horrible with Regex, so these functions are ugly, very bad looking. Bear with me, if you help me we can improve them. You can also use them in MOD value definition fields. 
+
+REMEMBER, always follow the below structure for a roll expression:
+
+|Registration Helpers: $<> and roll() expressions | All other roll expression functions | Subtext and Roll ID expressions: && and ~~ expressions
+
+For example:
+
+$<1;1d6> ceil($1/2) &&total;1:FAIL,3:SUCCESS&& ~testroll~
+
+ALSO IMPORTANT: Rolls in sandbox only return numerical values! Always make sure that the result of your roll is a number!!!
+
+The roll functions are the following:
+
 - ceil(): A classic, rounds to the highest number. Example: ceil(2.5) => will return 3 in the roll on chat
 - floor(): It rounds to the lowest number. Example: ceil(2.5) => will return 2 in the roll on chat
-- max(): returns the maximum roll of a simple dice roll, like 1d6, 2d6, 3d8, etc.
+- maxdie(): returns the maximum roll of a simple dice roll XdY. So maxdie(1d6) returns 6.
 - @{character_attribute_name}: so, imagine that the Key of the Level Property is "lvl". You can reference it on the roll with @{lvl}. So if you need to roll 1d6 + level to the chat you just use: 1d6+@{lvl}
 - #{citem_name_attribute}: if you are using a roll expression from a cItem you can reference one or more of its attributes with this. As an example, imagine a cItem has a "damage" property, and you want a roll expression to roll 1d6 + this attribute. So the roll expression would be 1d6+#{damage}. Remember @{} is for Actor attributes, #{} is for cItem attributes.
 
@@ -331,13 +344,13 @@ There is a list of functions to use with roll expressions. Now you will hate me 
 - if[expression:compared_value,return_iftrue,return_iffalse]: very useful expression especially for text attributes. Let's say you have a system in which you want to check if the attribute called "ismagical" of a specific cItem is true, and in case it is you want to return 2 to the roll chat. So the expression you need is [#{ismagical}:true,2,0]
     
 NOTE: Thanks to our friend @H3ls1 now If can accept nested expressions. The following are the expressions:
-    + Single IF with no ANDs no ORs --> if\[Field:condition,true_value, false_value\]
-    + Single IF with ORs only --> if\[FIELD1:COND1 OR FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value\] 
-    + Single IF with ANDs only --> if\[FIELD1:COND1 AND FIELD2:COND2 AND....FIELDn:CONDn,true_value, false_value\]
-    + Single IF with ANDs and ORs (it always execute first ANDs) --> if\[FIELD1:COND1 AND FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value\] 
-    + Nested IFs with or without ANDs and ORs (it works with the same logic as before)
-    Example without ANDs and ORs if\[F:C,true_value,ELSE if\[F:C, true_value, ELSE if\[F:C,true_value,false_Value\]\]\].....
-    Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, true_value,ELSE if\[F:C AND F4:C4,true_value,false_Value\]\]\]
++ Single IF with no ANDs no ORs --> if\[Field:condition,true_value, false_value\]
++ Single IF with ORs only --> if\[FIELD1:COND1 OR FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value\] 
++ Single IF with ANDs only --> if\[FIELD1:COND1 AND FIELD2:COND2 AND....FIELDn:CONDn,true_value, false_value\]
++ Single IF with ANDs and ORs (it always execute first ANDs) --> if\[FIELD1:COND1 AND FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value\] 
++ Nested IFs with or without ANDs and ORs (it works with the same logic as before)
+Example without ANDs and ORs if\[F:C,true_value,ELSE if\[F:C, true_value, ELSE if\[F:C,true_value,false_Value\]\]\].....
+Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, true_value,ELSE if\[F:C AND F4:C4,true_value,false_Value\]\]\]
     
 - --cItem_attribute_name--: This function returns the value of a cItem attribute if you pase the attribute's Key to it. Lets imagine we set Torch (the cItem created earlier as an example) as a CONSUMABLE MOD and fill the Roll Options fields. If we set its roll expression as "1d6 + --weight--" it will roll to chat 1d6 plus the value of its Weight attribute (remember we defined it as part of the Group object).
 - __ Actor_attribute_name __: This function returns the value of an Actor attribute if you pase the attribute's Key to it. Imagine you have a list type Property of Key "selectedskill" on your character sheet, and this list has as options all the available skills in the system (i.e: climb, deception, swim, etc). You want to make this property rollable, and when clicked you want the sheet to roll 1d6+the value of the selected skill. You need then to reference the skills (which are attributes), so you can do this with "1d6 + __ @{selectedskill} __" . How does this work? When you select, let's say the "climb" option, this function will return __ climb __, that is equivalent to @{climb}. By the way, no spaces, I just included them to avoid bold formatting here...
@@ -347,22 +360,35 @@ NOTE: Thanks to our friend @H3ls1 now If can accept nested expressions. The foll
 - #{num}: returns the current number of units of the cItems that this actor has.
 - #{target|target_attribute_key}: Returns the value of an attribute of the target actor on the map. Useful for calculating AC and such. Example: 1d20 + @{weapon_skill} &&0:FAILURE;#{target|ac}:YOU HIT!&&
 - #{diff}: There is a DC box on the bottom of your active scene, to the right of the macro bar. DC stands for difficulty class. If your system/game requires the GM to set a difficulty, this is the place to write it down. Then, the rolls can reference this difficulty by using #{diff}.
-- &&value_1:text_1;value_N;text_N&&: So imagine you want to return a sentence to the chat, along with your roll. You want to return "SUCESS" if the result of your roll is over 8, "FAILURE" if the result of the roll is under 7, and "PARTIAL SUCCESS" on every other result. This function allows you to return that sentence/word below the roll result. So you can do this with the following formula &&0:FAILURE;7:PARTIAL SUCCESS;9:SUCCESS&&
+- &&value_to_compare;value_1:text_1;value_N;text_N&&: So imagine you want to return a sentence to the chat, along with your roll. You want to return "SUCESS" if the result of your roll is over 8, "FAILURE" if the result of the roll is under 7, and "PARTIAL SUCCESS" on every other result. This function allows you to return that sentence/word below the roll result. So you can do this with the following formula &&total;0:FAILURE;7:PARTIAL SUCCESS;9:SUCCESS&&. The first argument of the expression is the value you are analysing, and if you write "total" it will take into account the total of the roll. You can include a property instead of that, or another roll expression with a numeric outcome.
 
-![Success and Difficulty rolls](docs/images/tuto41.png)
-
-- ¬¬expresion, result1:value1,result2:value2¬¬: This function is an advanced successes calculator. Imagine you need to count the number of dice equsl to 5 or higher in a 4d6 roll. You use then ¬¬4d6, 0:0,5:1¬¬. This means that for every die equal or higher to 5 it will return 1. So for a roll of 3,4,5,6 it will return 2. But what if we want to add that every 6 should return 2 instead of 1? We just add it as an option to the formula like this: ¬¬4d6, 0:0,5:1,6:2¬¬ So for a roll of 3,4,5,6 it will return 3.
 - ~Roll_ID~: adds a Roll ID to the roll. Remember that we have a MOD type called ROLL? And this one adds values to rolls of a specific Roll ID? So this function lets you add ROll IDs to rolls. As many as you like. So let's say we just defined a roll for an attack with Roll Name:"Attack", Roll ID: "attack", and Roll Expression: 1d20+@{strength}. However, we want more definition for it, and for that we want to incorporate some more Roll IDs, in case we need to modify the roll through a MOD. Let's say we want to add the Ids "melee_attack" and "slashing", then we would have to change the Roll Expression to 1d20+@{strength} ~melee_attack~ ~slashing~
 - ~ADV~ or ~DIS~: fives advantage or disadvantage to the roll
 - ~init~: sends the result of the roll to the initiative on the combat tracker.
 
 ![Rolling to initiative](docs/images/tuto42a.png)
 
-- !(Roll Name;Roll Expression): If you want to have a roll separated from your roll expression, with a name, and displayed by its own, you use this formula. For example, imagine that for a system we are designing we need to roll 1d6 with every skill check, and this die is called the "Anger Die". You could set it up like this: 1d10 + !(Anger Die;1d6).
+- roll(Name;dice;faces;explodes): If you want to have a roll separated from your roll expression with a name, and displayed by its own, you use this formula. For example, imagine that for a system we are designing we need to roll 1d6 in every skill check, and this die is called the "Anger Die". You could set it up like this. For example roll(Anger;1;6;false) registers a roll named Anger, of 1 dice of 6 faces and doesnt explode; This expression substitutes !(Roll Name;Roll Expression), that is removed from the system. Also ¬¬ expression doesn't work anymore.
+- ?[Roll Name]: returns the reference of a registered roll, as many times as you want. You need to use this with one of the following.
+- max(expr1,expr2,expr3): returns the max value within a series of expressions. For example max(2,3,4,@{value}) will return the maximum value of that list. You can combine with roll registrations like max(?[Name]), that will return the max die of all dice from a registered roll called Name.  
+- min(expr1,expr2,expr3): return min value of the list. You can also use a registered roll here!
+- countE(expr1,expr2,expr3;value): counts the number of expression results that are equal to the value. For example, using our previous example  countE(?[Test];3) will return  how many dice are equal to 3 (from the 3d6 rolled in the example).
+- countH(expr1,expr2,expr3;value): returns number of elements in the list with a value higher than 3. Can also be used with registered rolls like countH(?[Name];3).
+countL(expr1,expr2,expr3;value):  returns number of elements in the list with a value lower than 3.  Can also be used with registered rolls like countL(?[Name];3) 
+sum(expr1,expr2,expr3) : returns the sum of all elements in the list.  Can also be used with registered rolls like sum(?[Name]) 
+- maxdie(XdY): returns the max result in a simple roll expression, For example, maxdie(1d6) returns 6.
 
 ![Naming sub rolls](docs/images/tuto44.png)
 
 - $<index;expression>: So roll parsing is not perfect, and until we find a way to do it more visually attractive there will be tons of problems. Expressions that contain brackets inside other expressions that also contain brackets will give you troubles. To avoid this, you can save pieces of your expression through this function. For example $<1;%[@{str},0:0,15:1]> will register the expresion after the semicolon as $1. A full example of this is: $<1;%[@{str},0:0,15:1]> 2d6+$1. This expression is equivalent to 2d6 + %[@{str},0:0,15:1]. Remember to change the number before the semicolon, as is the index and will let you identify subexpressions using $1,$2,$3, etc.
+
+SOME EXAMPLES OF ROLLS:
+- Roll 1d6: 1d6
+- Roll 1d6, if the result is lower than 4, return 0.Otherwise return 1: %[1d6,0:0,5:1]
+- Roll 2d6 exploding, one called Skill and the other Wild, and return the highest: roll(Skill;1;6;true) roll(Wild;1;6;true) max(?[Skill],?[Wild])
+- Roll 4d6 and count results higher than 4:   roll(Test;4;6;false) countH(?[Test];4)
+- Roll 3d10, add the results, and if any die is equal to 10 add +5:  roll(Test;3;10;false)   sum(?[Test]) + (countE(?[Test];10) *5)
+- Roll 2d6, if any die is higher than 3 display SUCCESS, if the first die rolls a 1 display CONSEQUENCE, if both roll a 1 display SNAKE EYES:  roll(Test1;1;6;false) roll(Test2;1;6;false) max(?[Test1],?[Test2]) &&max(?[Test1],?[Test2]);0:FAIL;4:SUCCESS&& &&countE(?[Test1];1);0:-;1:CONSEQUENCE&& &&countE(?[Test1],?[Test2];1);0:-;2:SNAKE EYES&&
 
 ## 8.Folder structure best practices
 If we want to share our creations and systems, we will have to standardise the way we store Sandbox's info. In the future, we could try to include a button to export to db or something like that, I don't know. But for know, let's stick to this structure. In the Actors Directory I normally create 2 folders, one called _CONFIG, and one called CAMPAIGN. In _CONFIG, and within separate folders, I store each Template Actor that the system needs (one for PCs, other for NPCs, other for shared menus like shared inventory, etc).

@@ -399,37 +399,50 @@ export class gActor extends Actor{
             let citem = citemIDs.find(y=>y.id==mod.citem);
             let jumpmod=false;
 
-            if(mod.condop!="NON" && mod.condop!=null){
+            jumpmod = await this.checkModConditional(mod);
+            //console.log("add Citem " + citem.name + " " + jumpmod);
 
-                let condAtt = mod.condat;
-                let condValue = parseInt(mod.condvalue);
-
-                let attIntValue = parseInt(attributes[condAtt].value);
-
-                //                console.log(mod.name);
-                //                console.log(mod.condop + " " + condValue + " " + attIntValue);
-
-                if(!isNaN(attIntValue) && !isNaN(condValue)){
-                    if(mod.condop=="EQU"){
-                        if(attIntValue!=condValue){
-                            jumpmod=true;
-                        }
-                    }
-
-                    else if(mod.condop=="HIH"){
-                        if(attIntValue <= condValue){
-                            jumpmod=true;
-                        }
-                    }
-
-                    else if(mod.condop=="LOW"){
-                        if(attIntValue >= condValue){
-                            jumpmod=true;
-                        }
-                    }
-                }
-
-            }
+            //            if(mod.condop!="NON" && mod.condop!=null && mod.condat!=""){
+            //
+            //                let condAtt = mod.condat;
+            //                let condValue = parseInt(mod.condvalue);
+            //                let attIntValue;
+            //
+            //                if(condAtt.includes("#{")||condAtt.includes("@{")){
+            //                    attIntValue = await auxMeth.autoParser(condAtt,attributes,citem.attributes,false,false,citem.number);
+            //                }
+            //
+            //                else{
+            //                    attIntValue = attributes[condAtt].value;
+            //                }
+            //
+            //
+            //                //                console.log(mod.name);
+            //                //                console.log(mod.condop + " " + condValue + " " + attIntValue);
+            //
+            //                if(!isNaN(attIntValue) && !isNaN(condValue)){
+            //                    if(mod.condop=="EQU"){
+            //                        if(attIntValue.toString()!=condValue.toString()){
+            //                            jumpmod=true;
+            //                        }
+            //                    }
+            //
+            //                    else if(mod.condop=="HIH"){
+            //                        attIntValue = parseInt(attributes[condAtt].value);
+            //                        if(attIntValue <= condValue){
+            //                            jumpmod=true;
+            //                        }
+            //                    }
+            //
+            //                    else if(mod.condop=="LOW"){
+            //                        attIntValue = parseInt(attributes[condAtt].value);
+            //                        if(attIntValue >= condValue){
+            //                            jumpmod=true;
+            //                        }
+            //                    }
+            //                }
+            //
+            //            }
 
             if(!jumpmod){
                 if(mod.selectnum==0){
@@ -570,10 +583,10 @@ export class gActor extends Actor{
 
         let citem = citemIDs.find(y=>y.id==mod.citem);
 
-        if (condAtt!=null && condAtt!=""){
+        if (condAtt!=null && condAtt!="" && mod.condat!=""){
             let condValue = await auxMeth.autoParser(mod.condvalue,attributes,citem.attributes,false);
             let attIntValue;
-            if(condAtt.includes("#")){
+            if(condAtt.includes("#{")|| condAtt.includes("@{")){
 
                 attIntValue = await auxMeth.autoParser(condAtt,attributes,citem.attributes,false);
             }
@@ -595,7 +608,7 @@ export class gActor extends Actor{
 
             }
 
-            //console.log(condAtt + " " + attIntValue + " " + condValue);
+            //console.log(citem.name + " " + condAtt + " " + attIntValue + " " + condValue);
 
             if(mod.condop=="EQU"){
                 if(attIntValue.toString()!=mod.condvalue.toString()){
@@ -636,16 +649,29 @@ export class gActor extends Actor{
         //        console.log(this.data.data.attributes);
         //        console.log(actorData);
         let attributearray = [];
+
+        //console.log(sheetAtts);
+
         for(let attribute in attributes){
             let attdata = attributes[attribute];
+            //            let findme = sheetAtts.filter(y=>y==attribute);
+            //            if(findme.length==0){
+            //                delete attributes[attribute];
+            //            }
+            //            else{
             if(Array.isArray(attdata.value))
                 attdata.value = attdata.value[0];
             //console.log(attdata.name + " " + attdata.value + " isset " + attdata.isset);
             setProperty(attdata,"isset",false);
             setProperty(attdata,"default",false);
+
+            //TEST TO DELETE
             setProperty(attdata,"autoadd",0);
             setProperty(attdata,"maxadd",0);
+
             attributearray.push(attribute);
+            //}
+
         }
 
         //CHECKING CI ITEMS
@@ -672,16 +698,35 @@ export class gActor extends Actor{
             let property = await game.items.get(actorData.data.attributes[attribute].id);
             const actorAtt = actorData.data.attributes[attribute];
             if(property!=null){
-                if(property.data.data.defvalue!="" && actorAtt.value=="" && property.data.data.auto=="" && !property.data.data.defvalue.includes(".max}")){
-                    //console.log("defaulting " + attribute);
-                    let exprmode = false;
-                    if(property.data.data.datatype == "simpletext" || property.data.data.datatype == "textarea")
-                        exprmode = true;
-                    let newValue = await auxMeth.autoParser(property.data.data.defvalue,attributes,null,exprmode);
-                    //console.log("defaulting " + attribute + newValue);
-                    if(actorAtt.value!=newValue)
-                        ithaschanged = true;
-                    actorAtt.value = newValue ;
+                if(actorAtt.value=="" && property.data.data.auto=="" && !property.data.data.defvalue.includes(".max}")){
+                    if(property.data.data.defvalue!="" || (property.data.data.datatype == "checkbox")){
+                        //console.log("defaulting " + attribute);
+                        //console.log(property.data.data.defvalue);
+                        let exprmode = false;
+                        if(property.data.data.datatype == "simpletext" || property.data.data.datatype == "textarea")
+                            exprmode = true;
+                        let newValue = await auxMeth.autoParser(property.data.data.defvalue,attributes,null,exprmode);
+                        if(property.data.data.datatype == "checkbox"){
+
+                            if(newValue==null){
+                                newValue = false;
+                            }
+                            else if(newValue=="" || newValue==0 || newValue === "false"){
+                                newValue=false;
+                            }
+
+                            else{
+                                newValue=true;
+                            }
+
+                        }
+                        //console.log("defaulting " + attribute + " to " + newValue);
+                        if(actorAtt.value!=newValue)
+                            ithaschanged = true;
+                        actorAtt.value = newValue;
+
+                    }
+
                 }
                 //console.log(property.data.data);
                 //TODO DEFVALUE PARA MAX
@@ -845,6 +890,8 @@ export class gActor extends Actor{
                 if(((seedprop.data.data.automax=="" && attProp=="max") || (seedprop.data.data.auto=="" && attProp=="value")) && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
 
                     let value =mod.value;
+                    if(value==null)
+                        value=0;
                     let finalvalue=value;
                     if(value!=null){
                         if(isNaN(value)){
@@ -858,6 +905,7 @@ export class gActor extends Actor{
                         }
                     }
 
+
                     finalvalue = Number(finalvalue);
 
                     const myAtt = attributes[modAtt];
@@ -870,7 +918,7 @@ export class gActor extends Actor{
 
                     //console.log(_basecitem.name + " " + _mod.exec);
                     if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
-                        console.log("resetting " + _mod.attribute);
+                        //console.log("resetting " + _mod.attribute);
                         if(!citem.ispermanent){
                             if(!_mod.attribute.includes(".max")){
                                 attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
@@ -1011,9 +1059,16 @@ export class gActor extends Actor{
                             _mod.value=finalvalue;
                             _mod.attribute=mod.attribute;
 
+                            //TEST TO REINSTATE
                             //myAtt.isset = true;
                             //myAtt[attProp] = await Number(myAtt[attProp]) + Number(finalvalue);
 
+                            //console.log(rawexp);
+                            //console.log(exprmode);
+
+
+
+                            //TEST TO DELETE
                             if(attProp=="value")
                                 myAtt["autoadd"] += Number(finalvalue);
                             if(attProp=="max")
@@ -1039,7 +1094,7 @@ export class gActor extends Actor{
                                 if(!myAtt.default && _mod.exec && !citem.ispermanent){
                                     //console.log("removing mod");
                                     //myAtt[attProp] = Number(myAtt[attProp]) - Number(finalvalue);
-                                    ithaschanged = true;
+                                    //TEST TO DELETE
                                     if(attProp=="value")
                                         myAtt["autoadd"] -=Number(finalvalue);
                                     if(attProp=="max")
@@ -1048,7 +1103,7 @@ export class gActor extends Actor{
                                 }
 
                                 _mod.exec=false;
-                                //myAtt.isset = false;
+                                myAtt.isset = false;
 
                             }
                         }
@@ -1065,7 +1120,7 @@ export class gActor extends Actor{
             }
         }
 
-        ithaschanged = await this.autoCalculateAttributes(actorData,attributearray,attributes);
+        ithaschanged = await this.autoCalculateAttributes(actorData,attributearray,attributes,true);
 
         //ADD ROLLS
         const rollmods = mods.filter(y=>y.type=="ROLL");
@@ -1179,6 +1234,7 @@ export class gActor extends Actor{
                     }
                 }
 
+
             }
 
             else{
@@ -1247,13 +1303,30 @@ export class gActor extends Actor{
 
     }
 
-    async autoCalculateAttributes(actorData,attributearray,attributes){
+    async autoCalculateAttributes(actorData,attributearray,attributes,addauto=false){
         //Checking AUTO ATTRIBUTES -- KEEP DEFAULT VALUE EMPTY THEN!!
         let ithaschanged = false;
+        var parser = new DOMParser();
+        let htmlcode = this.sheet._element[0].outerHTML;
+        var form = await parser.parseFromString(htmlcode, 'text/html').querySelector('form');
+        var inputs = await form.querySelectorAll('input,select,textarea');
+        let sheetAtts =[];
+        for(let i = 0; i < inputs.length; i++){
+            let newAtt = inputs[i];
+            let attId = newAtt.getAttribute("attId");
+            let properKey;
+            if(attId!=null)
+                properKey = game.items.get(attId);
+            if(properKey!=null)
+                sheetAtts.push(properKey.data.data.attKey);
+
+        }
+        //console.log(sheetAtts);
         for (let i=0;i<attributearray.length;i++) {
             let attribute = attributearray[i];
-            if(attribute!=null || attribute!=undefined){
-
+            let findme = sheetAtts.filter(y=>y==attribute);
+            //console.log(attribute + " " + findme);
+            if((attribute!=null || attribute!=undefined)&&findme.length>0){
                 let attdata = attributes[attribute];
                 let rawexp="";
                 let property = await game.items.get(actorData.data.attributes[attribute].id);
@@ -1273,21 +1346,30 @@ export class gActor extends Actor{
                         rawexp = property.data.data.auto;
                         //console.log(rawexp);
                         //console.log(exprmode);
-                        let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode)
+                        let newvalue = await auxMeth.autoParser(rawexp,attributes,null,exprmode);
 
                         if(actorAtt.value!=newvalue)
                             ithaschanged = true;
                         actorAtt.default= true;
 
+
+
+                        //TEST TO REINSTATE
                         actorAtt.value = newvalue;
-                        actorAtt.value = Number(newvalue) + Number(actorAtt.autoadd);
+                        //TEST TO DELETE
+                        if(property.data.data.datatype!="simpletext")
+                            actorAtt.value = Number(newvalue) + Number(actorAtt.autoadd);
+
                         //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
                     }
 
                     if(property.data.data.automax !==""){
                         rawexp = property.data.data.automax;
+
                         let maxval = await auxMeth.autoParser(rawexp,attributes,null,false);
-                        maxval = Number(maxval) + + Number(actorAtt.maxadd);
+                        //TEST TO DELETE
+                        if(property.data.data.datatype!="simpletext")
+                            maxval = Number(maxval) + + Number(actorAtt.maxadd);
 
                         //if(actorAtt.max!=maxval){
                         if(actorAtt.max=="" || !actorAtt.maxblocked){
@@ -1341,6 +1423,7 @@ export class gActor extends Actor{
         //let diff = SBOX.diff[game.data.world.name];
         let diff = await game.settings.get("sandbox", "diff");
         //console.log(diff);
+        let rollformula = rollexp;
 
         //Roll modifiers generated by MODs of ROLL type
         let actorrolls = this.data.data.rolls;
@@ -1382,45 +1465,179 @@ export class gActor extends Actor{
         }
 
         //Preparsing TO CHECK IF VALID!!!
-        //console.log(rollexp);
         if(rollexp.includes("!("))
-            rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,false,false,number);
+            rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
 
         //console.log(rollexp);
-        //Parse sub rolls !() into indexed string ··!1,··!2,etc
-        let subrollsexp = rollexp.match(/(?<=\!\()\S*?(?=\))/g);
-        if(subrollsexp!=null){
-            //Parse Roll
+        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
+        //        console.log(rollexp);
 
-            //console.log(rollexp);
-            for (let i=0;i<subrollsexp.length;i++){
-                let tochange = "!(" + subrollsexp[i]+ ")";
-                let blocks = subrollsexp[i].split(";");
+        //        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,false,false,number);
+        //console.log(rollexp);
+        let subrollsexpb = rollexp.match(/(?<=\broll\b\().*?(?=\))/g);
+
+        if(subrollsexpb!=null){
+
+            //Parse Roll
+            for (let i=0;i<subrollsexpb.length;i++){
+                //console.log(subrollsexpb[i]);
+                let tochange = "roll(" + subrollsexpb[i]+ ")";
+                let blocks = subrollsexpb[i].split(";");
 
                 //Definition of sub Roll
                 let sRoll = {};
 
                 sRoll.name = blocks[0];
-                sRoll.expr = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,true,false,number);
-                sRoll.rolls = new Roll(sRoll.expr).roll();
-                sRoll.total = sRoll.rolls.total;
+                sRoll.numdice = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,false,false,number);
+                sRoll.faces = await auxMeth.autoParser(blocks[2],actorattributes,citemattributes,false,false,number);
+                sRoll.exploding = blocks[3];
 
-                if(game.dice3d!=null){
-                    await game.dice3d.showForRoll(sRoll.rolls,game.user,true);
+                if(parseInt(sRoll.numdice)>0){
+                    //console.log(sRoll.numdice);
+                    let exploder = "";
+                    if(sRoll.exploding==="true"){
+                        exploder = "x" + sRoll.faces;
+                    }
+
+
+                    sRoll.expr = sRoll.numdice+"d"+sRoll.faces+exploder;
+
+                    if(sRoll.numdice<1)
+                        sRoll.expr = "0";
+
+                    let partroll = new Roll(sRoll.expr);
+                    let finalroll = await partroll.roll();
+                    finalroll.extraroll=true;
+
+                    if(game.dice3d!=null){
+                        await game.dice3d.showForRoll(partroll,game.user,true);
+                    }
+
+                    sRoll.rolls = finalroll;
+                    await subrolls.push(sRoll);
                 }
 
-                setProperty(sRoll.rolls,"extraroll",true);
 
-                subrolls.push(sRoll);
-
-                let index = "··!"+i+"!";
 
                 //rollexp = rollexp.replace(tochange,sRoll.total);
-                rollexp = rollexp.replace(tochange,index);
+                rollexp = rollexp.replace(tochange,"");
+                rollformula = rollformula.replace(tochange,sRoll.numdice+"d"+sRoll.faces);
             }
         }
 
+        rollformula = rollexp;
+        //console.log(rollformula);
+
+        let subrollRefs = rollexp.match(/(?<=\?\[).*?(?=\])/g);
+        if(subrollRefs!=null){
+            //Parse Roll
+
+            //console.log(rollexp);
+            for (let i=0;i<subrollRefs.length;i++){
+                //console.log(subrollRefs[i]);
+                let tochange = "?[" + subrollRefs[i]+ "]";
+                let mysubRoll = subrolls.find(y=>y.name==subrollRefs[i]);
+                let finalvalue = "";
+
+                if(mysubRoll!=null){
+
+                    if(mysubRoll.rolls!=null){
+                        for(let j=0;j<mysubRoll.rolls._dice.length;j++){
+
+                            let dicearray = mysubRoll.rolls._dice[j].rolls;
+                            for(let k=0;k<dicearray.length;k++){
+                                if(k>0)
+                                    finalvalue += ",";
+
+                                let rollvalue=dicearray[k].roll;
+
+                                while(dicearray[k].exploded){
+                                    k+=1;
+                                    rollvalue += dicearray[k].roll;
+                                }
+
+                                finalvalue += rollvalue;
+
+
+                            }
+
+                        }
+                    }
+                    else{
+                        finalvalue = 0;
+                    }
+
+                    rollformula = rollformula.replace(tochange,mysubRoll.numdice+"d"+mysubRoll.faces);
+                }
+                else{
+                    finalvalue = 0;
+                    rollformula = rollformula.replace(tochange,0);
+                }
+
+
+                //rollexp = rollexp.replace(tochange,sRoll.total);
+                rollexp = rollexp.replace(tochange,finalvalue);
+
+
+            }
+        }
+
+        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
+        //        console.log(rollexp);
+        //console.log(rollformula);
+
+        //PARSING FOLL FORMULA, TO IMPROVE!!!
+        var sumResult = rollformula.match(/(?<=\bsum\b\().*?(?=\))/g);
+        if(sumResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<sumResult.length;i++){
+                let splitter = sumResult[i].split(";");
+                let comparer = splitter[0];
+                let tochange = "sum(" + sumResult[i]+ ")";
+                rollformula = rollformula.replace(tochange,comparer); 
+            }
+        }
+        rollformula = rollformula.replace(/\bsum\b\(.*?\)/g,"");
+
+        var countHResult = rollformula.match(/(?<=\bcountH\b\().*?(?=\))/g);
+        if(countHResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<countHResult.length;i++){
+                let splitter = countHResult[i].split(";");
+                let comparer = splitter[0];
+                let tochange = "countH(" + countHResult[i]+ ")";
+                rollformula = rollformula.replace(tochange,comparer); 
+            }
+        }
+        rollformula = rollformula.replace(/\bcountH\b\(.*?\)/g,"");
+
+        var countLResult = rollformula.match(/(?<=\bcountL\b\().*?(?=\))/g);
+        if(countLResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<countLResult.length;i++){
+                let splitter = countLResult[i].split(";");
+                let comparer = splitter[0];
+                let tochange = "countL(" + countLResult[i]+ ")";
+                rollformula = rollformula.replace(tochange,comparer); 
+            }
+        }
+        rollformula = rollformula.replace(/\bcountL\b\(.*?\)/g,"");
+
+        var countEResult = rollformula.match(/(?<=\bcountE\b\().*?(?=\))/g);
+        if(countEResult!=null){
+            //Substitute string for current value        
+            for (let i=0;i<countEResult.length;i++){
+                let splitter = countEResult[i].split(";");
+                let comparer = splitter[0];
+                let tochange = "countE(" + countEResult[i]+ ")";
+                rollformula = rollformula.replace(tochange,comparer); 
+            }
+        }
+        rollformula = rollformula.replace(/\bcountE\b\(.*?\)/g,"");
+
         //console.log(rollexp);
+        //console.log(subrolls);
+        //console.log(rollformula);
 
         //Check roll ids
         if (rollid==null)
@@ -1492,6 +1709,7 @@ export class gActor extends Actor{
                         rollmode = "DIS";
 
                     rollexp = rollexp.replace(idtoreplace,"");
+                    rollformula = rollformula.replace(idtoreplace,"");
                 }
 
             }  
@@ -1527,138 +1745,26 @@ export class gActor extends Actor{
         if(condid!=null){
             for (let j=0;j<condid.length;j++){
                 let condidexpr = condid[j];
-                let conddtoreplace = "&&" + condid[j]+ "&&";
+                if(condidexpr.length>2){
+                    //console.log(condidexpr);
+                    let conddtoreplace = "&&" + condid[j]+ "&&";
+                    let separador =""
+                    if(j<condid.length-1)
+                        separador ="|"
+                    conditionalText += condidexpr + separador;
 
-                conditionalText = condidexpr;
+                    rollexp = rollexp.replace(conddtoreplace,"");
+                }
 
-                rollexp = rollexp.replace(conddtoreplace,"");
             }  
         }
+
+        rollformula = rollformula.replace(/\&\&.*?\&\&/g,"");
 
         //console.log(rollexp);
         //console.log(subrolls);
         let roll;
         let multiroll=[];
-
-        let rollformula = rollexp;
-
-        //PARSE Asuccess rolls
-        var succresult = rollexp.match(/(?<=\¬\¬)\S*?(?=\¬\¬)/g);
-        if(succresult!=null){
-            let allrolls;
-
-            //Substitute string for current value
-            for (let i=0;i<succresult.length;i++){
-                //                let debugname = attpresult[i];
-                //                console.log(debugname);
-                let tochange = "¬¬" + succresult[i]+ "¬¬";
-
-                let blocks = succresult[i].split(",");
-
-                let succRoll = blocks[0];
-
-                let rollMod;
-
-                let finalvalue=0;
-                if(succRoll.includes("d2")||succRoll.includes("d3")||succRoll.includes("d4")||succRoll.includes("d6")||succRoll.includes("d8")||succRoll.includes("d10")||succRoll.includes("d12")||succRoll.includes("d20")||succRoll.includes("d100")||succRoll.includes("··!")){
-                    let numDices=1;
-                    let diceType;
-                    let foundDice=false;
-                    let succRollfinal = succRoll;
-
-                    if(succRoll.includes("··!")){
-                        succRoll = succRoll.replace("··!",""); 
-                        succRoll = succRoll.replace("!","");
-
-                        allrolls = subrolls[parseInt(succRoll)].rolls;
-                        rollformula = await rollformula.replace(tochange,subrolls[parseInt(succRoll)].expr);
-                    }
-                    else{
-                        let splitter = succRoll.split("d");
-
-                        numDices = new Roll(splitter[0]).roll().total;
-                        diceType = splitter[1];
-
-                        if(isNaN(diceType)){
-                            if(diceType.charAt(0)=="1"){
-                                diceType = diceType.charAt(0) + diceType.charAt(1);
-                            }
-                            else{
-                                //IF arithmetic expression with dice checker:
-                                rollMod = diceType.substring(1,diceType.length+1);
-                                diceType = diceType.charAt(0);
-                            }
-
-                            //console.log(rollMod);
-                        }
-
-                        succRoll=numDices+"d"+diceType;
-
-                        if(numDices<1)
-                            succRoll="0";
-                        let partroll = new Roll(succRoll);
-                        allrolls = await partroll.roll();
-                        if(game.dice3d!=null){
-                            await game.dice3d.showForRoll(partroll,game.user,true);
-                        }
-
-
-                    }
-
-                    rollformula = rollformula.replace(tochange,succRoll);
-
-                    multiroll.push(allrolls);
-
-                    if(numDices>0){
-
-
-                        for(let y=0;y<allrolls.dice[0].rolls.length;y++){
-
-                            let midvalue = 0;
-
-                            let succvalue = allrolls.dice[0].rolls[y].roll;
-
-                            if(rollMod!=null){
-                                succvalue = new Roll(succvalue+rollMod).roll().total;
-                            }
-
-                            //console.log(succvalue);
-
-                            for(let j=1;j<blocks.length;j++){
-                                let blockarray = blocks[j];
-                                let splitblock = blockarray.split(":");
-                                let condition = splitblock[0];
-                                let returnvalue = splitblock[1];
-
-                                if(isNaN(condition)){
-                                    let newroll = new Roll(condition).roll();
-                                    condition = newroll.total; 
-                                }
-
-                                if(succvalue>=condition){
-                                    midvalue = parseInt(returnvalue);
-                                }
-                            }
-
-                            finalvalue += midvalue;
-
-
-
-                        }
-                    }
-
-
-                }
-
-                //rolltotal += finalvalue;
-                rollexp = rollexp.replace(tochange,finalvalue);
-
-            }
-
-
-        }
-
-        //console.log(rollexp);
 
         //PARSE SUBROLLS
         var attpresult = rollexp.match(/(?<=\·\·\!)\S*?(?=\!)/g);
@@ -1690,6 +1796,11 @@ export class gActor extends Actor{
 
 
         //console.log(rollexp);
+        //console.log(rollformula);
+
+        //ROLL EXPRESSION
+        //rollformula = await auxMeth.autoParser(rollformula,actorattributes,citemattributes,true,false,number);
+        rollformula = await auxMeth.autoParser(rollformula,actorattributes,citemattributes,true,false,number);
         let partroll = new Roll(rollexp);
         roll = partroll.roll();
 
@@ -1704,18 +1815,8 @@ export class gActor extends Actor{
 
 
         //        console.log(multiroll);
-        //        console.log(rollexp);
-
-        //Generate Roll data
-        //        let extramod = 0;
-        //        let extramodstring="";
-        //        for (let k=0;k<rollid.length;k++){
-        //            if(rollid[k]!="" && hasProperty(actorrolls,rollid[k])){
-        //                extramod += parseInt(actorrolls[rollid[k]].value);
-        //                if(extramod!=0)
-        //                    extramodstring = " + " + actorrolls[rollid[k]].value;
-        //            }
-        //        }
+        //console.log(rollexp);
+        //console.log(rollformula);
 
         let formula = rollformula.replace(/\s[0]\s\+/g,"");
 
@@ -1756,12 +1857,50 @@ export class gActor extends Actor{
 
         rolltotal = parseInt(rolltotal) + parseInt(this.data.data.mod) + extramod;
 
-        let convalue = null;
+        let convalue = "";
+        //console.log(conditionalText)
         if(conditionalText!=""){
-            convalue = await auxMeth.autoParser(conditionalText,actorattributes,citemattributes,true,false,number);
-            convalue = convalue.replace(/\;/g,',');
-            convalue = "%["+rolltotal + "," + convalue + "]";
-            convalue = await auxMeth.autoParser(convalue,actorattributes,citemattributes,true,false,number);
+            let blocks = conditionalText.split("|");
+
+            for(let i=0;i<blocks.length;i++){
+                let thiscond = blocks[i];
+                if(thiscond.length>1){
+                    let condblocks = thiscond.split(";");
+                    let checktype = condblocks[0];
+                    let mycondition=0;
+                    if(checktype==="total"){
+                        mycondition += rolltotal;
+                    }
+                    else{
+                        mycondition = await auxMeth.autoParser(checktype,actorattributes,citemattributes,false,false,number);
+                    }
+                    let myeval="";
+                    for(let j=1;j<condblocks.length;j++){
+                        let comma="";
+                        if(j<condblocks.length-1)
+                            comma=",";
+                        myeval += condblocks[j] + comma;
+                    }
+
+                    //console.log(myeval);
+                    //console.log(mycondition);
+
+                    let finaleval = "%[" + mycondition + "," + myeval + "]";
+                    //console.log(finaleval);
+                    let finalevalvalue = await auxMeth.autoParser(finaleval,actorattributes,citemattributes,false,false,number);
+                    //console.log(finalevalvalue);
+
+                    convalue += await auxMeth.autoParser(finaleval,actorattributes,citemattributes,false,false,number) + " ";
+                    //console.log(convalue);
+                }
+
+
+            }                                   
+
+            //            convalue = await auxMeth.autoParser(conditionalText,actorattributes,citemattributes,true,false,number);
+            //            convalue = convalue.replace(/\;/g,',');
+            //            convalue = "%["+rolltotal + "," + convalue + "]";
+            //            convalue = await auxMeth.autoParser(convalue,actorattributes,citemattributes,true,false,number);
         }
 
         //console.log(rolldice);
