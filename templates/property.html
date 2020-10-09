@@ -88,6 +88,20 @@
                             <input class="check-hasheader" name="data.hasheader" id="check-hasheader" type="checkbox" {{checked item.data.hasheader}}/>
                         </div>
                     </div>
+                    {{#ifCond item.data.datatype "table"}}
+                    {{#if item.data.hasheader}}
+                    <div class="new-row">
+                        <div class="flexblock-left">
+                            <label class="label-medlarge">Column Name</label>
+                            {{#if data.namecolumn}}
+                            <input type="text" name="data.namecolumn" value="{{data.namecolumn}}"/>
+                            {{else}}
+                            <input type="text" name="data.namecolumn" value="Item"/>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/if}}
+                    {{/ifCond}}
                     <div class="new-row">
                         <div class="flexblock-left">
                             <label class="label-medlarge">Height</label>

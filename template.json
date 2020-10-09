@@ -47,6 +47,7 @@
             "hasroll":false,
             "ishidden":false,
             "hasheader":true,
+            "namecolumn": "Item",
             "hasunits":true,
             "hasactivation":false,
             "onlynames":"",
