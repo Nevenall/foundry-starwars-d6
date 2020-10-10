@@ -12,6 +12,7 @@ Only 3.5$ get you the following perks:
 - Access to WIP versions where you can test changes before they get publicly released
 - Voting power for functionalities, changes, and suggestions
 - Priority for bugs/worlds resolution. If you are a patron, I will try to answer you asap and look at your world/system.
+- Acces to foundry 0.7+ compatible sandbox version (WIP)
 
 B) Promoting ttrpgs in Spanish speaking countries by subscribing to my Youtube/Twitch channels below, or sharing them on social networks. Please consider helping me even if you don't speak Spanish, because I really want my favourite hobby to be generally seen in Spain & Latinamerica as it is actually seen in English speaking countries:
 
@@ -40,6 +41,8 @@ Do you have questions? Join my discord server and head to SANDBOX ENGLISH, I wil
 - Do not insert data in the Template actor. Template Actors are not for sheet building, just create regular actors for that!
 - After rebuilding a sheet, any previous character will require changing its sheet to Default, and back again to the current sheet, in order to display the new changes
 - Never forget to include a key to a Sandbox element, or it won't let you drag it anywhere. Also, make sure keys are unique and do not contain spaces!
+- Whenever you change a template, your existing actors won't register the changes correctly. This is intentional, until sandbox is more stable so any mistakes in the template don't destroy your world. In order to apply changes to existing actors: reassign the actor template to Default, then close it, and then open it again and select the right template.
+- SANDBOX IS NOT COMPATIBLE WITH FOUNDRY 0.7+. Only patrons have acces to the WIP sandbox compatible with 0.7 foundry versions.
 
 ## Index
 1. Basic Sheet Structure
