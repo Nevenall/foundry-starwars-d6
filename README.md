@@ -342,7 +342,7 @@ The roll functions are the following:
 ![Referring cItem attribute](docs/images/tuto40.png)
 
 - if[expression:compared_value,return_iftrue,return_iffalse]: very useful expression especially for text attributes. Let's say you have a system in which you want to check if the attribute called "ismagical" of a specific cItem is true, and in case it is you want to return 2 to the roll chat. So the expression you need is [#{ismagical}:true,2,0]
-    
+
 NOTE: Thanks to our friend @H3ls1 now If can accept nested expressions. The following are the expressions:
 + Single IF with no ANDs no ORs --> if\[Field:condition,true_value, false_value\]
 + Single IF with ORs only --> if\[FIELD1:COND1 OR FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value\] 
@@ -351,7 +351,7 @@ NOTE: Thanks to our friend @H3ls1 now If can accept nested expressions. The foll
 + Nested IFs with or without ANDs and ORs (it works with the same logic as before)
 Example without ANDs and ORs if\[F:C,true_value,ELSE if\[F:C, true_value, ELSE if\[F:C,true_value,false_Value\]\]\].....
 Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, true_value,ELSE if\[F:C AND F4:C4,true_value,false_Value\]\]\]
-    
+
 - --cItem_attribute_name--: This function returns the value of a cItem attribute if you pase the attribute's Key to it. Lets imagine we set Torch (the cItem created earlier as an example) as a CONSUMABLE MOD and fill the Roll Options fields. If we set its roll expression as "1d6 + --weight--" it will roll to chat 1d6 plus the value of its Weight attribute (remember we defined it as part of the Group object).
 - __ Actor_attribute_name __: This function returns the value of an Actor attribute if you pase the attribute's Key to it. Imagine you have a list type Property of Key "selectedskill" on your character sheet, and this list has as options all the available skills in the system (i.e: climb, deception, swim, etc). You want to make this property rollable, and when clicked you want the sheet to roll 1d6+the value of the selected skill. You need then to reference the skills (which are attributes), so you can do this with "1d6 + __ @{selectedskill} __" . How does this work? When you select, let's say the "climb" option, this function will return __ climb __, that is equivalent to @{climb}. By the way, no spaces, I just included them to avoid bold formatting here...
 - |Expression : This functions prevent Sandbox from parsing roll expressions, returning them as text. For example, lets say you just want to return to the chat "1d6", without rolling the 1d6, you just want a text saying "1d6". You then have to use |1d6 in your roll expressions.
@@ -368,7 +368,7 @@ Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, 
 
 ![Rolling to initiative](docs/images/tuto42a.png)
 
-- roll(Name;dice;faces;explodes): If you want to have a roll separated from your roll expression with a name, and displayed by its own, you use this formula. For example, imagine that for a system we are designing we need to roll 1d6 in every skill check, and this die is called the "Anger Die". You could set it up like this. For example roll(Anger;1;6;false) registers a roll named Anger, of 1 dice of 6 faces and doesnt explode; This expression substitutes !(Roll Name;Roll Expression), that is removed from the system. Also ¬¬ expression doesn't work anymore.
+- roll(Name;dice;faces;explodes): If you want to have a roll separated from your roll expression with a name, and displayed by its own, you use this formula. For example, imagine that for a system we are designing we need to roll 1d6 in every skill check, and this die is called the "Anger Die". You could set it up like this. For example roll(Anger;1;6;false) registers a roll named Anger, of 1 dice of 6 faces and doesnt explode; This expression substitutes !(Roll Name;Roll Expression), that is removed from the system. Also ¬¬ expression doesn't work anymore. The last argument, "explodes", can be either false, true, or add. If it is add, the succesive exploded dice will be added instead of displayed as independent dice. For example, roll(Anger;1;4;true) might return 4,4,3 while roll(Anger;1;4;add) might return 11.
 - ?[Roll Name]: returns the reference of a registered roll, as many times as you want. You need to use this with one of the following.
 - max(expr1,expr2,expr3): returns the max value within a series of expressions. For example max(2,3,4,@{value}) will return the maximum value of that list. You can combine with roll registrations like max(?[Name]), that will return the max die of all dice from a registered roll called Name.  
 - min(expr1,expr2,expr3): return min value of the list. You can also use a registered roll here!
