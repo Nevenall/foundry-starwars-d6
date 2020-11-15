@@ -6,19 +6,66 @@ export class auxMeth {
     static async getSheets(){
         //console.log("getting sheets");
 
-        SBOX.templates = [];
+        let templates = [];
 
-        SBOX.templates.push("Default");
 
-        let templates = game.actors.filter(y=>y.data.data.istemplate);
+        templates.push("Default");
 
-        for(let i=0;i<templates.length;i++){
-            if(!SBOX.templates.includes(templates[i].data.data.gtemplate))
-                SBOX.templates.push(templates[i].data.data.gtemplate);
+        let templatenames = game.actors.filter(y=>y.data.data.istemplate);
+
+        for(let i=0;i<templatenames.length;i++){
+
+            templates.push(templatenames[i].name);
         }
 
-        //console.log(SBOX.templates);
+        //console.log(templates);
+        return templates;
 
+    }
+
+    static async getTempHTML(gtemplate){
+
+        let html="";
+
+        //console.log(this.actor.data.data.gtemplate);
+        let mytemplate = gtemplate;
+        if(gtemplate!="Default"){
+            let _template = await game.actors.find(y=>y.data.data.istemplate && y.data.data.gtemplate==gtemplate);
+            //console.log(_template);
+            if(_template!=null){
+                html=_template.data.data._html;
+            }
+
+            if(html==null || html=="")
+                ui.notifications.warn("Please rebuild template actor");
+
+        }
+
+        if(html==null || html==""){
+            console.log("defaulting template");
+            gtemplate="Default";
+            html = await fetch(this.getHTMLPath(gtemplate)).then(resp => resp.text());
+
+        }
+
+        //console.log(html);
+        return html;
+    }
+
+    static getHTMLPath(gtemplate){
+        let path = "worlds/" + game.data.world.name ;
+        //        const path = "systems/sandbox/templates/" + game.data.world + "/";
+        var gtemplate = "";
+
+        if(gtemplate==="" || gtemplate==="Default"){
+            gtemplate = "character";
+            path = "systems/sandbox/templates/";
+        }
+
+        let templatepath = `${path}/${gtemplate}.html`;
+        //console.log(templatepath);
+
+        return templatepath;
     }
 
     /* -------------------------------------------- */
@@ -230,10 +277,12 @@ export class auxMeth {
             for (let i=0;i<itemresult.length;i++){
                 let attname = "#{" + itemresult[i]+ "}";
                 let attvalue;
+
                 if(itemattributes[itemresult[i]]!=null)
                     attvalue = itemattributes[itemresult[i]].value;
                 else{
-                    ui.notifications.warn("cItem property " + itemresult[i] + " of cItem " + itemattributes.name +" does not exist");
+                    //ui.notifications.warn("cItem property " + itemresult[i] + " of cItem " + itemattributes.name +" does not exist");
+                    attvalue=0;
                 }
 
                 if((attvalue!==false)&&(attvalue!==true)){
@@ -317,7 +366,7 @@ export class auxMeth {
                     attvalue = itemattributes[attcresult[i]].value;
                 if(attvalue=="" || attvalue ==null)
                     attvalue=0;
-                console.log(attname + " " + attvalue);
+                //console.log(attname + " " + attvalue);
                 expr = expr.replace(attname,attvalue);
             }         
 
@@ -349,13 +398,17 @@ export class auxMeth {
         //PARSE SCALED AUTO VALUES
         var scaleresult = expr.match(/(?<=\%\[).*?(?=\])/g);
         if(scaleresult!=null){
-            console.log(expr);
+            //console.log(expr);
             //Substitute string for current value
             for (let i=0;i<scaleresult.length;i++){
                 let limits = scaleresult[i].split(",");
                 //console.log(limits[0]);
-                let roll = new Roll(limits[0]).roll();
-                let value = roll.total;
+                let value = limits[0];
+                if(isNaN(value)){
+                    let roll = new Roll(limits[0]).roll();
+                    value = roll.total;
+                }
+
                 let valuemod=0;
 
                 let limitArray = [];
@@ -363,7 +416,8 @@ export class auxMeth {
                 for(let j=1;j<limits.length;j++){
                     let splitter = limits[j].split(":");
                     let scale = splitter[0];
-                    if(isNaN(scale) || scale.includes('+')|| scale.includes('-')|| scale.includes('/')|| scale.includes('*')){
+                    if(isNaN(scale)){
+                        //if(isNaN(scale) || scale.includes('+')|| scale.includes('-')|| scale.includes('/')|| scale.includes('*')){
                         let newroll = new Roll(scale).roll();
                         //expr = expr.replace(scale,newroll.total);
                         scale = newroll.total;
@@ -379,10 +433,14 @@ export class auxMeth {
                 await limitArray.sort(function (x, y) {
                     return x.scale - y.scale;
                 });
-
+                //console.log(limitArray);
+                //console.log(value);
+                valuemod= limitArray[0].value;
                 for(let k=0;k<limitArray.length;k++){
                     let checker = limitArray[k];
-                    if(value>=checker.scale){
+                    let checkscale = Number(checker.scale);
+                    //console.log(checkscale);
+                    if(value>=checkscale){
                         valuemod=checker.value;
                     }
                 }
@@ -390,7 +448,7 @@ export class auxMeth {
                 let attname = "%[" + scaleresult[i]+ "]";
                 expr = expr.replace(attname,valuemod);
             }
-            console.log(expr);
+            //console.log(expr);
 
         }
         //console.log(expr);
@@ -650,9 +708,9 @@ export class auxMeth {
                 let newroll = new Roll(maxresult[i]).roll();
 
                 let attvalue = 0;
-                for(let j=0;j<newroll._dice.length;j++){
-                    let diceexp = newroll._dice[j];
-                    attvalue += parseInt(diceexp.rolls.length)*parseInt(diceexp.faces);
+                for(let j=0;j<newroll.dice.length;j++){
+                    let diceexp = newroll.dice[j];
+                    attvalue += parseInt(diceexp.results.length)*parseInt(diceexp.faces);
                 }
 
 
