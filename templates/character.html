@@ -1,7 +1,7 @@
 <form class="{{cssClass}}" autocomplete="off" id="sheet">
     {{!-- Sheet Header --}}
     <header class="sheet-header">
-        <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+        <img class="profile-img" src="{{actor.img}}" title="{{actor.name}}" data-edit="img" height="100" width="100"/>
         <div class="header-fields">
             <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name"/></h1>
             <div class="flexblock-left ">
@@ -62,21 +62,22 @@
 
     {{!-- Sheet Tab Navigation --}}
     <div class="atabs">
-        <a class="tab-prev" id="tab-prev">&#10094;</a>
+        <a class="tab-prev" id="tab-prev">&#171;</a>
         <nav class="sheet-tabs tabs" data-group="primary" id="tabs" tabs="0">
 
             <a class="item tab-button" data-tab="description" id="tab-0">Bio</a>          
             <a style="display: none" id="tab-last"></a>
             {{#isGM}}
-            <a class="item tab-button" data-tab="citems" id="tab-citems">cItems</a>
             {{#if actor.data.istemplate}}
-            <a class="item tab-button" data-tab="token" id="tab-token">Token</a>
+            <a class="item tab-button" data-tab="token" id="tab-token">Config</a>
             <a class="item tab-button" data-tab="config" id="tab-tabs">Tabs</a>
+            {{else}}
+            <a class="item tab-button" data-tab="citems" id="tab-citems">cItems</a>
             {{/if}}
             {{/isGM}}
 
         </nav>
-        <a class="tab-next" id="tab-next">&#10095;</a>
+        <a class="tab-next" id="tab-next">&#187;</a>
     </div>
 
     {{!-- Sheet Body --}}
@@ -104,10 +105,15 @@
                 {{/each}}
             </ol>
         </div>
-        {{!-- Token Tab --}}
+        {{!-- Config Tab --}}
         <div class="tab token scrollable" data-group="primary" data-tab="token">
             <div class="flexblock">
                 <div class="col-1-2">
+                    <div class="new-row">
+                        <div class="panelheader">
+                            <label class="label-medlarge">TOKEN OPTIONS</label>
+                        </div>
+                    </div>
                     <div class="new-row">
                         <div class="flexblock-left">
                             <label class="label-medlarge">Bar 1</label>
@@ -131,6 +137,29 @@
                                 <option  value="HOVER">HOVER</option>
                                 <option  value="OWNER">OWNER</option>
                                 <option  value="ALWAYS">ALWAYS</option>
+                                {{/select}}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="new-row">
+                        <div class="panelheader">
+                            <label class="label-medlarge">TAB OPTIONS</label>
+                        </div>
+
+                        <div class="flexblock-left">
+                            <label class="label-medlarge">BIO Tab Visible</label>
+                            <input class="check-biovisible" name="data.biovisible" id="check-biovisible" type="checkbox" biovisible="false" {{checked actor.data.biovisible}}/>
+                        </div>
+
+                        <div class="flexblock-left">
+                            <label class="label-medlarge">Max visible Tabs</label>
+                            <select  class ="token-visitabs" name="data.visitabs"  data-type="String">
+                                {{#select actor.data.visitabs}}
+                                <option  value="2">2</option>
+                                <option  value="3">3</option>
+                                <option  value="4">4</option>
+                                <option  value="5">5</option>
                                 {{/select}}
                             </select>
                         </div>
