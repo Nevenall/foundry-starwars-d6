@@ -409,6 +409,7 @@ Well, that's all. It can feel like chaotic and a mess, but it works. I have been
 Check on Game Settings>Configure Settings>System Settings
 - Show Roll with Advantage option: the 1d20 text below the Actor name will appear or not
 - Show d20 Roll icon option: the d20 icon below the actor name lets you roll an expression like in chat. This will be deprecated soon
+- Check Item Consistency: if checked, every time you rebuild a template actor sheet a check will be executed. This check will run through every actor and item of the world and will look into empty key properties, non existing citems, and other inconsistencies. If it finds any, it will delete the inconsistent data, so BE CAREFUL when selecting this option. Also, if your world has a high number of actors and items, it may take too long to rebuild.
 - Show DC window: if your system uses difficulties, mark this one and the box to fill #{diff} will appear. It requires a created scene.
 - Show Last Roll window: if ou want to have the las game roll always visible at the bottom of the screen, check this one.
 - Token options: Sandbox has some specific token options. in the Template Actor, the Token tabs lets you choose which properties do you want to display as bars, and the level of access required to see one. This checkbox in settings lets you activate these options.
