@@ -61,6 +61,15 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
+    game.settings.register("sandbox", "consistencycheck", {
+        name: "Check cItem Consistency",
+        hint: "If checked, when rebuilding template, every cItem will be evaluated for consistency. WARNING: May take several minutes in big systems",
+        scope: "world",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
     game.settings.register("sandbox", "showDC", {
         name: "Show DC window",
         hint: "If checked a DC box will appear at the bottom of the screen",
@@ -302,46 +311,137 @@ Hooks.on("hoverToken", (token, hovered) => {
 
 });
 
-Hooks.on("createToken", (scene,token,options,userId) => {
-    let actor = game.actors.get(token.actorId);
-    if(!hasProperty(token.dataactorData,"citems"))
-        setProperty(token.actorData,"citems",actor.data.data.citems);
-
-    if(!hasProperty(token.actorData,"attributes"))
-        setProperty(token.actorData,"attributes",actor.data.data.attributes);
+Hooks.on("createToken", async (scene,token,options,userId) => {
+    //let actor = game.actors.get(token.actorId);
+    //console.log(token);
+    //token["tokenId"] = token._id;
+    //let mytoken = canvas.tokens.get(token._id);
+    //await mytoken.update({"actorData.tokenId":token._id});
+    //console.log(token);
 });
 
 Hooks.on("deleteToken", (scene, token) => {
     $('.dmtk-tooltip').remove();
 });
 
+Hooks.on("preUpdateToken", async (scene, token, updatedData, options, userId) => {
+    //console.log("updatingTokenActor");
+    //console.log(token);
+    //console.log(updatedData);
+    let myToken = canvas.tokens.get(token._id);
+    let myactor = game.actors.get(token.actorId);
+
+    let newdata = updatedData;
+    if (updatedData["data.citems"]!=null){
+        if(!hasProperty(updatedData,"actorData"))
+            setProperty(updatedData,"actorData",{});
+        if(!hasProperty(updatedData.actorData,"data"))
+            setProperty(updatedData.actorData,"data",{});
+        updatedData.actorData.data.citems = updatedData["data.citems"];
+    }
+
+});
+
 Hooks.on("updateToken", async (scene, token, updatedData, options, userId) => {
-    console.log("updatingTokenActor");
-    //console.log(token.actorData);
+    //console.log("updatingTokenActor");
+    //console.log(token);
+    //console.log(updatedData);
+    let myToken = canvas.tokens.get(token._id);
+    let myactor = game.actors.get(token.actorId);
+
+    let newdata = updatedData;
+    if (updatedData["data.citems"]!=null){
+        if(!hasProperty(updatedData,"actorData"))
+            setProperty(newdata,"actorData",{});
+        if(!hasProperty(newdata.actorData,"data"))
+            setProperty(newdata.actorData,"data",{});
+        newdata.actorData.data.citems = updatedData["data.citems"];
+    }
+
+    if(!options.stopit && newdata.actorData){
+
+        let myData = await myactor.actorUpdater(myToken.actor.data);
+
+        await myToken.update(myData,{stopit:true});
+
+        myToken.actor.sheet.render();
+
+    }
 });
 
 
-Hooks.on("preUpdateActor", async (data, updateData) => {
-
+Hooks.on("preUpdateActor", async (actor,updateData,options,userId) => {
+    //console.log(actor);
+    //console.log(updateData);
+    //console.log(data.data.gtemplate);
+    //console.log("preup");
     if(game.settings.get("sandbox", "tokenOptions")){
-        if(updateData.data){
-            if(updateData.data.displayName){
-                data.data.token.displayName = updateData.data.displayName;
-                data.data.token.displayBars = updateData.data.displayName;
-            }
-            if(updateData.data.tokenbar1){
-                data.data.token.bar1.attribute = updateData.data.tokenbar1;
-            }
+
+        //if(!actor.token)
+        //setProperty(updateData,"token",{})
+        //updateData.token=actor.data.token;
+        let displayName = actor.data.data.displayName; 
+        if(isNaN(displayName))
+            displayName = CONST.TOKEN_DISPLAY_MODES[displayName];
+        if(displayName==null)
+            displayName = 0;
+
+        if(actor.data.token!=null){
+            if(actor.data.token.diplayName==null)
+                if(!updateData.token){
+                    setProperty(updateData,"token",{});
+                }
         }
+
+        //updateData.token.name = actor.name;
+        if(updateData.token){
+            if(updateData.token.displayName!=displayName)
+                updateData.token.displayName = displayName;
+            if(updateData.token.displayBars!=displayName)
+                updateData.token.displayBars = displayName;
+            if(updateData.token.dimLight==null)
+                updateData.token.dimLight = 0;
+            if(updateData.token.dimSight==null)
+                updateData.token.dimSight = 0;
+            if(updateData.token.brightLight==null)
+                updateData.token.brightLight = 0;
+        }
+
+        //        updateData["token.displayName"] = displayName;
+        //        updateData["token.displayBars"] = displayName;
+        //        updateData["token.bar1.attribute"] = actor.data.data.tokenbar1;
+        //        updateData["token.bar1.attribute"] = actor.data.data.tokenbar1;
+
+        if(updateData.name){
+            if(!updateData.token)
+                setProperty(updateData,"token",{})
+            //updateData["token.name"] = updateData.name;
+            updateData.token.name = updateData.name;
+        }
+
 
         if(updateData.img){
-            updateData["token.img"] = updateData.img;
-            data.data.token.img = updateData.img;
+            if(!updateData.token)
+                setProperty(updateData,"token",{})
+            //updateData["token.img"] = updateData.img;
+            updateData.token.img = updateData.img;
         }
+        //
+        //        if(actor.token.img==null){
+        //            if(!updateData.token)
+        //                setProperty(updateData,"token",{})
+        //            updateData.token.img = actor.data.token.img;
+        //        }
+
     }
 
+    if(updateData["data.rollmode"]){
+        if(!hasProperty(updateData,"data"))
+            setProperty(updateData,"data",{});
+        updateData.data.rollmode = updateData["data.rollmode"];
+    }
 
-
+    //console.log(updateData);
 
 });
 
@@ -358,6 +458,8 @@ Hooks.on("preCreateToken", async (scene, tokenData, options, userId) =>{
         if(tokennumber!=0){
             tokenData.name += " " + tokennumber;
         }
+
+
     }
 
 
@@ -379,31 +481,23 @@ Hooks.on("deleteActor", (actor) =>{
 });
 
 Hooks.on("updateActor", async (actor, updateData,options,userId) => {
-
-
-    //console.log(actor);
     //console.log(updateData);
+    //console.log("updateHook");
+
     if(updateData){
         actor.data.flags.lastupdatedBy = await userId;
-        //actor.data.flags.haschanged = true;
-    }
-    else{
-        //actor.data.flags.haschanged = false;
-        //console.log("not changed");
+
     }
 
-    if(game.settings.get("sandbox", "tokenOptions")){
-        if(actor.data.token.name!=actor.data.name){
-            actor.data.token.name = actor.data.name;
-            actor.data.token.displayName = actor.data.data.displayName;
-            actor.data.token.displayBars = actor.data.data.displayName;
-            actor.data.token.bar1.attribute = actor.data.data.tokenbar1;
-            actor.update({"token":actor.data.token},{diff:false});
+    if(updateData.data!=null){
+        if(!options.stopit && (updateData.data.attributes || updateData.data.citems || updateData.data.mod)){
+            actor.data = await actor.actorUpdater(actor.data);
+
+            await actor.update(actor.data,{stopit:true,diff:true});
+
         }
     }
 
-
-    //console.log("updated");
 
 });
 
@@ -517,31 +611,19 @@ Hooks.on("rendersItemSheet", (app, html, data) => {
 });
 
 Hooks.on("rendergActorSheet", async (app, html, data) => {
-    //console.log("rendering");
+    //console.log("rendering Hook");
     //console.log(app);
     //console.log(data);
     const actor = app.actor;
-    let _html = await app.getTemplateHTML(html);
-
-    if(actor.data.data.istemplate && hasProperty(actor.data.data,"_html")){
-        html = actor.data.data._html;
-    }
-    else{
-        html = $(_html);
-    }
 
     if(actor.data.flags.lastupdatedBy==null){
         actor.data.flags.lastupdatedBy = game.user._id;
         actor.data.flags.haschanged = true;
     }
 
-    if(actor.data.flags.lastupdatedBy == game.user._id && actor.data.flags.haschanged){
-        if(!app.actor.data.flags.ischeckingauto)
-            app.actor.actorUpdater(data);
-
-    }
-
-    actor.listSheets();
+    if(actor.token==null)
+        actor.listSheets();
+    //if(!actor.data.data.istemplate && !actor.data.flags.ischeckingauto){
     if(!actor.data.data.istemplate){
         app.refreshCItems(html);
         app.handleGMinputs(html);
@@ -554,11 +636,11 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
             event.preventDefault();
             app.scrollBarTest(html);
         });
+
+
     }
 
     app.displaceTabs();
-
-
 
 });
 
@@ -573,11 +655,11 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
 
     let _html = await html[0].outerHTML;
     let realuser = game.users.get(data.message.user);
-    //console.log(realuser);
 
-    if(data.message.type==1 && game.user._id!=data.message.user && !game.user.isgM)
+    if(((data.cssClass == "whisper")||(data.message.type==1)) && game.user._id!=data.message.user && !game.user.isgM)
         hide=true;
 
+    //console.log(hide);
     if(_html.includes("dice-roll") && !_html.includes("table-draw")){
         let rollData = {
             token:{
@@ -606,11 +688,6 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
 
         });
 
-        if(!game.user.isGM && hide){
-            console.log(html);
-            html.hide();
-        }
-
     }
 
     //console.log(html);
@@ -619,7 +696,7 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
         if(_html.includes("table-draw")){
             let mytableID = data.message.flags.core.RollTable;
             let mytable = game.tables.get(mytableID);
-            console.log(mytable.data.permission.default);
+            //console.log(mytable.data.permission.default);
             if(mytable.data.permission.default==0)
                 hide=true;
         }
@@ -638,16 +715,18 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
         await containerDiv.appendChild(headerDiv);
         await containerDiv.appendChild(messageDiv);
 
-        if(!game.user.isGM && hide){
-            console.log(html);
-            html.hide();
-        }
-
         html = html[0].insertBefore(headerDiv,html[0].childNodes[0]);
+        html = $(html);
 
     }
 
 
+
+    if(!game.user.isGM && hide){
+        //console.log(html);
+        //console.log(_html);
+        html.hide();
+    }
 
     //ROLL INSTRUCTIONS
     let header = $(html).find(".message-header");
