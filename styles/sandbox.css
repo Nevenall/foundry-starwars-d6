@@ -85,7 +85,7 @@
 }
 
 .sandbox.sheet .tabs .item.active {
-    text-decoration: underline;
+
     text-shadow: none;
 }
 
@@ -799,6 +799,10 @@
     font-weight: bold;
 }
 
+.sandbox.sheet .underlined {
+    text-decoration: underline;
+}
+
 .sandbox.sheet .smalltext {
     font-size: 11px;
 }
@@ -881,6 +885,7 @@
 
 
 .sandbox.sheet table{
+    width:-webkit-fill-available;
     background-color:#bcc2bf;
     border-style:none;
     padding: 0px 0px;
@@ -891,6 +896,7 @@
 .sandbox.sheet table.table-free{
     height:100%;
     width:100%;
+    width:-webkit-fill-available;
 }
 
 .sandbox.sheet table.table-small{
@@ -1042,7 +1048,7 @@
     flex-direction: row;
     border-top: 1px solid #AAA;
     border-bottom: 2px solid black;
-    padding: 15px 20px;
+    padding: 1px 20px;
 
 }
 
@@ -1294,6 +1300,15 @@
     overflow-y: auto;
 }
 
+.roll-timestamp{
+    font-family: Tahoma, sans-serif;
+    font-size: 9px;
+    font-style: italic;
+    text-align:center;
+    width:100%;
+    padding:0px 5px;
+}
+
 .sandbox.sheet .radio-input{
     padding:5px 2px;
     vertical-align:middle;
@@ -1475,4 +1490,19 @@ div.dmtk-tooltip.visible {
     visibility: visible;
 }
 
+.sandbox.sheet nav.sheet-tabs {
+    flex: 0 0 auto;
+    border:none;
+}
 
+.sandbox.sheet .tab-prev {
+    flex: 0 0 auto;
+    border:none;
+    padding: 10px 0px;
+}
+
+.sandbox.sheet .tab-next {
+    flex: 0 0 auto;
+    border:none;
+    padding: 10px 0px;
+}
