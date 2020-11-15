@@ -11,6 +11,8 @@
             "displayName":"",
             "tokenbar1":"",
             "shieldstat":"",
+            "biovisible":true,
+            "visitabs":3,
             "selector":false,
             "attributes":{},
             "citems":[],
