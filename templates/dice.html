@@ -65,7 +65,7 @@
                     <li class="roll-flexrow" data-item-id="{{key}}">
                         <label class="label-roll">{{{die.rolls.length}}}d{{{die.faces}}}:</label>
                         {{#each die.rolls as |roll id|}}
-                        <div class="roll-die">{{{roll.roll}}}</div>
+                        <div class="roll-die">{{{roll.result}}}</div>
                         {{/each}}
                     </li>
                     {{/each}}
@@ -77,7 +77,7 @@
                         {{#each subdie.rolls.dice as |subrolldie id|}}
 
                         {{#each subrolldie.rolls as |subrollresult cid|}}
-                        <div class="roll-die">{{{subrollresult.roll}}}</div>
+                        <div class="roll-die">{{{subrollresult.result}}}</div>
                         {{/each}}
 
                         {{/each}}
@@ -100,6 +100,12 @@
 
             <div class="roll-user">
                 {{{user}}}
+            </div>
+        </div>
+
+        <div class="roll-flexrow">
+            <div class="roll-timestamp message-timestamp">
+                {{{data.timestamp}}}
             </div>
         </div>
     </div>
