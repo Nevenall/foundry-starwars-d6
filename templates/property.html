@@ -88,6 +88,7 @@
                             <input class="check-hasheader" name="data.hasheader" id="check-hasheader" type="checkbox" {{checked item.data.hasheader}}/>
                         </div>
                     </div>
+
                     {{#ifCond item.data.datatype "table"}}
                     {{#if item.data.hasheader}}
                     <div class="new-row">
@@ -102,6 +103,7 @@
                     </div>
                     {{/if}}
                     {{/ifCond}}
+
                     <div class="new-row">
                         <div class="flexblock-left">
                             <label class="label-medlarge">Height</label>
@@ -321,7 +323,7 @@
                 </div>
             </div>
             {{/ifCond}}
-            
+
             {{#ifCond item.data.datatype "radio"}}
             <div class="flexblock">
                 <div class="col-1-2">
