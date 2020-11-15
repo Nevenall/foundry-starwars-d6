@@ -539,9 +539,10 @@ export class auxMeth {
                 let cond;
                 let val;
                 let result;
+                //console.log(general_cond);
 
-                var findOR = general_cond.search("OR"); 
-                var findAND = general_cond.search("AND");
+                var findOR = general_cond.search(" OR "); 
+                var findAND = general_cond.search(" AND ");
                 var findSpecial = general_cond.search("<"); //This will be used in the case we implement grouping AND/ORS like if(a and(b or c)) => if[a AND <b OR c>]
 
                 if (limits[2]!=null) falsevalue = limits[2] // in case there are no ELSEs, the false value is equal to the false statement
@@ -572,8 +573,6 @@ export class auxMeth {
                     falsevalue =falsevalue.replace("~DIS~","");
                     falsevalue =falsevalue.replace("1d20","2d20kl");
                 }
-
-
 
                 if (findSpecial == -1 && findAND == -1 && findOR == -1){
                     //Single expression --> if[FIELD:VALUE,TRUE,FALSE]
@@ -655,9 +654,11 @@ export class auxMeth {
                 }
                 let finalvalue;
                 let attname="";
+
                 if(result == true){
                     //In case the condition is met, we quit the nested IFs (if any) and return value on the true statement
                     finalvalue = truevalue;
+                    //console.log(expr);
                     if (searchElse!=-1)  {
                         for (let z=i;z<ifresult.length-1;z++){
                             attname = attname + "if[" + ifresult[z]+ ",ELSE " ;    
@@ -680,6 +681,7 @@ export class auxMeth {
 
                 }else{
                     //in case the condition is not met
+                    console.log(expr);
                     if (falsevalue == "else"){
                         //in case the false statement is a nested IF
                         ifresult[i] = ifresult[i] + ",ELSE " ; //adapt the expression to be identifiable by the rutine
