@@ -217,6 +217,10 @@ export class sItemSheet extends ItemSheet {
         let dropitem;
         let dropmod = false;
         let modId;
+
+        //        if(event==null)
+        //            return;
+
         if(event.toElement.classList.contains("itemdrop-area")){
             console.log("dropping on mod");
             dropmod = true;
@@ -546,9 +550,12 @@ export class sItemSheet extends ItemSheet {
                                             input.setAttribute("type", "checkbox");
                                             let setvalue = false;
                                             //console.log(attribute.value);
-                                            if(attribute.value==true || attribute.value=="true"){
+                                            if(attribute.value===true || attribute.value==="true"){
                                                 setvalue = true;
                                             }
+
+                                            if(attribute.value==="false")
+                                                attribute.value = false;
                                             //console.log(setvalue);
                                             input.checked = setvalue;
                                         }
