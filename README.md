@@ -322,13 +322,13 @@ There is a list of functions to use with roll expressions. Now you will hate me 
 
 REMEMBER, always follow the below structure for a roll expression:
 
-|Registration Helpers: $<> and roll() expressions | All other roll expression functions | Subtext and Roll ID expressions: && and ~~ expressions
+Registration Helpers: $<> and roll() expressions, + All other roll expression functions, + Subtext and Roll ID expressions: && and ~~ expressions
 
 For example:
 
-$<1;1d6> ceil($1/2) &&total;1:FAIL,3:SUCCESS&& ~testroll~
+$<1;1d6> 3d6+$1 &&total;1:FAIL,3:SUCCESS&& ~testroll~
 
-ALSO IMPORTANT: Rolls in sandbox only return numerical values! Always make sure that the result of your roll is a number!!!
+ALSO IMPORTANT: Rolls in sandbox only return numerical values! Always make sure that the result of your roll is a number!!! **AND ONLY ONE NUMBER** So you can't return: "Hello World", or [3,4,6], or "SUCCESS". It needs to be a number, only one, like 4.
 
 The roll functions are the following:
 
@@ -361,9 +361,9 @@ Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, 
 - #{name}: Returns the name of the cItem you are rolling from.
 - #{roll}: Returns the value of the latest roll executed on a cItem. How is this useful? Well, imagine you have a cItem that is a CONSUMABLE, and every time is activated it rolls 1d6. If you want that 1d6 result to be added to an attribute as part of an ADD MOD, you just need to use #{roll} in the MOD value input field.
 - #{num}: returns the current number of units of the cItems that this actor has.
-- #{target|target_attribute_key}: Returns the value of an attribute of the target actor on the map. Useful for calculating AC and such. Example: 1d20 + @{weapon_skill} &&0:FAILURE;#{target|ac}:YOU HIT!&&
+- #{target|target_attribute_key}: Returns the value of an attribute of the target actor on the map. Useful for calculating AC and such. Example: 1d20 + @{weapon_skill} &&total;0:FAILURE;#{target|ac}:YOU HIT!&&
 - #{diff}: There is a DC box on the bottom of your active scene, to the right of the macro bar. DC stands for difficulty class. If your system/game requires the GM to set a difficulty, this is the place to write it down. Then, the rolls can reference this difficulty by using #{diff}.
-- &&value_to_compare;value_1:text_1;value_N;text_N&&: So imagine you want to return a sentence to the chat, along with your roll. You want to return "SUCESS" if the result of your roll is over 8, "FAILURE" if the result of the roll is under 7, and "PARTIAL SUCCESS" on every other result. This function allows you to return that sentence/word below the roll result. So you can do this with the following formula &&total;0:FAILURE;7:PARTIAL SUCCESS;9:SUCCESS&&. The first argument of the expression is the value you are analysing, and if you write "total" it will take into account the total of the roll. You can include a property instead of that, or another roll expression with a numeric outcome.
+- &&value_to_compare;value_1:text_1,value_N,text_N&&: So imagine you want to return a sentence to the chat, along with your roll. You want to return "SUCESS" if the result of your roll is over 8, "FAILURE" if the result of the roll is under 7, and "PARTIAL SUCCESS" on every other result. This function allows you to return that sentence/word below the roll result. So you can do this with the following formula &&total;0:FAILURE,7:PARTIAL SUCCESS,9:SUCCESS&&. The first argument of the expression is the value you are analysing, and if you write "total" it will take into account the total of the roll. You can include a property instead of that, or another roll expression with a numeric outcome.
 
 - ~Roll_ID~: adds a Roll ID to the roll. Remember that we have a MOD type called ROLL? And this one adds values to rolls of a specific Roll ID? So this function lets you add ROll IDs to rolls. As many as you like. So let's say we just defined a roll for an attack with Roll Name:"Attack", Roll ID: "attack", and Roll Expression: 1d20+@{strength}. However, we want more definition for it, and for that we want to incorporate some more Roll IDs, in case we need to modify the roll through a MOD. Let's say we want to add the Ids "melee_attack" and "slashing", then we would have to change the Roll Expression to 1d20+@{strength} ~melee_attack~ ~slashing~
 - ~ADV~ or ~DIS~: fives advantage or disadvantage to the roll
@@ -384,6 +384,10 @@ sum(expr1,expr2,expr3) : returns the sum of all elements in the list.  Can also 
 ![Naming sub rolls](docs/images/tuto44.png)
 
 - $<index;expression>: So roll parsing is not perfect, and until we find a way to do it more visually attractive there will be tons of problems. Expressions that contain brackets inside other expressions that also contain brackets will give you troubles. To avoid this, you can save pieces of your expression through this function. For example $<1;%[@{str},0:0,15:1]> will register the expresion after the semicolon as $1. A full example of this is: $<1;%[@{str},0:0,15:1]> 2d6+$1. This expression is equivalent to 2d6 + %[@{str},0:0,15:1]. Remember to change the number before the semicolon, as is the index and will let you identify subexpressions using $1,$2,$3, etc.
+
+- add(property_key;value): this expression will only work with a targeted token. It will add "value" to the current value of the specified property (key only, no @). For example, roll(Damage_Roll;2;10;false) sum(?[Damage_Roll]) add(HP;-sum(?[Damage_Roll])). This example expression will substract 2d10 from the property @{HP} of the targeted token.
+
+- set(property_key;value): as add() property, but will set the value to it.
 
 SOME EXAMPLES OF ROLLS:
 - Roll 1d6: 1d6
