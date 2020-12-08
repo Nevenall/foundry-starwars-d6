@@ -43,6 +43,8 @@ Hooks.once("init", async function() {
     Items.unregisterSheet("core", ItemSheet);
     Items.registerSheet("dnd5e", sItemSheet, {makeDefault: true});
 
+
+
     game.settings.register("sandbox", "showADV", {
         name: "Show Roll with Advantage option",
         hint: "If checked, 1d20,ADV,DIS options will be displayed under the Actor's name",
@@ -124,16 +126,92 @@ Hooks.once("init", async function() {
         type: String,
     });
 
-    let initF = await game.settings.get("sandbox", "initKey");
-    let formvalue = "@attributes." + initF + ".value";
-    if(initF=="")
-        formvalue = "1d20";
 
-    CONFIG.Combat.initiative = {
-        formula: formvalue,
-        decimals: 2
+    Combat.prototype.rollInitiative = async function(ids, {formula=null, updateTurn=true, messageOptions={}}={}) {
+
+        // Structure input data
+        ids = typeof ids === "string" ? [ids] : ids;
+        const currentId = this.combatant._id;
+
+        // Iterate over Combatants, performing an initiative roll for each
+        const [updates, messages] = await ids.reduce(async(results, id, i) => {
+            //console.log(results);
+            let [updates, messages] = await results;
+
+            // Get Combatant data
+            const c = this.getCombatant(id);
+            if ( !c || !c.owner ) return results;
+
+            // Roll initiative
+            const cf = await this._getInitiativeFormula(c);
+            //console.log(cf);
+            const roll = this._getInitiativeRoll(c, cf);
+            updates.push({_id: id, initiative: roll.total});
+
+            // Determine the roll mode
+            let rollMode = messageOptions.rollMode || game.settings.get("core", "rollMode");
+            if (( c.token.hidden || c.hidden ) && (rollMode === "roll") ) rollMode = "gmroll";
+
+            // Construct chat message data
+            let messageData = mergeObject({
+                speaker: {
+                    scene: canvas.scene._id,
+                    actor: c.actor ? c.actor._id : null,
+                    token: c.token._id,
+                    alias: c.token.name
+                },
+                flavor: `${c.token.name} rolls for Initiative!`,
+                flags: {"core.initiativeRoll": true}
+            }, messageOptions);
+            const chatData = roll.toMessage(messageData, {create:false, rollMode});
+
+            // Play 1 sound for the whole rolled set
+            if ( i > 0 ) chatData.sound = null;
+            messages.push(chatData);
+
+            // Return the Roll and the chat data
+            return results;
+        }, [[], []]);
+        if ( !updates.length ) return this;
+
+        // Update multiple combatants
+        await this.updateEmbeddedEntity("Combatant", updates);
+
+        // Ensure the turn order remains with the same combatant
+        if ( updateTurn ) {
+            await this.update({turn: this.turns.findIndex(t => t._id === currentId)});
+        }
+
+        // Create multiple chat messages
+        await CONFIG.ChatMessage.entityClass.create(messages);
+
+        // Return the updated Combat
+        return this;
+
     };
 
+    Combat.prototype._getInitiativeFormula = async function(combatant) {
+
+        let initF = await game.settings.get("sandbox", "initKey");
+        let formula = "1d20";
+        if(initF!=""){
+            formula = "@{" + initF + "}"
+        }
+
+        formula = await auxMeth.autoParser(formula,combatant.actor.data.data.attributes,null,true,false);
+        formula = await auxMeth.autoParser(formula,combatant.actor.data.data.attributes,null,true,false);
+
+        CONFIG.Combat.initiative.formula = formula;
+
+
+        return CONFIG.Combat.initiative.formula || game.system.data.initiative;
+
+    };
+
+    CONFIG.Combat.initiative = {
+        formula: "1d20",
+        decimals: 2
+    };
 
 
 });
@@ -314,10 +392,14 @@ Hooks.on("hoverToken", (token, hovered) => {
 Hooks.on("createToken", async (scene,token,options,userId) => {
     //let actor = game.actors.get(token.actorId);
     //console.log(token);
-    //token["tokenId"] = token._id;
-    //let mytoken = canvas.tokens.get(token._id);
+    //    token["tokenId"] = token._id;
+    //    let mytoken = canvas.tokens.get(token._id);
     //await mytoken.update({"actorData.tokenId":token._id});
     //console.log(token);
+    if(!hasProperty(token, "data"))
+        setProperty(token,"data",{});
+    if(!hasProperty(token.data, "effects"))
+        setProperty(token.data,"effects",[]);
 });
 
 Hooks.on("deleteToken", (scene, token) => {
@@ -339,6 +421,8 @@ Hooks.on("preUpdateToken", async (scene, token, updatedData, options, userId) =>
             setProperty(updatedData.actorData,"data",{});
         updatedData.actorData.data.citems = updatedData["data.citems"];
     }
+
+
 
 });
 
@@ -405,12 +489,16 @@ Hooks.on("preUpdateActor", async (actor,updateData,options,userId) => {
                 updateData.token.dimSight = 0;
             if(updateData.token.brightLight==null)
                 updateData.token.brightLight = 0;
+            if(updateData.token.bar1==null){
+                setProperty(updateData.token,"bar1",{});
+                updateData.token.bar1.attribute = actor.data.data.tokenbar1;
+            }    
+
         }
 
         //        updateData["token.displayName"] = displayName;
         //        updateData["token.displayBars"] = displayName;
-        //        updateData["token.bar1.attribute"] = actor.data.data.tokenbar1;
-        //        updateData["token.bar1.attribute"] = actor.data.data.tokenbar1;
+
 
         if(updateData.name){
             if(!updateData.token)
@@ -424,14 +512,9 @@ Hooks.on("preUpdateActor", async (actor,updateData,options,userId) => {
             if(!updateData.token)
                 setProperty(updateData,"token",{})
             //updateData["token.img"] = updateData.img;
-            updateData.token.img = updateData.img;
+            if(!actor.isToken)
+                updateData.token.img = updateData.img;
         }
-        //
-        //        if(actor.token.img==null){
-        //            if(!updateData.token)
-        //                setProperty(updateData,"token",{})
-        //            updateData.token.img = actor.data.token.img;
-        //        }
 
     }
 
@@ -481,7 +564,12 @@ Hooks.on("deleteActor", (actor) =>{
 });
 
 Hooks.on("updateActor", async (actor, updateData,options,userId) => {
-    //console.log(updateData);
+    //console.log(actor.data);
+    //    console.log(options);
+    //    console.log(userId);
+    //    console.log(actor.data.flags.lastupdatedBy);
+    //console.log("updating actor");
+
     //console.log("updateHook");
 
     if(updateData){
@@ -491,9 +579,10 @@ Hooks.on("updateActor", async (actor, updateData,options,userId) => {
 
     if(updateData.data!=null){
         if(!options.stopit && (updateData.data.attributes || updateData.data.citems || updateData.data.mod)){
+            //console.log(actor.data);
             actor.data = await actor.actorUpdater(actor.data);
 
-            await actor.update(actor.data,{stopit:true,diff:true});
+            await actor.update(actor.data,{stopit:true});
 
         }
     }
@@ -504,6 +593,7 @@ Hooks.on("updateActor", async (actor, updateData,options,userId) => {
 Hooks.on("closegActorSheet", (entity, eventData) => {
     //console.log(entity);
     //console.log(eventData);
+    //console.log("closing sheet");
 
     let character = entity.object.data;
     if(character.flags.ischeckingauto)
@@ -519,6 +609,8 @@ Hooks.on("preCreateItem", (entity, options, userId) => {
     if(!entity.img){
         if(entity.type=="cItem"){
             image="systems/sandbox/docs/icons/sh_citem_icon.png";
+
+
         }
 
         if(entity.type=="sheettab"){
@@ -549,7 +641,7 @@ Hooks.on("preCreateItem", (entity, options, userId) => {
 
 });
 
-Hooks.on("createItem", (entity) => {
+Hooks.on("createItem", async (entity) => {
     let do_update=false;
     let image="";
     if(entity.type=="cItem"){
@@ -562,30 +654,44 @@ Hooks.on("createItem", (entity) => {
             }
 
         }
-
+        //BEWARE OF THIS, THIS WAS NEEDED WHEN DUPLICATING CITEMS IN THE PAST!!
         if(do_update)
-            entity.update();
+            await entity.update(entity.data,{diff:false});
     }
 
 });
 
-Hooks.on("updateItem", (entity) => {
+//Hooks.on("preUpdateItem", (entity) => {
+//
+//    if(entity.type=="cItem"){
+//        //console.log(entity);
+//        for(let i=0;i<entity.data.data.mods.length;i++){
+//            const mymod=entity.data.data.mods[i];
+//            if(mymod.citem!=entity.data._id){
+//                mymod.citem = entity.data._id;
+//            }
+//
+//        }
+//    }
+//});
 
-    let do_update=false;
-    if(entity.type=="cItem"){
-        //console.log(entity);
-        for(let i=0;i<entity.data.data.mods.length;i++){
-            const mymod=entity.data.data.mods[i];
-            if(mymod.citem!=entity.data._id){
-                mymod.citem = entity.data._id;
-                do_update=true;
-            }
-
-        }
-        if(do_update)
-            entity.update();
-    }
-});
+//Hooks.on("updateItem", (entity) => {
+//
+//    let do_update=false;
+//    if(entity.type=="cItem"){
+//        //console.log(entity);
+//        for(let i=0;i<entity.data.data.mods.length;i++){
+//            const mymod=entity.data.data.mods[i];
+//            if(mymod.citem!=entity.data._id){
+//                mymod.citem = entity.data._id;
+//                do_update=true;
+//            }
+//
+//        }
+////        if(do_update)
+////            entity.update();
+//    }
+//});
 
 Hooks.on("closesItemSheet", (entity, eventData) => {
     let item = entity.object.data;
@@ -615,11 +721,6 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
     //console.log(app);
     //console.log(data);
     const actor = app.actor;
-
-    if(actor.data.flags.lastupdatedBy==null){
-        actor.data.flags.lastupdatedBy = game.user._id;
-        actor.data.flags.haschanged = true;
-    }
 
     if(actor.token==null)
         actor.listSheets();
