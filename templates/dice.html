@@ -63,8 +63,8 @@
                 <ol class="roll-list">
                     {{#each dice as |die key|}}
                     <li class="roll-flexrow" data-item-id="{{key}}">
-                        <label class="label-roll">{{{die.rolls.length}}}d{{{die.faces}}}:</label>
-                        {{#each die.rolls as |roll id|}}
+                        <label class="label-roll">{{{die.results.length}}}d{{{die.faces}}}:</label>
+                        {{#each die.results as |roll id|}}
                         <div class="roll-die">{{{roll.result}}}</div>
                         {{/each}}
                     </li>
@@ -74,9 +74,9 @@
                     {{#each subdice as |subdie key|}}
                     <li class="roll-flexrow" data-item-id="{{key}}">
                         <label class="label-roll">{{{subdie.name}}} ({{{subdie.expr}}}):</label>
-                        {{#each subdie.rolls.dice as |subrolldie id|}}
+                        {{#each subdie.results.dice as |subrolldie id|}}
 
-                        {{#each subrolldie.rolls as |subrollresult cid|}}
+                        {{#each subrolldie.results as |subrollresult cid|}}
                         <div class="roll-die">{{{subrollresult.result}}}</div>
                         {{/each}}
 
