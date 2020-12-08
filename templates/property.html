@@ -226,6 +226,19 @@
                         </div>
                     </div>
                     {{/ifCond}}
+                    {{#ifCond item.data.datatype "simplenumeric"}}
+                    <div class="new-row">
+                        <div class="flexblock-left">
+                            <label class="label-medlarge">Input Size</label>
+                            <select  name="data.inputsize"  data-type="String">
+                                {{#select item.data.inputsize}}
+                                <option  value="F">Small</option>
+                                <option  value="M">Medium</option>
+                                {{/select}}
+                            </select>
+                        </div>
+                    </div>
+                    {{/ifCond}}
                     {{#ifCond item.data.datatype "textarea"}}
                     <div class="new-row">
                         <div class="flexblock-left">
