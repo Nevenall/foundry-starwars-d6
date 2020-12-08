@@ -193,8 +193,21 @@ export class auxMeth {
     static async autoParser(expr,attributes,itemattributes,exprmode,noreg=false,number=1){
         var toreturn = expr;
         //console.log(expr);
+        //console.log(typeof(expr));
+        if(typeof(expr)!="string")
+            return expr;
         //console.log(itemattributes);
         //console.log(number);
+        //console.log(exprmode);
+
+        //PARSE TO TEXT
+        let textexpr = expr.match(/[|]/g);
+        if(textexpr!=null){
+            expr = expr.replace("|","");
+            exprmode=true;
+        }
+
+        //console.log(exprmode);
 
         //Expression register. Recommended to avoid REgex shennanigans
         let regArray =[];
@@ -212,7 +225,7 @@ export class auxMeth {
 
                 let regobject = {};
                 regobject.index = regblocks[0];
-                regobject.expr = regblocks[1];
+                regobject.expr = expreg[i].replace(regblocks[0]+";",'');
                 //console.log(regobject.expr);
                 let internalvBle = regobject.expr.match(/(?<=\$)[0-9]/g);
                 if(internalvBle!=null){
@@ -235,7 +248,7 @@ export class auxMeth {
 
             }
 
-            let exprparse = expr.match(/(?<=\$)[0-9]/g);
+            let exprparse = expr.match(/(?<=\$)[0-9]+/g);
             if(exprparse!=null){
                 for (let i=0;i<exprparse.length;i++){
                     let regindex = exprparse[i];
@@ -255,6 +268,7 @@ export class auxMeth {
         }
 
         //console.log(expr);
+        //console.log(regArray);
 
         //Parses last roll
         if(itemattributes!=null && expr.includes("#{roll}")){
@@ -332,7 +346,7 @@ export class auxMeth {
                         }
 
                         ui.notifications.warn("Property " + rawattname + mycitem + " does not exist");
-                        console.log(expr);
+                        //console.log(expr);
                     }
 
                     if((attvalue!==false)&&(attvalue!==true)){
@@ -395,544 +409,608 @@ export class auxMeth {
         }
 
         //console.log(expr);
-        //PARSE SCALED AUTO VALUES
-        var scaleresult = expr.match(/(?<=\%\[).*?(?=\])/g);
-        if(scaleresult!=null){
-            //console.log(expr);
-            //Substitute string for current value
-            for (let i=0;i<scaleresult.length;i++){
-                let limits = scaleresult[i].split(",");
-                //console.log(limits[0]);
-                let value = limits[0];
-                if(isNaN(value)){
-                    let roll = new Roll(limits[0]).roll();
-                    value = roll.total;
-                }
 
-                let valuemod=0;
+        //NEW SMART PARSING
+        let sums_are_num = false;
+        let safety_break = 0;
 
-                let limitArray = [];
+        while(!sums_are_num){
 
-                for(let j=1;j<limits.length;j++){
-                    let splitter = limits[j].split(":");
-                    let scale = splitter[0];
-                    if(isNaN(scale)){
-                        //if(isNaN(scale) || scale.includes('+')|| scale.includes('-')|| scale.includes('/')|| scale.includes('*')){
-                        let newroll = new Roll(scale).roll();
-                        //expr = expr.replace(scale,newroll.total);
-                        scale = newroll.total;
+            sums_are_num = true;
+            if(safety_break>7)
+                break;
 
-                    }
+            //PARSE SCALED AUTO VALUES
+            //var scaleresult = expr.match(/(?<=\%\[).*?(?=\])/g);
+            let scmatch = /\%\[/g;
+            var scaleresultArray;
+            var scaleresult = [];
 
-                    let limitEl = {};
-                    limitEl.scale = scale;
-                    limitEl.value = splitter[1];
-                    await limitArray.push(limitEl);
-                }
-
-                await limitArray.sort(function (x, y) {
-                    return x.scale - y.scale;
-                });
-                //console.log(limitArray);
-                //console.log(value);
-                valuemod= limitArray[0].value;
-                for(let k=0;k<limitArray.length;k++){
-                    let checker = limitArray[k];
-                    let checkscale = Number(checker.scale);
-                    //console.log(checkscale);
-                    if(value>=checkscale){
-                        valuemod=checker.value;
-                    }
-                }
-
-                let attname = "%[" + scaleresult[i]+ "]";
-                expr = expr.replace(attname,valuemod);
+            while (scaleresultArray = scmatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(scmatch.lastIndex, expr.length);
+                let subb = auxMeth.getBracketsString(suba);
+                scaleresult.push(subb);
             }
+            if(scaleresult!=null){
+                //console.log(expr);
+                //Substitute string for current value
+                for (let i=scaleresult.length-1;i>=0;i--){
+                    let limits = scaleresult[i].split(",");
+                    //console.log(limits[0]);
+                    let value = limits[0];
+                    if(isNaN(value)){
+                        let roll = new Roll(limits[0]).roll();
+                        value = roll.total;
+                    }
+
+                    let valuemod=0;
+
+                    let limitArray = [];
+
+                    for(let j=1;j<limits.length;j++){
+                        let splitter = limits[j].split(":");
+                        let scale = splitter[0];
+                        if(isNaN(scale)){
+                            //if(isNaN(scale) || scale.includes('+')|| scale.includes('-')|| scale.includes('/')|| scale.includes('*')){
+                            let newroll = new Roll(scale).roll();
+                            //expr = expr.replace(scale,newroll.total);
+                            scale = newroll.total;
+
+                        }
+
+                        let limitEl = {};
+                        limitEl.scale = scale;
+                        limitEl.value = splitter[1];
+                        await limitArray.push(limitEl);
+                    }
+
+                    await limitArray.sort(function (x, y) {
+                        return x.scale - y.scale;
+                    });
+                    //console.log(limitArray);
+                    //console.log(value);
+                    valuemod= limitArray[0].value;
+                    for(let k=0;k<limitArray.length;k++){
+                        let checker = limitArray[k];
+                        let checkscale = Number(checker.scale);
+                        //console.log(checkscale);
+                        if(value>=checkscale){
+                            valuemod=checker.value;
+                        }
+                    }
+
+                    let nonum = /[#@]{|\%\[|\if\[/g;
+                    let checknonum = valuemod.match(nonum);
+
+                    if(checknonum!=null){
+                        sums_are_num = false;
+                    }
+
+                    let attname = "%[" + scaleresult[i]+ "]";
+                    expr = expr.replace(attname,valuemod);
+
+
+                }
+                //console.log(expr);
+
+            }
+
             //console.log(expr);
 
-        }
-        //console.log(expr);
-        //PARSE CONDITIONAL / ONLY FOR TEXT ORIGINAL
-        //        var ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
-        //        if(ifresult!=null){
-        //
-        //            //Substitute string for current value
-        //            for (let i=0;i<ifresult.length;i++){
-        //                let limits = ifresult[i].split(",");
-        //                let truevalue = limits[1];
-        //                let falsevalue = limits[2];
-        //                let finalvalue;
-        //                let conditionarray = limits[0].split(":");
-        //                let condition = conditionarray[0];
-        //                let conditioncheck = conditionarray[1];
-        //                //console.log(condition + " / " + conditioncheck);
-        //                //console.log(truevalue + " " + falsevalue);
-        //                if(condition==conditioncheck){
-        //                    finalvalue = truevalue;
-        //                }
-        //
-        //                else{
-        //                    finalvalue = falsevalue;
-        //                }
-        //
-        //                let attname = "if[" + ifresult[i]+ "]";
-        //                expr = expr.replace(attname,finalvalue);
-        //                //console.log(expr);
-        //            }         
-        //
-        //        }
+            //PARSE CONDITIONAL / ONLY FOR TEXT ORIGINAL
+            //var ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
+            var ifmatch = /\if\[/g;
+            var ifresultArray;
+            var ifresult = [];
 
-        /********************************************* H3LS1 - 09/11/2020 ************************************************** */
-        /**************************** ADDED ORs, ANDs, NESTED IFs - TO BE CHECKED AND APPROVED *******************************/
-
-        /* FORMATS OF THE IF expressions ARE:
-        1. Single IF with no ANDs no ORs --> if[Field:condition,true_value, false_value]
-        2. Single IF with ORs only --> if[FIELD1:COND1 OR FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value]
-        3. Single IF with ANDs only --> if[FIELD1:COND1 AND FIELD2:COND2 AND....FIELDn:CONDn,true_value, false_value]
-        4. Single IF with ANDs and ORs (it always execute first ANDs) --> if[FIELD1:COND1 AND FIELD2:COND2 OR....FIELDn:CONDn,true_value, false_value]
-        5. Nested IFs with or without ANDs and ORs (it works with the same logic as before)
-            5.1 Example without ANDs and ORs  if[F:C,true_value, ELSE if[F:C, true_value, ELSE if[F:C,true_value,false_Value]]].....
-            5.2 Example with ANDs and ORs  if[F1:C1 OR F2:C2 AND F3:C3,true_value, ELSE if[F:C, true_value, ELSE if[F:C AND F4:C4,true_value,false_Value]]].....
-
-        */ 
-
-        //PARSE CONDITIONAL / **** IT WORKS ALSO FOR NUMBERS (comparing as equal not <,>) ****
-
-        var searchElse = expr.search("ELSE"); 
-        var countElses = (expr.match(/ELSE/g) || []).length;
-        var ifresult = [];
-        var ifsentence = [];
-
-        //Check if there are any ELSEs on the expression
-        if(searchElse!=-1){
-            //There are ELSES
-            var statement = expr.split(/ELSE/g); // Split all the nested ifs
-            for (let i=0;i<=countElses;i++){
-                //we modify the nested ifs to be considered as simple Ifs statements
-                if (i==countElses) {
-                    let toReplace="";
-                    for(let x=0;x<=countElses;x++){toReplace = toReplace + "]";}
-                    statement[i] = statement[i].replace(toReplace,"]"); 
-                }
-                else statement[i] = statement[i].replace(/,([^,]*)$/,"]");                
-                ifsentence = statement[i].match(/(?<=\if\[).*?(?=\])/g); 
-                ifresult[i] = ifsentence[0];
+            while (ifresultArray = ifmatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(ifmatch.lastIndex, expr.length);
+                let subb = auxMeth.getBracketsString(suba);
+                ifresult.push(subb);
             }
-        }else{
-            //There are no ELSEs
-            countElses = 1;
-            ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
-        }
+            if(ifresult!=null){
 
+                //Substitute string for current value
+                for (let i=ifresult.length-1;i>=0;i--){
 
-        if(ifresult!=null){
-            //If there are any IFs
-            for (let i=0;i<ifresult.length;i++){
-                /*Calculate if the IF condition is true or false for all the nested IFs (if any). It finalizes either when it finds a true condition
-                returning the true statement or when it reaches the last false condition returing the false statement of the last nested IF (if any)*/
-                let limits = ifresult[i].split(","); //split condition and true, false statements
-                let general_cond = limits[0];
-                let truevalue = limits[1];
-                let falsevalue;
-                let findADV;
-                let findDIS;
-                let cond;
-                let val;
-                let result;
-                //console.log(general_cond);
+                    var nonumber = false;
+                    let limits = ifresult[i].split(",");
+                    let general_cond = limits[0];
+                    let truevalue = limits[1];
+                    let falsevalue = limits[2];
+                    let dontparse = false;
+                    falsevalue = falsevalue.replace("ELSE ","");
 
-                var findOR = general_cond.search(" OR "); 
-                var findAND = general_cond.search(" AND ");
-                var findSpecial = general_cond.search("<"); //This will be used in the case we implement grouping AND/ORS like if(a and(b or c)) => if[a AND <b OR c>]
+                    let finalvalue = falsevalue;
 
-                if (limits[2]!=null) falsevalue = limits[2] // in case there are no ELSEs, the false value is equal to the false statement
-                else falsevalue = "else"; //in case there are ELSEs, the false value is equal to CONST = else
+                    var findOR = general_cond.search(" OR "); 
+                    var findAND = general_cond.search(" AND ");
 
-                /*Update formula for ADV or DIS*/
-                findADV = truevalue.search("~ADV~");
-                if (findADV != -1){
+                    let orconditions;
+                    let andconditions;
 
-                    truevalue =truevalue.replace("~ADV~","");
-                    truevalue =truevalue.replace("1d20","2d20kh");
-                }
-                findDIS = truevalue.search("~DIS~");
-                if (findDIS != -1){
+                    if (findOR != -1){
+                        //console.log("OR");
+                        orconditions = general_cond.split(" OR ");
+                        for(let j=0;j<orconditions.length;j++){
+                            let conditions = orconditions[j].split(":");
+                            let thiscondition = conditions[0];
+                            let checker = conditions[1];
 
-                    truevalue =truevalue.replace("~DIS~","");
-                    truevalue =truevalue.replace("1d20","2d20kl");
-                }
-                findADV = falsevalue.search("~ADV~");
-                if (findADV != -1){
+                            if (thiscondition === "true" || thiscondition === "false") {
+                                thiscondition = (thiscondition === "true");
+                            }
 
-                    falsevalue =falsevalue.replace("~ADV~","");
-                    falsevalue =falsevalue.replace("1d20","2d20kh");
-                }
-                findDIS = falsevalue.search("~DIS~");
-                if (findDIS != -1){
+                            if (checker === "true" || checker === "false") {
+                                checker = (checker === "true");
+                            }
 
-                    falsevalue =falsevalue.replace("~DIS~","");
-                    falsevalue =falsevalue.replace("1d20","2d20kl");
-                }
+                            if(isNaN(checker)){
+                                try{
+                                    let newroll = new Roll(checker).roll();
+                                    checker = newroll.total;
+                                }
+                                catch(err){
 
-                if (findSpecial == -1 && findAND == -1 && findOR == -1){
-                    //Single expression --> if[FIELD:VALUE,TRUE,FALSE]
-                    result = false;
-                    var comp = general_cond.split(":");
-                    cond = $.trim(comp[0]);
-                    val = $.trim(comp[1]);
-                    if(cond == val) result = true; else result = false;
-                }
+                                }
+                            }
 
-                if (findSpecial == -1 && findAND == -1 && findOR != -1){
-                    //Only ORs --> if[FIELD1:VALUE1 OR FIELD2:VALUE2......OR FIELDn:VALUEn,TRUE,FALSE]
-                    var ORconditions = general_cond.split("OR");
-                    if(ORconditions!=null){
-                        result = false;
-                        let j = 0;
-                        while(result != true && j<ORconditions.length ){
-                            var comp = ORconditions[j].split(":");
-                            cond = $.trim(comp[0]);
-                            val = $.trim(comp[1]);
-                            if(cond == val) result = true;
-                            j++;
-                        }
+                            if(isNaN(thiscondition)){
+                                try{
+                                    let newroll = new Roll(thiscondition).roll();
+                                    thiscondition = newroll.total;
+                                }
+                                catch(err){
 
-                    }else{
-                        //** ERROR **/
-                    }       
-                }
+                                }
+                            }
 
-                if (findSpecial == -1 && findAND != -1 && findOR == -1){
-                    //Only ANDs --> if[FIELD1:VALUE1 AND FIELD2:VALUE2......AND FIELDn:VALUEn,TRUE,FALSE]
-                    var ANDconditions = general_cond.split("AND");
-                    if(ANDconditions!=null){
-                        result = true;
-                        let j = 0;
-                        while(result != false && j<ANDconditions.length ){
-                            var comp = ANDconditions[j].split(":");
-                            cond = $.trim(comp[0]);
-                            val = $.trim(comp[1]);
-                            if(cond != val) result = false;
-                            j++;
-                        }
-
-                    }else{
-                        //** ERROR **/
-                    }
-                }
-
-                if (findSpecial == -1 && findAND != -1 && findOR != -1){
-                    //ANDs && ORs without grouping - First we resolve ANDs --> if[FIELD1:VALUE1 OR FIELD2:VALUE2 AND FIELD3:VALUE3,TRUE,FALSE]
-                    //First we resolve F2:V2 AND F3:V3 (if this is true, no more checking since OR condition is met)
-                    var ORconditions = general_cond.split("OR");
-                    if(ORconditions!=null){
-                        result = false;
-                        let j = 0;
-                        while(result != true && j<ORconditions.length ){
-                            if (findAND = ORconditions[j].search("AND") != -1){
-                                var ANDconditions = ORconditions[j].split("AND");
-                                if(ANDconditions!=null){
-                                    result = true;
-                                    let k = 0;
-                                    while(result != false && k<ANDconditions.length ){
-                                        var comp = ANDconditions[k].split(":");
-                                        cond = $.trim(comp[0]);
-                                        val = $.trim(comp[1]);
-                                        if(cond != val) result = false;
-                                        k++;
-                                    }
-                                }   
-                            }else{
-                                var comp = ORconditions[j].split(":");
-                                cond = $.trim(comp[0]);
-                                val = $.trim(comp[1]);
-                                if(cond == val) result = true;
-                            }           
-                            j++;    
+                            if(thiscondition==checker)
+                                finalvalue = truevalue;
                         }
                     }
-                }
-                let finalvalue;
-                let attname="";
 
-                if(result == true){
-                    //In case the condition is met, we quit the nested IFs (if any) and return value on the true statement
-                    finalvalue = truevalue;
-                    //console.log(expr);
-                    if (searchElse!=-1)  {
-                        for (let z=i;z<ifresult.length-1;z++){
-                            attname = attname + "if[" + ifresult[z]+ ",ELSE " ;    
+                    else if (findAND != -1){
+                        //console.log("AND");
+                        andconditions = general_cond.split(" AND ");
+                        finalvalue = truevalue;
+                        for(let j=0;j<andconditions.length;j++){
+                            let conditions = andconditions[j].split(":");
+                            let thiscondition = conditions[0];
+                            let checker = conditions[1];
 
+                            if (thiscondition === "true" || thiscondition === "false") {
+                                thiscondition = (thiscondition === "true");
+                            }
+
+                            if (checker === "true" || checker === "false") {
+                                checker = (checker === "true");
+                            }
+
+                            if(isNaN(checker)){
+                                try{
+                                    let newroll = new Roll(checker).roll();
+                                    checker = newroll.total;
+                                }
+                                catch(err){
+                                    dontparse = true;
+
+                                }
+                            }
+
+                            if(isNaN(thiscondition)){
+                                try{
+                                    let newroll = new Roll(thiscondition).roll();
+                                    thiscondition = newroll.total;
+                                }
+                                catch(err){
+                                    dontparse = true;
+                                }
+                            }
+
+                            //console.log(thiscondition + " " + checker);
+
+                            if(thiscondition!=checker)
+                                finalvalue = falsevalue;
+                        }
+                    }
+
+                    else {
+                        //console.log("NONE");
+                        let conditions = general_cond.split(":");
+                        let thiscondition = conditions[0];
+                        let checker = conditions[1];
+
+                        if (thiscondition === "true" || thiscondition === "false") {
+                            thiscondition = (thiscondition === "true");
                         }
 
-                        attname = attname + "if[" + ifresult[countElses];
-                        for (let z=0;z<=countElses;z++){
-                            attname = attname + "]" ;    
-
+                        if (checker === "true" || checker === "false") {
+                            checker = (checker === "true");
                         }
 
+                        if(isNaN(checker)){
+                            try{
+                                let newroll = new Roll(checker).roll();
+                                checker = newroll.total;
+                            }
+                            catch(err){
+                                dontparse = true;
+                            }
+                        }
 
+                        if(isNaN(thiscondition)){
+                            try{
+                                let newroll = new Roll(thiscondition).roll();
+                                thiscondition = newroll.total;
+                            }
+                            catch(err){
+                                dontparse = true;
+                            }
+                        }
+
+                        if(thiscondition===checker){
+                            finalvalue = truevalue;
+                        }
                     }
-                    else attname = "if[" + ifresult[i]+ "]";
 
-                    expr = expr.replace(attname,finalvalue);
-                    if (searchElse!=-1) i=ifresult.length;
-
-
-                }else{
-                    //in case the condition is not met
-                    console.log(expr);
-                    if (falsevalue == "else"){
-                        //in case the false statement is a nested IF
-                        ifresult[i] = ifresult[i] + ",ELSE " ; //adapt the expression to be identifiable by the rutine
-                        attname = "if[" + ifresult[i];
-                        expr = expr.replace(attname,""); //"delete" the nested IF that is not met from the expression
-                    }
-                    else{
-                        //in case the false statement is a valid value
-                        finalvalue = falsevalue;
-                        attname = "if[" + ifresult[i]+ "]";
+                    let attname = "if[" + ifresult[i]+ "]";
+                    if(!dontparse)
                         expr = expr.replace(attname,finalvalue);
-                    } 
-                }
 
-            }
-        }
+                    let nonum = /[#@]{|\%\[|\if\[/g;
+                    let checknonum = finalvalue.match(nonum);
 
-        /************************************************************************************************************************** */
-
-
-        //PARSE MAX ROLL
-        var maxresult = expr.match(/(?<=\maxdie\().*?(?=\))/g);
-        if(maxresult!=null){
-            for (let i=0;i<maxresult.length;i++){
-                let attname = "maxdie(" + maxresult[i]+ ")";
-                let newroll = new Roll(maxresult[i]).roll();
-
-                let attvalue = 0;
-                for(let j=0;j<newroll.dice.length;j++){
-                    let diceexp = newroll.dice[j];
-                    attvalue += parseInt(diceexp.results.length)*parseInt(diceexp.faces);
-                }
-
-
-
-                expr = expr.replace(attname,attvalue);
-            }
-        }
-
-        //MAXOF
-        var maxResult = expr.match(/(?<=\max\().*?(?=\))/g);
-        if(maxResult!=null){
-            //Substitute string for current value        
-            for (let i=0;i<maxResult.length;i++){
-                //                let debugname = attpresult[i];
-                //                console.log(debugname);
-
-                let blocks = maxResult[i].split(",");
-                let finalvalue=0;
-                let valueToMax = Array();
-                let nonumber=false;
-                for (let n=0;n<blocks.length;n++){
-                    if(!isNaN(blocks[n])){
-                        valueToMax.push(parseInt(blocks[n]));
+                    if(checknonum!=null){
+                        sums_are_num = false;
                     }
+
+                }         
+
+            }
+
+            //console.log(expr);
+
+            //PARSE MAX ROLL
+            //var maxresult = expr.match(/(?<=\maxdie\().*?(?=\))/g);
+            let mxmatch = /\bmaxdie\(/g;
+            var maxdieArray;
+            var maxDie = [];
+
+            while (maxdieArray = mxmatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(mxmatch.lastIndex, expr.length);
+                let subb = auxMeth.getParenthesString(suba);
+                maxDie.push(subb);
+            }
+
+            if(maxDie!=null){
+                for (let i=0;i<maxDie.length;i++){
+                    let tochange = "maxdie(" + maxDie[i]+ ")";
+
+
+                    let newroll = new Roll(maxDie[i]).roll();
+
+                    let attvalue = 0;
+                    for(let j=0;j<newroll.dice.length;j++){
+                        let diceexp = newroll.dice[j];
+                        attvalue += parseInt(diceexp.results.length)*parseInt(diceexp.faces);
+                    }
+
+
+                    expr = expr.replace(tochange,attvalue);
+                }
+            }
+
+            //MAXOF
+            //var maxResult = expr.match(/(?<=\max\().*?(?=\))/g);
+            let mrmatch = /\bmax\(/g;
+            var maxResultArray;
+            var maxResult = [];
+
+            while (maxResultArray = mrmatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(mrmatch.lastIndex, expr.length);
+                let subb = auxMeth.getParenthesString(suba);
+                maxResult.push(subb);
+            }
+
+            if(maxResult!=null){
+                //Substitute string for current value        
+                for (let i=0;i<maxResult.length;i++){
+
+                    let blocks = maxResult[i].split(",");
+                    let finalvalue=0;
+                    let valueToMax = Array();
+                    let nonumber=false;
+                    for (let n=0;n<blocks.length;n++){
+                        if(!isNaN(blocks[n])){
+                            valueToMax.push(parseInt(blocks[n]));
+                        }
+                        else{
+                            nonumber=true;
+                        }
+                    }
+                    if(!nonumber){
+                        finalvalue = Math.max.apply(Math, valueToMax);
+                        let tochange = "max(" + maxResult[i]+ ")";
+                        expr = expr.replace(tochange,parseInt(finalvalue)); 
+                    }
+
                     else{
-                        nonumber=true;
+                        sums_are_num = false;
                     }
-                }
-                if(!nonumber){
-                    finalvalue = Math.max.apply(Math, valueToMax);
-                    let tochange = "max(" + maxResult[i]+ ")";
-                    expr = expr.replace(tochange,parseInt(finalvalue)); 
-                }
 
+                }
             }
-        }
-        //MINOF
-        var minResult = expr.match(/(?<=\min\().*?(?=\))/g);
-        if(minResult!=null){
-            //Substitute string for current value        
-            for (let i=0;i<minResult.length;i++){
-                //                let debugname = attpresult[i];
-                //                console.log(debugname);
 
-                let blocks = minResult[i].split(",");
-                let finalvalue;
-                let valueToMin = Array();
-                let nonumber=false;
-                for (let n=0;n<blocks.length;n++){
-                    if(!isNaN(blocks[n])){
-                        valueToMin.push(parseInt(blocks[n]));
+            //MINOF
+            //var minResult = expr.match(/(?<=\min\().*?(?=\))/g);
+            let minmatch = /\bmin\(/g;
+            var minResultArray;
+            var minResult = [];
+
+            while (minResultArray = minmatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(minmatch.lastIndex, expr.length);
+                let subb = auxMeth.getParenthesString(suba);
+                minResult.push(subb);
+            }
+            if(minResult!=null){
+                //Substitute string for current value        
+                for (let i=0;i<minResult.length;i++){
+                    //                let debugname = attpresult[i];
+                    //                console.log(debugname);
+
+                    let blocks = minResult[i].split(",");
+                    let finalvalue;
+                    let valueToMin = Array();
+                    let nonumber=false;
+                    for (let n=0;n<blocks.length;n++){
+                        if(!isNaN(blocks[n])){
+                            valueToMin.push(parseInt(blocks[n]));
+                        }
+                        else{
+                            nonumber=true;
+                        }
                     }
+                    if(!nonumber){
+                        finalvalue = Math.min.apply(Math, valueToMin);
+                        let tochange = "min(" + minResult[i]+ ")";
+                        expr = expr.replace(tochange,parseInt(finalvalue)); 
+                    }
+
                     else{
-                        nonumber=true;
+                        sums_are_num = false;
                     }
-                }
-                if(!nonumber){
-                    finalvalue = Math.min.apply(Math, valueToMin);
-                    let tochange = "min(" + minResult[i]+ ")";
-                    expr = expr.replace(tochange,parseInt(finalvalue)); 
-                }
 
 
+                }
             }
-        }
-        //COUNTIF
-        var countIfResult = expr.match(/(?<=\bcountE\b\().*?(?=\))/g);
-        if(countIfResult!=null){
-            //Substitute string for current value        
-            for (let i=0;i<countIfResult.length;i++){
-                //                let debugname = attpresult[i];
+            //COUNTIF
+            //console.log(expr);
+            //var countIfResult = expr.match(/(?<=\bcountE\b\().*?(?=\))/g);
+            let cifmatch = /\bcountE\(/g;
+            var countIfResultArray;
+            var countIfResult = [];
+
+            while (countIfResultArray = cifmatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(cifmatch.lastIndex, expr.length);
+                let subb = auxMeth.getParenthesString(suba);
+                countIfResult.push(subb);
+            }
+            if(countIfResult!=null){
+                //Substitute string for current value        
+                for (let i=0;i<countIfResult.length;i++){
+                    //                let debugname = attpresult[i];
 
 
-                let splitter = countIfResult[i].split(";");
-                let comparer = splitter[1];
-                let blocks = splitter[0].split(",");
-                let finalvalue=0;
-                let valueIf = Array();
-                let nonumber=false;
-                for (let n=0;n<blocks.length;n++){
-                    if(!isNaN(blocks[n])){
-                        valueIf.push(parseInt(blocks[n]));
+                    let splitter = countIfResult[i].split(";");
+                    let comparer = countIfResult[i].replace(splitter[0] + ";",'');
+                    let blocks = splitter[0].split(",");
+                    let finalvalue=0;
+                    let valueIf = Array();
+                    let nonumber=false;
+
+                    for (let n=0;n<blocks.length;n++){
+                        if(!isNaN(blocks[n])){
+                            valueIf.push(parseInt(blocks[n]));
+                        }
+                        else{
+                            nonumber=true;
+                        }
+
                     }
+
+                    if(!nonumber){
+                        for(let j=0;j<valueIf.length;j++){
+                            //console.log(valueIf[j] + " " + comparer)
+                            if(parseInt(valueIf[j])==parseInt(comparer))
+                                finalvalue+=1;
+                        }
+
+                        let tochange = "countE(" + countIfResult[i]+ ")";
+                        expr = expr.replace(tochange,parseInt(finalvalue)); 
+                    }
+
                     else{
-                        nonumber=true;
+                        sums_are_num = false;
                     }
 
+
                 }
-
-                if(!nonumber){
-                    for(let j=0;j<valueIf.length;j++){
-                        if(valueIf[j]==comparer)
-                            finalvalue+=1;
-                    }
-
-                    let tochange = "countE(" + countIfResult[i]+ ")";
-                    expr = expr.replace(tochange,parseInt(finalvalue)); 
-                }
-
-
             }
-        }
+            //console.log(expr);
 
-        //COUNTHIGHER
-        var countHighResult = expr.match(/(?<=\bcountH\b\().*?(?=\))/g);
-        if(countHighResult!=null){
-            //Substitute string for current value        
-            for (let i=0;i<countHighResult.length;i++){
-                //                let debugname = attpresult[i];
+            //COUNTHIGHER
+            //var countHighResult = expr.match(/(?<=\bcountH\b\().*?(?=\))/g);
+            let chimatch = /\bcountH\(/g;
+            var countHighResultArray;
+            var countHighResult = [];
+
+            while (countHighResultArray = chimatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(chimatch.lastIndex, expr.length);
+                let subb = auxMeth.getParenthesString(suba);
+                countHighResult.push(subb);
+            }
+            if(countHighResult!=null){
+                //Substitute string for current value        
+                for (let i=0;i<countHighResult.length;i++){
+                    //                let debugname = attpresult[i];
 
 
-                let splitter = countHighResult[i].split(";");
-                let comparer = splitter[1];
-                let blocks = splitter[0].split(",");
-                let finalvalue=0;
-                let valueIf = Array();
-                let nonumber=false;
-                for (let n=0;n<blocks.length;n++){
-                    if(!isNaN(blocks[n])){
-                        valueIf.push(parseInt(blocks[n]));
+                    let splitter = countHighResult[i].split(";");
+                    //let comparer = splitter[1];
+                    let comparer = countHighResult[i].replace(splitter[0] + ";",'');
+                    let blocks = splitter[0].split(",");
+                    let finalvalue=0;
+                    let valueIf = Array();
+                    let nonumber=false;
+                    for (let n=0;n<blocks.length;n++){
+                        if(!isNaN(blocks[n])){
+                            valueIf.push(parseInt(blocks[n]));
+                        }
+                        else{
+                            nonumber=true;
+                        }
                     }
+                    if(!nonumber){
+                        for(let j=0;j<valueIf.length;j++){
+                            if(valueIf[j]>comparer)
+                                finalvalue+=1;
+                        }
+
+                        let tochange = "countH(" + countHighResult[i]+ ")";
+                        expr = expr.replace(tochange,parseInt(finalvalue));
+                    }
+
                     else{
-                        nonumber=true;
-                    }
-                }
-                if(!nonumber){
-                    for(let j=0;j<valueIf.length;j++){
-                        if(valueIf[j]>comparer)
-                            finalvalue+=1;
+                        sums_are_num = false;
                     }
 
-                    let tochange = "countH(" + countHighResult[i]+ ")";
-                    expr = expr.replace(tochange,parseInt(finalvalue));
+
                 }
-
-
             }
-        }
 
-        //COUNTLOWER
-        var countLowResult = expr.match(/(?<=\bcountL\b\().*?(?=\))/g);
-        if(countLowResult!=null){
-            //Substitute string for current value        
-            for (let i=0;i<countLowResult.length;i++){
-                //                let debugname = attpresult[i];
+            //COUNTLOWER
+            //var countLowResult = expr.match(/(?<=\bcountL\b\().*?(?=\))/g);
+            let clomatch = /\bcountL\(/g;
+            var countLowResultArray;
+            var countLowResult = [];
+
+            while (countLowResultArray = clomatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(clomatch.lastIndex, expr.length);
+                let subb = auxMeth.getParenthesString(suba);
+                countLowResult.push(subb);
+            }
+
+            if(countLowResult!=null){
+                //Substitute string for current value        
+                for (let i=0;i<countLowResult.length;i++){
+                    //                let debugname = attpresult[i];
 
 
-                let splitter = countLowResult[i].split(";");
-                let comparer = splitter[1];
-                let blocks = splitter[0].split(",");
-                let finalvalue=0;
-                let valueIf = Array();
-                let nonumber=false;
-                for (let n=0;n<blocks.length;n++){
-                    if(!isNaN(blocks[n])){
-                        valueIf.push(parseInt(blocks[n]));
+                    let splitter = countLowResult[i].split(";");
+                    //let comparer = parseInt(splitter[1]);
+                    let comparer = countLowResult[i].replace(splitter[0] + ";",'');
+                    let blocks = splitter[0].split(",");
+                    let finalvalue=0;
+                    let valueIf = Array();
+
+                    let nonumber=false;
+                    for (let n=0;n<blocks.length;n++){
+
+                        if(!isNaN(blocks[n])){
+                            valueIf.push(parseInt(blocks[n]));
+                        }
+                        else{
+                            nonumber=true;
+                        }
                     }
+                    if(!nonumber){
+                        for(let j=0;j<valueIf.length;j++){
+                            if(valueIf[j]<comparer)
+                                finalvalue+=1;
+                        }
+
+                        let tochange = "countL(" + countLowResult[i]+ ")";
+                        expr = expr.replace(tochange,parseInt(finalvalue));
+                    }
+
                     else{
-                        nonumber=true;
-                    }
-                }
-                if(!nonumber){
-                    for(let j=0;j<valueIf.length;j++){
-                        if(valueIf[j]<comparer)
-                            finalvalue+=1;
+                        sums_are_num = false;
                     }
 
-                    let tochange = "countL(" + countLowResult[i]+ ")";
-                    expr = expr.replace(tochange,parseInt(finalvalue));
+
                 }
-
-
             }
-        }
 
-        //SUM
-        var sumResult = expr.match(/(?<=\bsum\b\().*?(?=\))/g);
-        if(sumResult!=null){
-            //Substitute string for current value        
-            for (let i=0;i<sumResult.length;i++){
-                //                let debugname = attpresult[i];
+            //SUM
+            //var sumResult = expr.match(/(?<=\bsum\b\().*?(?=\))/g);
+            let summatch = /\bsum\(/g;
+            var sumResultResultArray;
+            var sumResult = [];
+
+            while (sumResultResultArray = summatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(summatch.lastIndex, expr.length);
+                let subb = auxMeth.getParenthesString(suba);
+                sumResult.push(subb);
+            }
+            if(sumResult!=null){
+                //Substitute string for current value        
+                for (let i=0;i<sumResult.length;i++){
+                    //                let debugname = attpresult[i];
 
 
-                let splitter = sumResult[i].split(";");
-                let comparer = splitter[1];
-                let blocks = splitter[0].split(",");
-                let finalvalue=0;
-                let valueIf = Array();
-                let nonumber=false;
-                for (let n=0;n<blocks.length;n++){
-                    if(!isNaN(blocks[n])){
-                        finalvalue += parseInt(blocks[n]);
+                    let splitter = sumResult[i].split(";");
+                    let comparer = splitter[1];
+                    let blocks = splitter[0].split(",");
+                    let finalvalue=0;
+                    let valueIf = Array();
+                    let nonumber=false;
+                    for (let n=0;n<blocks.length;n++){
+                        if(!isNaN(blocks[n])){
+                            finalvalue += parseInt(blocks[n]);
+                        }
+                        else{
+                            nonumber=true;
+                        }
+
                     }
+                    if(!nonumber){
+                        let tochange = "sum(" + sumResult[i]+ ")";
+                        expr = expr.replace(tochange,parseInt(finalvalue));
+                    }
+
                     else{
-                        nonumber=true;
+                        sums_are_num = false;
                     }
 
-                }
-                if(!nonumber){
-                    let tochange = "sum(" + sumResult[i]+ ")";
-                    expr = expr.replace(tochange,parseInt(finalvalue));
-                }
 
-
+                }
             }
+
+            safety_break += 1;
+
         }
 
         //console.log(expr);
+        //console.log(exprmode);
 
         toreturn = expr;
 
-        //PARSE TO TEXT
-        if(expr.includes("|")){
-            expr = expr.replace("|","");
-            exprmode=true;
-        }
+
 
         if(isNaN(expr)){
-
+            //console.log("nonumber");
             if(!exprmode){
+                //console.log("exprmode=false")
                 try{
                     let final = new Roll(expr);
 
@@ -978,6 +1056,60 @@ export class auxMeth {
         }
         //console.log(toreturn);
         return toreturn;
+    }
+
+    static getParenthesString(expr){
+        let openpar = 0;
+        let closedpar = -1;
+        let parsed = false;
+        let finalexpr = "";
+
+        for(let i=0;i<expr.length;i++){
+            if(!parsed){
+                if(expr.charAt(i)==='(')
+                    openpar +=1;
+                if(expr.charAt(i)===')')
+                    closedpar +=1;
+
+                if(openpar == closedpar){
+                    parsed = true;
+                }
+                else{
+                    finalexpr += expr.charAt(i);
+                }
+
+            }
+
+        }
+
+        return finalexpr;
+    }
+
+    static getBracketsString(expr){
+        let openpar = 0;
+        let closedpar = -1;
+        let parsed = false;
+        let finalexpr = "";
+
+        for(let i=0;i<expr.length;i++){
+            if(!parsed){
+                if(expr.charAt(i)==='[')
+                    openpar +=1;
+                if(expr.charAt(i)===']')
+                    closedpar +=1;
+
+                if(openpar == closedpar){
+                    parsed = true;
+                }
+                else{
+                    finalexpr += expr.charAt(i);
+                }
+
+            }
+
+        }
+
+        return finalexpr;
     }
 
     static dynamicSort(property){
