@@ -189,7 +189,7 @@ export class gActor extends Actor{
                 exec:false,
                 attribute:_mod.attribute,
                 expr:_mod.value,
-                value:0
+                value:null
             });
         }
 
@@ -207,7 +207,6 @@ export class gActor extends Actor{
 
             let tokenId = this.token.id;
             let mytoken = canvas.tokens.get(tokenId);
-            //console.log(mytoken);
             await mytoken.update({"data.citems":citems},{diff:false});
         }
 
@@ -420,48 +419,6 @@ export class gActor extends Actor{
             jumpmod = await this.checkModConditional(data,mod);
             //console.log("add Citem " + citem.name + " " + jumpmod);
 
-            //            if(mod.condop!="NON" && mod.condop!=null && mod.condat!=""){
-            //
-            //                let condAtt = mod.condat;
-            //                let condValue = parseInt(mod.condvalue);
-            //                let attIntValue;
-            //
-            //                if(condAtt.includes("#{")||condAtt.includes("@{")){
-            //                    attIntValue = await auxMeth.autoParser(condAtt,attributes,citem.attributes,false,false,citem.number);
-            //                }
-            //
-            //                else{
-            //                    attIntValue = attributes[condAtt].value;
-            //                }
-            //
-            //
-            //                //                console.log(mod.name);
-            //                //                console.log(mod.condop + " " + condValue + " " + attIntValue);
-            //
-            //                if(!isNaN(attIntValue) && !isNaN(condValue)){
-            //                    if(mod.condop=="EQU"){
-            //                        if(attIntValue.toString()!=condValue.toString()){
-            //                            jumpmod=true;
-            //                        }
-            //                    }
-            //
-            //                    else if(mod.condop=="HIH"){
-            //                        attIntValue = parseInt(attributes[condAtt].value);
-            //                        if(attIntValue <= condValue){
-            //                            jumpmod=true;
-            //                        }
-            //                    }
-            //
-            //                    else if(mod.condop=="LOW"){
-            //                        attIntValue = parseInt(attributes[condAtt].value);
-            //                        if(attIntValue >= condValue){
-            //                            jumpmod=true;
-            //                        }
-            //                    }
-            //                }
-            //
-            //            }
-
             if(!jumpmod){
                 if(mod.selectnum==0){
                     for(let k=0;k<mod.items.length;k++){
@@ -528,19 +485,7 @@ export class gActor extends Actor{
 
                 }
             }
-            //            else{
-            //                let thiscitem = citemIDs.find(y=>y.id==mod.citem);
-            //
-            //                if(!hasProperty(thiscitem,"selection")){
-            //                    let selindex = thiscitem.selection.find(y=>y.index==mod.index);
-            //                    let delindex = thiscitem.selection.IndexOf(selindex);
-            //
-            //                    thiscitem.selection.splice(delindex,1);
-            //                }
-            //
-            //
-            //            }
-            //this.update({"data.citems":citemIDs}, {diff: false});
+
         }
 
         //console.log(mods);
@@ -676,15 +621,12 @@ export class gActor extends Actor{
 
         for(let attribute in attributes){
             let attdata = attributes[attribute];
-            //            let findme = sheetAtts.filter(y=>y==attribute);
-            //            if(findme.length==0){
-            //                delete attributes[attribute];
-            //            }
-            //            else{
+
             if(Array.isArray(attdata.value))
                 attdata.value = attdata.value[0];
             //console.log(attdata.name + " " + attdata.value + " isset " + attdata.isset);
             setProperty(attdata,"isset",false);
+            setProperty(attdata,"maxset",false);
             setProperty(attdata,"default",false);
 
             //TEST TO DELETE
@@ -783,8 +725,6 @@ export class gActor extends Actor{
 
 
             }
-            //console.log(attribute + " isset " + actorAtt.isset);
-            //actorAtt.isset = false;
 
         }
 
@@ -798,10 +738,12 @@ export class gActor extends Actor{
             let modAtt = mod.attribute;
             let attProp = "value";
             let modvable = "modified";
+            let setvble = "isset";
             if(modAtt.includes(".max")){
                 modAtt = modAtt.replace(".max","");
                 attProp = "max";
                 modvable = "modmax";
+                setvble = "maxset";
             }
 
             let jumpmod=false;
@@ -810,33 +752,45 @@ export class gActor extends Actor{
             }
 
             if(hasProperty(attributes,modAtt)){
-                let value =mod.value;
+                let value = mod.value;
+
                 let finalvalue =value;
+
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
 
                 let citem = citemIDs.find(y=>y.id==mod.citem);
 
                 let _citem = await game.items.get(mod.citem).data.data;
 
-                if(isNaN(value)){
-                    if(value.charAt(0)=="|"){
-                        value = value.replace("|","");
-                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
-                    }
-                    else{
-                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,citem.number);
-                    }
-                }
+                //                if(isNaN(value)){
+                //                    if(value.charAt(0)=="|"){
+                //                        value = value.replace("|","");
+                //                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
+                //                    }
+                //                    else{
+                //                        finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,citem.number);
+                //                    }
+                //                }
+
+                finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
+
 
                 const myAtt = attributes[modAtt];
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
+
                 const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
                 const _mod = await _basecitem.mods.find(x=>x.index==mod.index);
+
+                //                console.log(mod.name);
+                //                console.log(value);
+                //                console.log(finalvalue);
+                //                console.log(_mod.expr);
+                //                console.log(_mod.exec);
 
                 if(_mod==null)
                     console.log(citem);
                 if(_mod.exec)
-                    myAtt.isset=true;
+                    myAtt[setvble]=true;
 
                 //Checks if mod has not changed. TODO METHOD TO CHECK THIS AND MOD EXISTING IN BETTER WAY
                 //if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
@@ -844,23 +798,31 @@ export class gActor extends Actor{
                     _mod.exec = false;
                 }
 
-                if(mod.expr!=null)
-                    if(mod.expr != _mod.value)
+                if(_mod.expr!=null){
+                    if(finalvalue != _mod.expr){
                         _mod.exec = false;
+                    }
 
+                }
+
+                _mod.expr = finalvalue;
+                finalvalue = await auxMeth.autoParser(finalvalue,attributes,citem.attributes,false,false,citem.number);
+                //console.log(finalvalue);
                 //console.log(mod.name + " exec= " + _mod.exec + " citem= " + citem.name + " active= " + citem.isactive + " value= " + finalvalue + " isset=" + myAtt.isset);
                 if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
-
-                    if(attProp!="max" || (attProp=="max" && !myAtt.maxblocked)){
-                        myAtt.prev= myAtt[attProp];
-                        _mod.exec = true;
-                        _mod.value=finalvalue;
-                        _mod.attribute=mod.attribute;
-                        ithaschanged = true;
-                        myAtt[attProp]= finalvalue;
-                        myAtt.isset= true;
-                        //console.log("setting " + modAtt + "=" + finalvalue);
+                    if(!_mod.exec){
+                        if(attProp!="max" || (attProp=="max" && !myAtt.maxblocked)){
+                            myAtt.prev= myAtt[attProp];
+                            _mod.exec = true;
+                            _mod.value=finalvalue;
+                            _mod.attribute=mod.attribute;
+                            ithaschanged = true;
+                            myAtt[attProp]= finalvalue;
+                            myAtt[setvble]= true;
+                            //console.log("setting " + modAtt + "=" + finalvalue);
+                        }
                     }
+
 
                 }
 
@@ -876,12 +838,12 @@ export class gActor extends Actor{
 
                         _mod.exec = false;
                         if(citem.isactive)
-                            myAtt.isset= true;
+                            myAtt[setvble]= true;
 
                     }
                     else{
                         if(citem.isactive){
-                            myAtt.isset= true;
+                            myAtt[setvble]= true;
                         }
                     }
 
@@ -901,10 +863,12 @@ export class gActor extends Actor{
             let modAtt = mod.attribute;
             let attProp = "value";
             let modvable = "modified";
+            let setvble = "isset";
             if(modAtt.includes(".max")){
                 modAtt = modAtt.replace(".max","");
                 attProp = "max";
                 modvable = "modmax";
+                setvble = "maxset";
             }
             //console.log(modAtt);
             let jumpmod=false;
@@ -941,7 +905,6 @@ export class gActor extends Actor{
 
                     const myAtt = attributes[modAtt];
 
-                    //console.log(mod.citem);
                     //console.log(mod.index);
 
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
@@ -956,7 +919,10 @@ export class gActor extends Actor{
                     }
 
                     //console.log(_basecitem.name + " " + _mod.exec);
-                    if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
+                    //console.log(_mod.expr);
+                    let exprcheck = _mod.expr;
+                    let checkroll = exprcheck.match(/d[%@(]|d+/g);
+                    if(_mod.exec && ((_mod.value!=finalvalue && checkroll==null) || _mod.attribute!=modAtt)){
                         //console.log("resetting " + _mod.attribute);
                         if(!citem.ispermanent){
                             if(!_mod.attribute.includes(".max")){
@@ -974,9 +940,9 @@ export class gActor extends Actor{
                     if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                         if(!_mod.exec || (myAtt[modvable] && !mod.once)){
-                            //console.log("executing " + mod.name + " " + finalvalue);
+                            //console.log("executing " + mod.name + "=" + myAtt[attProp] + " + " + finalvalue);
                             myAtt.prev= myAtt[attProp];
-                            myAtt[attProp] = Number(myAtt[attProp]) + finalvalue;
+                            myAtt[attProp] = parseInt(Number(myAtt[attProp]) + finalvalue);
                             ithaschanged = true;
 
                             _mod.exec=true;
@@ -1026,10 +992,12 @@ export class gActor extends Actor{
             let modAtt = mod.attribute;
             let attProp = "value";
             let modvable="modified";
+            let setvble = "isset";
             if(modAtt.includes(".max")){
                 modAtt = modAtt.replace(".max","");
                 attProp = "max";
                 modvable = "modmax";
+                setvble = "maxset";
             }
             let jumpmod=false;
             if(mod.condop!="NON" && mod.condop!=null){
@@ -1039,7 +1007,7 @@ export class gActor extends Actor{
             let citem = citemIDs.find(y=>y.id==mod.citem);
             let _citem = game.items.get(mod.citem).data.data;
 
-            //console.log("entering " + mod.name + " " + jumpmod);
+            //console.log("entering " + mod.name + " " + jumpmod + " for" + modAtt);
             if(hasProperty(attributes,modAtt)){
                 let seedprop = game.items.get(attributes[modAtt].id);
                 if(((seedprop.data.data.automax!="" && attProp=="max") || (seedprop.data.data.auto!="" && attProp=="value")) && (seedprop.data.data.datatype=="simplenumeric" || seedprop.data.data.datatype=="radio")){
@@ -1055,7 +1023,7 @@ export class gActor extends Actor{
                             finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,false,false,parseInt(citem.number));
                         }
                     }
-                    //console.log("finalvalue:" + finalvalue);
+
 
                     const myAtt = attributes[modAtt];
                     const _basecitem = await citemIDs.find(y=>y.id==mod.citem && y.mods.find(x=>x.index==mod.index));
@@ -1066,27 +1034,47 @@ export class gActor extends Actor{
 
                         //console.log(_basecitem.name + " _mod.exec:" + _mod.exec + " toadd:" + finalvalue);
 
-                        if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
-                            console.log("resetting " + _mod.attribute);
+                        //if(_mod.exec && (_mod.value!=finalvalue || _mod.attribute!=modAtt)){
+                        //console.log(_mod.expr);
+
+
+                        let exprcheck = _mod.expr;
+                        let checkroll = exprcheck.match(/d[%@(]|d+/g);
+
+                        if(_mod.exec && checkroll!=null){
+                            //console.log("die expression")
+                            finalvalue = _mod.value;
+                        }
+
+
+                        if(_mod.exec && ((_mod.value!=finalvalue && checkroll==null) || _mod.attribute!=modAtt)){
+                            //console.log("resetting " + _mod.attribute);
+
+                            let special = attributes[modAtt];
+                            console.log(special);
                             if(!citem.ispermanent){
                                 if(!_mod.attribute.includes(".max")){
-                                    attributes[_mod.attribute].value = Number(attributes[_mod.attribute].value) - _mod.value;
+                                    special.value = Number(special.value) - _mod.value;
                                 }
                                 else{
-                                    attributes[modAtt].max = Number(attributes[modAtt].max) - _mod.value;
+                                    special.max = Number(special.max) - _mod.value;
                                 }
                             }
 
-
                             _mod.exec = false;
                         }
+
                         //console.log(myAtt);
-                        if(myAtt.isset)
+                        if(myAtt[setvble])
                             _mod.exec=false;
+                        //
+                        //                        console.log("finalvalue:" + finalvalue);
+                        //                        console.log("expr:" + _mod.expr);
+                        //                        console.log("value:" + _mod.value);
 
                         //console.log("current value:" + attributes[_mod.attribute].value);
 
-                        //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " isactive:" + citem.isactive + " value:" + finalvalue + " isset:" + myAtt.isset);
+                        //console.log("Previo exec:" + _mod.exec + " name:" + citem.name + " finalvalue:" + finalvalue + " isset:" + myAtt.isset);
                         if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
                             //console.log(attProp + " :att/Prop - auto: " + seedprop.data.data.auto);
@@ -1142,7 +1130,7 @@ export class gActor extends Actor{
                                 }
 
                                 _mod.exec=false;
-                                myAtt.isset = false;
+                                myAtt[setvble] = false;
 
                             }
                         }
@@ -1236,7 +1224,6 @@ export class gActor extends Actor{
                 if(property.data.data.defvalue!="" && property.data.data.auto=="" && actorAtt.value===""){
                     ithaschanged = true;
                     actorAtt.value = await auxMeth.autoParser(property.data.data.defvalue,attributes,null,false);
-                    //console.log("defaulting " + attribute + actorAtt.value);
                 }
                 if(property.data.data.datatype=="simplenumeric" || property.data.data.datatype=="radio"){
 
@@ -1260,6 +1247,9 @@ export class gActor extends Actor{
                     }
 
                 }
+
+
+
 
 
             }
@@ -1404,13 +1394,13 @@ export class gActor extends Actor{
                 //console.log("checking " + attribute + " isset " + actorAtt.isset);
 
                 //Check the Auto value
-                if(property!=null && !actorAtt.isset){
+                if(property!=null){
                     let exprmode = false;
                     if(property.data.data.datatype!="simplenumeric" && property.data.data.datatype!="radio"){
                         exprmode = true;
                     }
 
-                    if(property.data.data.auto !==""){
+                    if(property.data.data.auto !=="" && !actorAtt.isset){
                         //console.log("autochecking " + attribute);
                         rawexp = property.data.data.auto;
                         //console.log(rawexp);
@@ -1432,13 +1422,15 @@ export class gActor extends Actor{
                         //console.log("defaulting " + attribute + " to " + newvalue + " isset: " + actorAtt.isset);
                     }
 
-                    if(property.data.data.automax !==""){
+                    if(property.data.data.automax !==""  && !actorAtt.maxset){
                         rawexp = property.data.data.automax;
 
                         let maxval = await auxMeth.autoParser(rawexp,attributes,null,false);
                         //TEST TO DELETE
                         if(property.data.data.datatype!="simpletext")
-                            maxval = Number(maxval) + + Number(actorAtt.maxadd);
+                            maxval = Number(maxval) + Number(actorAtt.maxadd);
+
+                        //console.log("Changing " + attribute + " max to " + maxval);
 
                         //if(actorAtt.max!=maxval){
                         if(actorAtt.max=="" || !actorAtt.maxblocked){
@@ -1528,11 +1520,13 @@ export class gActor extends Actor{
         rollname = await auxMeth.autoParser(rollname,actorattributes,citemattributes,true,false,number);
 
         //Parse roll difficulty
-        rollexp = rollexp.replace(/\#{diff}/g,diff);
+        if(diff)
+            rollexp = rollexp.replace(/\#{diff}/g,diff);
         if (citemattributes!=null)
             rollexp = rollexp.replace("#{name}",citemattributes.name);
 
         //Parse target attribute
+        //console.log(target);
         let targetexp = rollexp.match(/(?<=\#{target\|)\S*?(?=\})/g);
         if(targetexp!=null){
             for (let j=0;j<targetexp.length;j++){
@@ -1559,120 +1553,122 @@ export class gActor extends Actor{
         rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
         //console.log(rollexp);
 
-        //        rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,false,false,number);
-        //console.log(rollexp);
-        let subrollsexpb = rollexp.match(/(?<=\broll\b\().*?(?=\))/g);
+        //let subrollsexpbc = rollexp.match(/(?<=\broll\b\().*?(?=\))/g);
 
-        if(subrollsexpb!=null){
+        while(rollexp.match(/(?<=\broll\b\().*?(?=\))/g)!=null){
+
+            let rollmatch = /\broll\(/g;
+            var rollResultResultArray;
+            var rollResult = [];
+
+            while (rollResultResultArray = rollmatch.exec(rollexp)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = rollexp.substring(rollmatch.lastIndex, rollexp.length);
+                let subb = auxMeth.getParenthesString(suba);
+                rollResult.push(subb);
+            }
+
+            //let subrollsexpb = rollexp.match(/(?<=\broll\b\().*?(?=\))/g);
+            let subrollsexpb = rollResult;
 
             //Parse Roll
-            for (let i=0;i<subrollsexpb.length;i++){
-                //console.log(subrollsexpb[i]);
-                let tochange = "roll(" + subrollsexpb[i]+ ")";
-                let blocks = subrollsexpb[i].split(";");
+            //for (let i=0;i<subrollsexpb.length;i++){
+            //console.log(subrollsexpb[i]);
 
-                //Definition of sub Roll
-                let sRoll = {};
-
-                sRoll.name = blocks[0];
-                sRoll.numdice = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,false,false,number);
-                sRoll.faces = await auxMeth.autoParser(blocks[2],actorattributes,citemattributes,false,false,number);
-                sRoll.exploding = blocks[3];
-
-                if(parseInt(sRoll.numdice)>0){
-                    //console.log(sRoll.numdice);
-                    let exploder = "";
-                    if(sRoll.exploding==="true" || sRoll.exploding==="add"){
-                        exploder = "x" + sRoll.faces;
-                    }
+            //console.log(rollexp);
+            let tochange = "roll(" + subrollsexpb[0]+ ")";
+            let blocks = subrollsexpb[0].split(";");
+            //console.log(blocks);
 
 
-                    sRoll.expr = sRoll.numdice+"d"+sRoll.faces+exploder;
 
-                    if(sRoll.numdice<1)
-                        sRoll.expr = "0";
+            //Definition of sub Roll
+            let sRoll = {};
 
-                    let partroll = new Roll(sRoll.expr);
-                    let finalroll = await partroll.roll();
-                    finalroll.extraroll=true;
+            sRoll.name = blocks[0];
+            sRoll.numdice = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,false,false,number);
+            sRoll.faces = await auxMeth.autoParser(blocks[2],actorattributes,citemattributes,false,false,number);
+            sRoll.exploding = blocks[3];
 
-                    if(game.dice3d!=null){
-                        await game.dice3d.showForRoll(partroll,game.user,true);
-                    }
+            //console.log(sRoll);
 
-                    sRoll.rolls = finalroll;
-                    await subrolls.push(sRoll);
+            if(parseInt(sRoll.numdice)>0){
+                //console.log(sRoll.numdice);
+                let exploder = "";
+                if(sRoll.exploding==="true" || sRoll.exploding==="add"){
+                    exploder = "x" + sRoll.faces;
                 }
 
 
+                sRoll.expr = sRoll.numdice+"d"+sRoll.faces+exploder;
 
-                //rollexp = rollexp.replace(tochange,sRoll.total);
-                rollexp = rollexp.replace(tochange,"");
-                rollformula = rollformula.replace(tochange,sRoll.numdice+"d"+sRoll.faces);
+                if(sRoll.numdice<1)
+                    sRoll.expr = "0";
+
+                let partroll = new Roll(sRoll.expr);
+                let finalroll = await partroll.roll();
+                finalroll.extraroll=true;
+
+                if(game.dice3d!=null){
+                    await game.dice3d.showForRoll(partroll,game.user,true);
+                }
+
+                sRoll.results = finalroll;
+                await subrolls.push(sRoll);
             }
-        }
-        //console.log(rollexp);
-        //console.log(subrolls);
-        rollformula = rollexp;
-        //console.log(rollformula);
-
-        let subrollRefs = rollexp.match(/(?<=\?\[).*?(?=\])/g);
-        if(subrollRefs!=null){
-            //Parse Roll
-
-            //console.log("subrolls");
-            for (let i=0;i<subrollRefs.length;i++){
-                //console.log(subrollRefs[i]);
-                let tochange = "?[" + subrollRefs[i]+ "]";
-                let mysubRoll = subrolls.find(y=>y.name==subrollRefs[i]);
-                let finalvalue = "";
-
-                if(mysubRoll!=null){
-
-                    if(mysubRoll.rolls!=null){
-
-                        for(let j=0;j<mysubRoll.rolls.dice.length;j++){
-
-                            let dicearray = mysubRoll.rolls.dice[j].results;
-
-                            for(let k=0;k<dicearray.length;k++){
-                                if(k>0)
-                                    finalvalue += ",";
-
-                                let rollvalue=dicearray[k].result;
-
-                                if(mysubRoll.exploding==="add"){
-                                    while(dicearray[k].exploded && k<dicearray.length){
-                                        k+=1;
-                                        rollvalue += dicearray[k].result;
-                                    }
-                                }
-
-                                finalvalue += rollvalue;
 
 
+
+            //rollexp = rollexp.replace(tochange,sRoll.total);
+            rollexp = rollexp.replace(tochange,"");
+            rollformula = rollformula.replace(tochange,sRoll.numdice+"d"+sRoll.faces);
+
+            let exptochange = '\\?\\[\\b' + sRoll.name + '\\]';
+
+            var re = new RegExp(exptochange, 'g');
+
+            let mysubRoll = subrolls.find(y=>y.name==sRoll.name);
+            let finalvalue = "";
+
+
+
+            if(sRoll.results!=null){
+
+                for(let j=0;j<sRoll.results.dice.length;j++){
+
+                    let dicearray = sRoll.results.dice[j].results;
+
+                    for(let k=0;k<dicearray.length;k++){
+                        if(k>0)
+                            finalvalue += ",";
+
+                        let rollvalue=dicearray[k].result;
+
+                        if(mysubRoll.exploding==="add"){
+                            while(dicearray[k].exploded && k<dicearray.length){
+                                k+=1;
+                                rollvalue += dicearray[k].result;
                             }
-
                         }
+
+                        finalvalue += rollvalue;
+
+
                     }
-                    else{
-                        finalvalue = 0;
-                    }
 
-                    rollformula = rollformula.replace(tochange,mysubRoll.numdice+"d"+mysubRoll.faces);
                 }
-                else{
-
-                    finalvalue = 0;
-                    rollformula = rollformula.replace(tochange,0);
-                }
-
-
-                //rollexp = rollexp.replace(tochange,sRoll.total);
-                rollexp = await rollexp.replace(tochange,finalvalue);
-
-
             }
+            else{
+                finalvalue = 0;
+            }
+
+            rollformula = rollformula.replace(re,sRoll.numdice+"d"+sRoll.faces);
+
+
+            rollexp = rollexp.replace(re,finalvalue);
+            rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
+            rollformula = rollexp;
+            //}
         }
         //console.log(rollexp);
         rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
@@ -1743,27 +1739,6 @@ export class gActor extends Actor{
 
         //Remove rollIDs and save them
         let parseid = rollexp.match(/(?<=\~)\S*?(?=\~)/g);
-        //        if(parseid!=null){
-        //            for (let j=0;j<parseid.length;j++){
-        //                let idexpr = parseid[j];
-        //                let idtoreplace = "~" + parseid[j]+ "~";
-        //                let newid = await auxMeth.autoParser(idexpr,actorattributes,citemattributes,true,number);
-        //
-        //                if(newid!="")
-        //                    rollid.push(newid);
-        //
-        //                if(parseid[j]=="init")
-        //                    initiative=true;
-        //
-        //                if(parseid[j]=="ADV")
-        //                    rollmode = "ADV";
-        //
-        //                if(parseid[j]=="DIS")
-        //                    rollmode = "DIS";
-        //
-        //                rollexp = rollexp.replace(idtoreplace,"");
-        //            }  
-        //        }
 
         /************************************ H3LSI - 09/11/2020 *********************************************/
 
@@ -1831,6 +1806,88 @@ export class gActor extends Actor{
 
         //Parse Roll
         rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
+
+        //ADDer to target implementation - add(property, value)
+        let is_adding = false
+        let addblock = {};
+        let adder = rollexp.match(/(?<=\badd\b\().*?(?=\))/g);
+        if(adder!=null){
+            is_adding = true;
+            for (let i=0;i<adder.length;i++){
+                let tochange = "add(" + adder[i]+ ")";
+                let blocks = adder[i].split(";");
+                addblock.addprop = await auxMeth.autoParser(blocks[0],actorattributes,citemattributes,true,false,number);
+                addblock.addvalue = 0;
+                addblock.addvalue = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,false,false,number);
+                addblock.addvalue = Number(addblock.addvalue);
+
+                rollexp = rollexp.replace(tochange,"");
+                rollformula = rollformula.replace(tochange,"");
+            }
+
+        }
+
+        // ADDER implementatin
+        if(target!=null && is_adding){
+
+            //console.log(addblock.addprop);
+            //console.log(targetattributes);
+
+            let targetattributes = target.actor.data.data.attributes;
+            if(targetattributes[addblock.addprop]!=null){
+                targetattributes[addblock.addprop].value = parseInt(targetattributes[addblock.addprop].value);
+                targetattributes[addblock.addprop].value += addblock.addvalue;
+                //console.log("changing token prop " + addblock.addprop + " to " + targetattributes[addblock.addprop].value);
+
+                let tokenId = target.id;
+                let mytoken = canvas.tokens.get(tokenId);
+                await mytoken.update({"data.attributes":targetattributes},{diff:false});
+            }
+
+
+        }
+
+        //console.log(addblock);
+
+        //SETer to target implementation - set(property, value)
+        let is_seting = false
+        let setblock = {};
+        let setter = rollexp.match(/(?<=\bset\b\().*?(?=\))/g);
+        if(setter!=null){
+            is_seting = true;
+            for (let i=0;i<setter.length;i++){
+                let tochange = "set(" + setter[i]+ ")";
+                let blocks = setter[i].split(";");
+                setblock.setprop = await auxMeth.autoParser(blocks[0],actorattributes,citemattributes,true,false,number);
+                setblock.setvalue = 0;
+                setblock.setvalue = await auxMeth.autoParser(blocks[1],actorattributes,citemattributes,false,false,number);
+                setblock.setvalue = Number(setblock.setvalue);
+
+                rollexp = rollexp.replace(tochange,"");
+                rollformula = rollformula.replace(tochange,"");
+            }
+
+        }
+
+        //console.log(is_seting);
+        //console.log(target);
+
+        // SETER implementatin
+        if(target!=null && is_seting){
+
+            let targetattributes = target.actor.data.data.attributes;
+            if(targetattributes[setblock.setprop]!=null){
+                targetattributes[setblock.setprop].value = setblock.setvalue;
+                //console.log("changing token prop " + setblock.setprop + " to " + targetattributes[setblock.setprop].value);
+
+                let tokenId = target.id;
+                let mytoken = canvas.tokens.get(tokenId);
+                await mytoken.update({"data.attributes":targetattributes},{diff:false});
+            }
+
+        }
+
+        //console.log(setblock);
 
         //console.log(rollexp);
         //Remove conditionalexp and save it
@@ -1950,6 +2007,7 @@ export class gActor extends Actor{
 
         rolltotal = parseInt(rolltotal) + parseInt(this.data.data.mod) + extramod;
 
+        //TEXT MANAGMENET
         let convalue = "";
         //console.log(conditionalText)
         if(conditionalText!=""){
@@ -1990,16 +2048,14 @@ export class gActor extends Actor{
                 }
 
 
-            }                                   
+            }
 
-            //            convalue = await auxMeth.autoParser(conditionalText,actorattributes,citemattributes,true,false,number);
-            //            convalue = convalue.replace(/\;/g,',');
-            //            convalue = "%["+rolltotal + "," + convalue + "]";
-            //            convalue = await auxMeth.autoParser(convalue,actorattributes,citemattributes,true,false,number);
         }
 
         //console.log(rolldice);
         //console.log(subrolls);
+        //console.log(convalue);
+
 
         let rollData = {
             token:{
