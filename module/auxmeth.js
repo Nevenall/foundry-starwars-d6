@@ -522,6 +522,8 @@ export class auxMeth {
                     let falsevalue = limits[2];
                     let dontparse = false;
                     falsevalue = falsevalue.replace("ELSE ","");
+                    let checknonumcond;
+                    let nonumcond;
 
                     let finalvalue = falsevalue;
 
@@ -558,6 +560,12 @@ export class auxMeth {
                             }
 
                             if(isNaN(thiscondition)){
+                                nonumcond = /\+|\-|\\|\*/g;
+                                checknonumcond = thiscondition.match(nonumcond);
+                            }
+
+
+                            if(isNaN(thiscondition) || checknonumcond!=null){
                                 try{
                                     let newroll = new Roll(thiscondition).roll();
                                     thiscondition = newroll.total;
@@ -601,6 +609,11 @@ export class auxMeth {
                             }
 
                             if(isNaN(thiscondition)){
+                                nonumcond = /\+|\-|\\|\*/g;
+                                checknonumcond = thiscondition.match(nonumcond);
+                            }
+
+                            if(isNaN(thiscondition) || checknonumcond!=null){
                                 try{
                                     let newroll = new Roll(thiscondition).roll();
                                     thiscondition = newroll.total;
@@ -631,6 +644,8 @@ export class auxMeth {
                             checker = (checker === "true");
                         }
 
+                        //console.log(thiscondition + " " + checker);
+
                         if(isNaN(checker)){
                             try{
                                 let newroll = new Roll(checker).roll();
@@ -642,6 +657,11 @@ export class auxMeth {
                         }
 
                         if(isNaN(thiscondition)){
+                            nonumcond = /\+|\-|\\|\*/g;
+                            checknonumcond = thiscondition.match(nonumcond);
+                        }
+
+                        if(isNaN(thiscondition) || checknonumcond!=null){
                             try{
                                 let newroll = new Roll(thiscondition).roll();
                                 thiscondition = newroll.total;
@@ -651,20 +671,24 @@ export class auxMeth {
                             }
                         }
 
-                        if(thiscondition===checker){
+                        //console.log(thiscondition + " " + checker);
+
+                        if(thiscondition .toString() === checker.toString()){
                             finalvalue = truevalue;
                         }
                     }
 
                     let attname = "if[" + ifresult[i]+ "]";
-                    if(!dontparse)
-                        expr = expr.replace(attname,finalvalue);
 
-                    let nonum = /[#@]{|\%\[|\if\[/g;
+                    let nonum = /[#@]{|\%\[|\if\[|\+|\-|\\|\*/g;
                     let checknonum = finalvalue.match(nonum);
 
                     if(checknonum!=null){
                         sums_are_num = false;
+                    }
+
+                    else{
+                        expr = expr.replace(attname,finalvalue);
                     }
 
                 }         
