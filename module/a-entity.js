@@ -1951,6 +1951,7 @@ export class gActor extends Actor{
         //ROLL EXPRESSION
         //rollformula = await auxMeth.autoParser(rollformula,actorattributes,citemattributes,true,false,number);
         rollformula = await auxMeth.autoParser(rollformula,actorattributes,citemattributes,true,false,number);
+        //console.log(rollexp);
         let partroll = new Roll(rollexp);
         roll = partroll.roll();
 
