@@ -471,6 +471,7 @@ export class auxMeth {
                     //console.log(limitArray);
                     //console.log(value);
                     valuemod= limitArray[0].value;
+                    //console.log(valuemod);
                     for(let k=0;k<limitArray.length;k++){
                         let checker = limitArray[k];
                         let checkscale = Number(checker.scale);
@@ -496,204 +497,7 @@ export class auxMeth {
 
             }
 
-            //console.log(expr);
 
-            //PARSE CONDITIONAL / ONLY FOR TEXT ORIGINAL
-            //var ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
-            var ifmatch = /\if\[/g;
-            var ifresultArray;
-            var ifresult = [];
-
-            while (ifresultArray = ifmatch.exec(expr)) {
-                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
-                let suba = expr.substring(ifmatch.lastIndex, expr.length);
-                let subb = auxMeth.getBracketsString(suba);
-                ifresult.push(subb);
-            }
-            if(ifresult!=null){
-
-                //Substitute string for current value
-                for (let i=ifresult.length-1;i>=0;i--){
-
-                    var nonumber = false;
-                    let limits = ifresult[i].split(",");
-                    let general_cond = limits[0];
-                    let truevalue = limits[1];
-                    let falsevalue = limits[2];
-                    let dontparse = false;
-                    falsevalue = falsevalue.replace("ELSE ","");
-                    let checknonumcond;
-                    let nonumcond;
-
-                    let finalvalue = falsevalue;
-
-                    var findOR = general_cond.search(" OR "); 
-                    var findAND = general_cond.search(" AND ");
-
-                    let orconditions;
-                    let andconditions;
-
-                    if (findOR != -1){
-                        //console.log("OR");
-                        orconditions = general_cond.split(" OR ");
-                        for(let j=0;j<orconditions.length;j++){
-                            let conditions = orconditions[j].split(":");
-                            let thiscondition = conditions[0];
-                            let checker = conditions[1];
-
-                            if (thiscondition === "true" || thiscondition === "false") {
-                                thiscondition = (thiscondition === "true");
-                            }
-
-                            if (checker === "true" || checker === "false") {
-                                checker = (checker === "true");
-                            }
-
-                            if(isNaN(checker)){
-                                try{
-                                    let newroll = new Roll(checker).roll();
-                                    checker = newroll.total;
-                                }
-                                catch(err){
-
-                                }
-                            }
-
-                            if(isNaN(thiscondition)){
-                                nonumcond = /\+|\-|\\|\*/g;
-                                checknonumcond = thiscondition.match(nonumcond);
-                            }
-
-
-                            if(isNaN(thiscondition) || checknonumcond!=null){
-                                try{
-                                    let newroll = new Roll(thiscondition).roll();
-                                    thiscondition = newroll.total;
-                                }
-                                catch(err){
-
-                                }
-                            }
-
-                            if(thiscondition==checker)
-                                finalvalue = truevalue;
-                        }
-                    }
-
-                    else if (findAND != -1){
-                        //console.log("AND");
-                        andconditions = general_cond.split(" AND ");
-                        finalvalue = truevalue;
-                        for(let j=0;j<andconditions.length;j++){
-                            let conditions = andconditions[j].split(":");
-                            let thiscondition = conditions[0];
-                            let checker = conditions[1];
-
-                            if (thiscondition === "true" || thiscondition === "false") {
-                                thiscondition = (thiscondition === "true");
-                            }
-
-                            if (checker === "true" || checker === "false") {
-                                checker = (checker === "true");
-                            }
-
-                            if(isNaN(checker)){
-                                try{
-                                    let newroll = new Roll(checker).roll();
-                                    checker = newroll.total;
-                                }
-                                catch(err){
-                                    dontparse = true;
-
-                                }
-                            }
-
-                            if(isNaN(thiscondition)){
-                                nonumcond = /\+|\-|\\|\*/g;
-                                checknonumcond = thiscondition.match(nonumcond);
-                            }
-
-                            if(isNaN(thiscondition) || checknonumcond!=null){
-                                try{
-                                    let newroll = new Roll(thiscondition).roll();
-                                    thiscondition = newroll.total;
-                                }
-                                catch(err){
-                                    dontparse = true;
-                                }
-                            }
-
-                            //console.log(thiscondition + " " + checker);
-
-                            if(thiscondition!=checker)
-                                finalvalue = falsevalue;
-                        }
-                    }
-
-                    else {
-                        //console.log("NONE");
-                        let conditions = general_cond.split(":");
-                        let thiscondition = conditions[0];
-                        let checker = conditions[1];
-
-                        if (thiscondition === "true" || thiscondition === "false") {
-                            thiscondition = (thiscondition === "true");
-                        }
-
-                        if (checker === "true" || checker === "false") {
-                            checker = (checker === "true");
-                        }
-
-                        //console.log(thiscondition + " " + checker);
-
-                        if(isNaN(checker)){
-                            try{
-                                let newroll = new Roll(checker).roll();
-                                checker = newroll.total;
-                            }
-                            catch(err){
-                                dontparse = true;
-                            }
-                        }
-
-                        if(isNaN(thiscondition)){
-                            nonumcond = /\+|\-|\\|\*/g;
-                            checknonumcond = thiscondition.match(nonumcond);
-                        }
-
-                        if(isNaN(thiscondition) || checknonumcond!=null){
-                            try{
-                                let newroll = new Roll(thiscondition).roll();
-                                thiscondition = newroll.total;
-                            }
-                            catch(err){
-                                dontparse = true;
-                            }
-                        }
-
-                        //console.log(thiscondition + " " + checker);
-
-                        if(thiscondition .toString() === checker.toString()){
-                            finalvalue = truevalue;
-                        }
-                    }
-
-                    let attname = "if[" + ifresult[i]+ "]";
-
-                    let nonum = /[#@]{|\%\[|\if\[|\+|\-|\\|\*/g;
-                    let checknonum = finalvalue.match(nonum);
-
-                    if(checknonum!=null){
-                        sums_are_num = false;
-                    }
-
-                    else{
-                        expr = expr.replace(attname,finalvalue);
-                    }
-
-                }         
-
-            }
 
             //console.log(expr);
 
@@ -998,16 +802,36 @@ export class auxMeth {
                     let finalvalue=0;
                     let valueIf = Array();
                     let nonumber=false;
+
                     for (let n=0;n<blocks.length;n++){
-                        if(!isNaN(blocks[n])){
-                            finalvalue += parseInt(blocks[n]);
+                        let nonumsum = /[#@]{|\%\[|\if\[|\?/g;
+                        let checknonumsum = blocks[n].match(nonumsum);
+                        //console.log(blocks[n])
+                        if(!isNaN(blocks[n]) && (checknonumsum==null)){
+
+                            let blocktotal = blocks[n];
+                            let arithmparser = /\+|\-|\\|\*/g;
+                            let has_arith = blocktotal.match(arithmparser);
+
+                            if(has_arith!=null){
+                                try{
+                                    let newroll = new Roll(blocks[n]).roll();
+                                    blocktotal = newroll.total;
+                                }
+                                catch(err){
+
+                                }
+                            }
+                            finalvalue += parseInt(blocktotal);
                         }
                         else{
+                            //console.log("nonumber");
                             nonumber=true;
                         }
 
                     }
                     if(!nonumber){
+                        //console.log("replacing")
                         let tochange = "sum(" + sumResult[i]+ ")";
                         expr = expr.replace(tochange,parseInt(finalvalue));
                     }
@@ -1019,6 +843,210 @@ export class auxMeth {
 
                 }
             }
+
+            //console.log(expr);
+
+            //PARSE CONDITIONAL
+            //var ifresult = expr.match(/(?<=\if\[).*?(?=\])/g);
+            var ifmatch = /\if\[/g;
+            var ifresultArray;
+            var ifresult = [];
+
+            while (ifresultArray = ifmatch.exec(expr)) {
+                //console.log(maxResultArray.index + ' ' + mrmatch.lastIndex);
+                let suba = expr.substring(ifmatch.lastIndex, expr.length);
+                let subb = auxMeth.getBracketsString(suba);
+                ifresult.push(subb);
+            }
+            if(ifresult!=null){
+
+                //Substitute string for current value
+                for (let i=ifresult.length-1;i>=0;i--){
+
+                    var nonumber = false;
+                    let limits = ifresult[i].split(",");
+                    let general_cond = limits[0];
+                    let truevalue = limits[1];
+                    let falsevalue = limits[2];
+                    let dontparse = false;
+                    falsevalue = falsevalue.replace("ELSE ","");
+                    let checknonumcond;
+                    let nonumcond;
+
+                    let finalvalue = falsevalue;
+
+                    var findOR = general_cond.search(" OR "); 
+                    var findAND = general_cond.search(" AND ");
+
+                    let orconditions;
+                    let andconditions;
+
+                    if (findOR != -1){
+                        //console.log("OR");
+                        orconditions = general_cond.split(" OR ");
+                        for(let j=0;j<orconditions.length;j++){
+                            let conditions = orconditions[j].split(":");
+                            let thiscondition = conditions[0];
+                            let checker = conditions[1];
+
+                            if (thiscondition === "true" || thiscondition === "false") {
+                                thiscondition = (thiscondition === "true");
+                            }
+
+                            if (checker === "true" || checker === "false") {
+                                checker = (checker === "true");
+                            }
+
+                            if(isNaN(checker)){
+                                try{
+                                    let newroll = new Roll(checker).roll();
+                                    checker = newroll.total;
+                                }
+                                catch(err){
+
+                                }
+                            }
+
+                            if(isNaN(thiscondition)){
+                                nonumcond = /\+|\-|\\|\*/g;
+                                checknonumcond = thiscondition.match(nonumcond);
+                            }
+
+
+                            if(isNaN(thiscondition) || checknonumcond!=null){
+                                try{
+                                    let newroll = new Roll(thiscondition).roll();
+                                    thiscondition = newroll.total;
+                                }
+                                catch(err){
+
+                                }
+                            }
+
+                            if(thiscondition==checker)
+                                finalvalue = truevalue;
+                        }
+                    }
+
+                    else if (findAND != -1){
+                        //console.log("AND");
+                        andconditions = general_cond.split(" AND ");
+                        finalvalue = truevalue;
+                        for(let j=0;j<andconditions.length;j++){
+                            let conditions = andconditions[j].split(":");
+                            let thiscondition = conditions[0];
+                            let checker = conditions[1];
+
+                            if (thiscondition === "true" || thiscondition === "false") {
+                                thiscondition = (thiscondition === "true");
+                            }
+
+                            if (checker === "true" || checker === "false") {
+                                checker = (checker === "true");
+                            }
+
+                            if(isNaN(checker)){
+                                try{
+                                    let newroll = new Roll(checker).roll();
+                                    checker = newroll.total;
+                                }
+                                catch(err){
+                                    dontparse = true;
+
+                                }
+                            }
+
+                            if(isNaN(thiscondition)){
+                                nonumcond = /\+|\-|\\|\*/g;
+                                checknonumcond = thiscondition.match(nonumcond);
+                            }
+
+                            if(isNaN(thiscondition) || checknonumcond!=null){
+                                try{
+                                    let newroll = new Roll(thiscondition).roll();
+                                    thiscondition = newroll.total;
+                                }
+                                catch(err){
+                                    dontparse = true;
+                                }
+                            }
+
+                            //console.log(thiscondition + " " + checker);
+
+                            if(thiscondition!=checker)
+                                finalvalue = falsevalue;
+                        }
+                    }
+
+                    else {
+                        //console.log("NONE");
+                        let conditions = general_cond.split(":");
+                        let thiscondition = conditions[0];
+                        let checker = conditions[1];
+
+                        if (thiscondition === "true" || thiscondition === "false") {
+                            thiscondition = (thiscondition === "true");
+                        }
+
+                        if (checker === "true" || checker === "false") {
+                            checker = (checker === "true");
+                        }
+
+                        //console.log(thiscondition + " " + checker);
+
+                        if(isNaN(checker)){
+                            try{
+                                let newroll = new Roll(checker).roll();
+                                checker = newroll.total;
+                            }
+                            catch(err){
+                                dontparse = true;
+                            }
+                        }
+
+                        if(isNaN(thiscondition)){
+                            nonumcond = /\+|\-|\\|\*/g;
+                            checknonumcond = thiscondition.match(nonumcond);
+                        }
+
+                        if(isNaN(thiscondition) || checknonumcond!=null){
+                            try{
+                                let newroll = new Roll(thiscondition).roll();
+                                thiscondition = newroll.total;
+                            }
+                            catch(err){
+                                dontparse = true;
+                            }
+                        }
+
+                        //console.log(thiscondition + " " + checker);
+
+                        if(thiscondition .toString() === checker.toString()){
+                            finalvalue = truevalue;
+                        }
+                    }
+
+                    //console.log(finalvalue);
+
+                    let attname = "if[" + ifresult[i]+ "]";
+
+                    let nonum = /[#@]{|\%\[|\if\[|\?/g;
+                    let checknonumtrue = falsevalue.match(nonum);
+                    let checknonumfalse = truevalue.match(nonum);
+
+                    if(checknonumtrue!=null || checknonumfalse!=null){
+                        sums_are_num = false;
+                    }
+
+                    else{
+                        expr = expr.replace(attname,finalvalue);
+                    }
+
+                }         
+
+            }
+
+            //console.log(expr);
 
             safety_break += 1;
 
