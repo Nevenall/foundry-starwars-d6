@@ -1501,6 +1501,10 @@ export class gActor extends Actor{
         let conditionalText="";
         //let diff = SBOX.diff[game.data.world.name];
         let diff = await game.settings.get("sandbox", "diff");
+        if(diff==null)
+            diff = 0;
+        if(isNaN(diff))
+            diff = 0;
         //console.log(diff);
         let rollformula = rollexp;
 
@@ -1520,8 +1524,7 @@ export class gActor extends Actor{
         rollname = await auxMeth.autoParser(rollname,actorattributes,citemattributes,true,false,number);
 
         //Parse roll difficulty
-        if(diff)
-            rollexp = rollexp.replace(/\#{diff}/g,diff);
+        rollexp = rollexp.replace(/\#{diff}/g,diff);
         if (citemattributes!=null)
             rollexp = rollexp.replace("#{name}",citemattributes.name);
 
@@ -1549,9 +1552,9 @@ export class gActor extends Actor{
         if(rollexp.includes("!("))
             rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
 
-        //console.log(rollexp);
+        console.log(rollexp);
         rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
-        //console.log(rollexp);
+        console.log(rollexp);
 
         //let subrollsexpbc = rollexp.match(/(?<=\broll\b\().*?(?=\))/g);
 
