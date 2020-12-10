@@ -277,7 +277,7 @@ Hooks.once('ready', async() => {
             event.stopPropagation();
 
             if(event.key=="Backspace" || event.key=="Delete"){
-                sInput.value = "";
+                sInput.value = 0;
             }
 
             else if(event.key=="Enter"){
@@ -285,10 +285,20 @@ Hooks.once('ready', async() => {
                 await game.settings.set("sandbox", "diff", sInput.value);
             }
 
+            else if(event.key=="-"){
+                //SBOX.diff[game.data.world.name] = sInput.value;
+                sInput.value = "-";
+            }
+
             else{
                 if(!isNaN(event.key))
                     sInput.value += event.key;
             }
+
+            if(!isNaN(sInput.value)){
+                sInput.value = parseInt(sInput.value);
+            }
+
 
         });
 
