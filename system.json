@@ -4,7 +4,7 @@
     "description": "Custom system builder to build character sheets and rulesets for any game.",
     "version": "0.6.2",
     "minimumCoreVersion": "0.5.5",
-    "compatibleCoreVersion": "0.7.7",
+    "compatibleCoreVersion": "0.7.8",
     "templateVersion": 1,
     "author": "Seregras",
     "esmodules": ["module/sandbox.js"],
