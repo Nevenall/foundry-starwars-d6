@@ -202,8 +202,9 @@ export class auxMeth {
 
         //PARSE TO TEXT
         let textexpr = expr.match(/[|]/g);
-        if(textexpr!=null){
-            expr = expr.replace("|","");
+        if(textexpr!=null && (expr.charAt(0)=="|")){
+            //console.log("has | ");
+            expr = expr.substr(1,expr.length);
             exprmode=true;
         }
 
