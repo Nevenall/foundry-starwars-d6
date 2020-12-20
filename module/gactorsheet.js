@@ -1697,11 +1697,13 @@ export class gActorSheet extends ActorSheet {
                 if(myactorcitems!=null){
                     for(let j=myactorcitems.length-1;j>=0;j--){
                         let mycitem = myactorcitems[j];
-
+                        //console.log(mycitem);
                         if(mycitem!=null){
                             let templatecItem = game.items.get(mycitem.id);
+                            //console.log(templatecItem);
 
                             if(templatecItem!=null){
+                                let isconsistent = true;
                                 let mymods = mycitem.mods;
                                 if(mymods!=null){
                                     for(let r=0;r<mymods.length;r++){
@@ -1709,7 +1711,18 @@ export class gActorSheet extends ActorSheet {
                                             mymods[r].citem=mycitem.id;
                                         if(!hasProperty(mymods[r],"index"))
                                             setProperty(mymods[r],"index",0);
+
+                                        if(mymods[r].expr != templatecItem.data.data.mods[mymods[r].index].value)
+                                            isconsistent = false;
                                     }
+                                }
+
+                                //MOD change consistency checker
+                                if(!isconsistent){
+                                    //console.log(templatecItem.name + " is fucked in " + myactor.name);
+                                    await myactor.deletecItem(templatecItem.id,true);
+                                    await myactor.addcItem(templatecItem);
+                                    await myactor.update(myactor.data);
                                 }
 
                             }
