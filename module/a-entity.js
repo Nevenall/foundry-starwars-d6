@@ -138,7 +138,7 @@ export class gActor extends Actor{
         const attributes = this.data.data.attributes;
         let itemKey = "";
         let newItem={};
-        //console.log(ciTem);
+        //console.log(ciTem.data.data.groups);
         setProperty(newItem,itemKey,{});
         newItem[itemKey].id=ciTem.data._id;
         newItem[itemKey].ikey=itemKey;
@@ -148,17 +148,24 @@ export class gActor extends Actor{
         newItem[itemKey].isactive = false;
         newItem[itemKey].isreset = true;
 
-        if(ciTem.data.data.isUnique){
-            let groupID = ciTem.data.data.uniqueGID;
-            for(let i=citems.length-1;i>=0;i--){
-                let citemObj = game.items.get(citems[i].id);
-                let hasgroup = citemObj.data.data.groups.some(y=>y.id==groupID);
-                if(hasgroup){
-                    await this.deletecItem(citems[i].id, true);
-                    //await  citems.splice(i,1);
-                }
+        let isunik = ciTem.data.data.isUnique;
 
+        for(let j=0;j<ciTem.data.data.groups.length;j++){
+
+            let _groupcheck = await game.items.get(ciTem.data.data.groups[j].id);
+            let groupID = ciTem.data.data.groups[j].id;
+            if (_groupcheck.data.data.isUnique){
+                for(let i=citems.length-1;i>=0;i--){
+                    let citemObj = game.items.get(citems[i].id);
+                    let hasgroup = citemObj.data.data.groups.some(y=>y.id==groupID);
+                    if(hasgroup){
+                        await this.deletecItem(citems[i].id, true);
+                        //await  citems.splice(i,1);
+                    }
+
+                }
             }
+
         }
 
         //newItem[itemKey].attributes = ciTem.data.data.attributes;
@@ -756,7 +763,7 @@ export class gActor extends Actor{
 
                 let finalvalue =value;
 
-                //console.log(mod.name + " " + mod.citem + " " + mod.index);
+                //console.log(mod.name + " " + mod.citem + " " + mod.index + " " + mod.value);
 
                 let citem = citemIDs.find(y=>y.id==mod.citem);
 
@@ -773,7 +780,7 @@ export class gActor extends Actor{
                 //                }
 
                 finalvalue = await auxMeth.autoParser(value,attributes,citem.attributes,true,false,citem.number);
-
+                //console.log(finalvalue);
 
                 const myAtt = attributes[modAtt];
                 //console.log(mod.name + " " + mod.citem + " " + mod.index);
@@ -783,7 +790,7 @@ export class gActor extends Actor{
 
                 //                console.log(mod.name);
                 //                console.log(value);
-                //                console.log(finalvalue);
+                //                
                 //                console.log(_mod.expr);
                 //                console.log(_mod.exec);
 
@@ -806,7 +813,12 @@ export class gActor extends Actor{
                 }
 
                 _mod.expr = finalvalue;
-                finalvalue = await auxMeth.autoParser(finalvalue,attributes,citem.attributes,false,false,citem.number);
+
+                let textexpr = value.match(/[|]/g);
+                if(textexpr==null && (value.charAt(0)!="|")){
+                    finalvalue = await auxMeth.autoParser(finalvalue,attributes,citem.attributes,false,false,citem.number);
+                }
+
                 //console.log(finalvalue);
                 //console.log(mod.name + " exec= " + _mod.exec + " citem= " + citem.name + " active= " + citem.isactive + " value= " + finalvalue + " isset=" + myAtt.isset);
                 if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
@@ -936,6 +948,7 @@ export class gActor extends Actor{
                         _mod.exec = false;
                     }
 
+                    //console.log(myAtt[attProp]);
                     //console.log(mod.name + " exec: " + _mod.exec + " isactive " + citem.isactive);
                     if((_citem.usetype=="PAS" || citem.isactive) && !jumpmod){
 
@@ -1494,6 +1507,7 @@ export class gActor extends Actor{
     async rollSheetDice(rollexp,rollname,rollid,actorattributes,citemattributes,number=1,target=null){
 
         //console.log(rollexp);
+        //console.log(rollid);
         //console.log(citemattributes.name);
 
         let initiative=false;
@@ -1552,9 +1566,9 @@ export class gActor extends Actor{
         if(rollexp.includes("!("))
             rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
 
-        console.log(rollexp);
+        //console.log(rollexp);
         rollexp = await auxMeth.autoParser(rollexp,actorattributes,citemattributes,true,false,number);
-        console.log(rollexp);
+        //console.log(rollexp);
 
         //let subrollsexpbc = rollexp.match(/(?<=\broll\b\().*?(?=\))/g);
 
