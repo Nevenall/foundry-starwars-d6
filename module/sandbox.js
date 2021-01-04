@@ -213,6 +213,12 @@ Hooks.once("init", async function() {
         decimals: 2
     };
 
+    game.socket.on("system.sandbox", (data) => {
+        if (data.op === 'target_edit'){
+            gActor.handleTargetRequest(data); 
+        } 
+    });
+
 
 });
 
@@ -420,6 +426,9 @@ Hooks.on("preUpdateToken", async (scene, token, updatedData, options, userId) =>
     //console.log("updatingTokenActor");
     //console.log(token);
     //console.log(updatedData);
+    if(!token.owner){
+        return;
+    }
     let myToken = canvas.tokens.get(token._id);
     let myactor = game.actors.get(token.actorId);
 
@@ -440,8 +449,14 @@ Hooks.on("updateToken", async (scene, token, updatedData, options, userId) => {
     //console.log("updatingTokenActor");
     //console.log(token);
     //console.log(updatedData);
+    if(!token.owner){
+        return;
+    }
     let myToken = canvas.tokens.get(token._id);
     let myactor = game.actors.get(token.actorId);
+
+    //console.log(myToken);
+    //console.log(myactor);
 
     let newdata = updatedData;
     if (updatedData["data.citems"]!=null){
@@ -671,19 +686,10 @@ Hooks.on("createItem", async (entity) => {
 
 });
 
-//Hooks.on("preUpdateItem", (entity) => {
-//
-//    if(entity.type=="cItem"){
-//        //console.log(entity);
-//        for(let i=0;i<entity.data.data.mods.length;i++){
-//            const mymod=entity.data.data.mods[i];
-//            if(mymod.citem!=entity.data._id){
-//                mymod.citem = entity.data._id;
-//            }
-//
-//        }
-//    }
-//});
+Hooks.on("preUpdateItem", (entity) => {
+
+    //console.log(entity);
+});
 
 //Hooks.on("updateItem", (entity) => {
 //
@@ -740,6 +746,7 @@ Hooks.on("rendergActorSheet", async (app, html, data) => {
         app.handleGMinputs(html);
         app.refreshBadge(html);
         app.populateRadioInputs(html);
+        app.setImages(html);
         app.scrollBarTest(html);
         actor.setInputColor();
 
