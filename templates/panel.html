@@ -63,6 +63,13 @@
                             </select>
                         </div>
                     </div>
+                    <div class="new-row">
+                        <div class="flexblock-left">
+                            <label class="label-med">Is Image</label>
+                            <input class="check-isimg" name="data.isimg" id="check-isimg" type="checkbox" {{checked item.data.isimg}}/>
+
+                        </div>
+                    </div>
 
                 </div>
 
@@ -97,6 +104,12 @@
                                 <option  value="G">GREY</option>
                                 {{/select}}
                             </select>
+                        </div>
+                    </div>
+                    <div class="new-row">
+                        <div class="flexblock-left">
+                            <label class="label-med">Image Path</label>
+                            <input type="text" name="data.imgsrc" value="{{data.imgsrc}}" data-dtype="String"/>
                         </div>
                     </div>
 
