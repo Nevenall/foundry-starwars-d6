@@ -68,7 +68,8 @@ export class sItemSheet extends ItemSheet {
             let namechain = obj.split(".");
             let name = namechain[1];
             let index = namechain[0];
-            const prop = this.item.data.data.properties[index];
+            const propis = this.item.data.data.properties;
+            const prop = propis[index];
 
             if(prop.isconstant){
                 prop.isconstant=false;
@@ -77,7 +78,10 @@ export class sItemSheet extends ItemSheet {
                 prop.isconstant=true;
             }
 
-            this.item.update({"data.properties":this.item.data.data.properties},{diff:false});
+            //this.item.data.data.properties = propis;
+            this.item.update(this.item.data);
+
+            //this.item.update({"data.properties":this.item.data.data.properties},{diff:false});
         });
 
         // Checks if a Mod is executable only one
@@ -94,7 +98,8 @@ export class sItemSheet extends ItemSheet {
                 mod.once=true;
             }
 
-            this.item.update({"data.mods":this.item.data.data.mods},{diff:false});
+            //this.item.update({"data.mods":this.item.data.data.mods},{diff:false});
+            this.item.update(this.item.data);
         });
 
         html.find('.mod-add').click(ev => {
@@ -135,7 +140,8 @@ export class sItemSheet extends ItemSheet {
             let modId =  ev.target.parentElement.parentElement.getAttribute("mod");
             this.item.data.data.mods[modId].items.splice(cindex,1);
             this.scrollbarSet();
-            this.item.update({"data.mods": mods}, {diff: false});
+            //this.item.update({"data.mods": mods}, {diff: false});
+            this.item.update(this.item.data);
         });
 
         // Everything below here is only needed if the sheet is editable
@@ -323,11 +329,14 @@ export class sItemSheet extends ItemSheet {
             if(this.item.data.type=="cItem" && dropitem.data.type == "group" && dropitem.data.data.isUnique){
                 itemData.isUnique=true;
                 itemData.uniqueGID=dropitem.data._id;
-                await this.item.update({"data": itemData}, {diff: false}); 
+                //await this.item.update({"data": itemData}, {diff: false}); 
+                this.item.data.data = itemData;
+                await this.item.update(this.item.data);
             }
 
             else{
                 await this.updateLists(subitems);
+
             }
 
 
@@ -340,9 +349,14 @@ export class sItemSheet extends ItemSheet {
             //TODO --- No sería Title?
             myitem.group.name = dropitem.data.name;
             myitem.group.ikey = itemKey;
+            this.item.data.data.group = myitem.group;
+            await this.item.update(this.item.data);
 
-            await this.item.update({"data.group": myitem.group}, {diff: false}); 
+            //await this.item.update({"data.group": myitem.group}, {diff: false});
+
         }
+        //console.log("updated");
+        console.log(this.item.data.data);
 
     }
 
@@ -386,16 +400,22 @@ export class sItemSheet extends ItemSheet {
 
     async updateLists(subitems){
         if(this.item.data.type=="panel"|| this.item.data.type=="group"){
-            await this.item.update({"data.properties": subitems}, {diff: false});
+            //await this.item.update({"data.properties": subitems}, {diff: false});
+            this.item.data.data.properties = subitems;
         }
 
         else if(this.item.data.type=="sheettab" || this.item.data.type=="multipanel"){
-            await this.item.update({"data.panels": subitems}, {diff: false}); 
+            //await this.item.update({"data.panels": subitems}, {diff: false});
+            this.item.data.data.panels = subitems;
         }
 
         else if(this.item.data.type=="cItem"){
-            await this.item.update({"data.groups": subitems}, {diff: false}); 
+            //await this.item.update({"data.groups": subitems}, {diff: false}); 
+            this.item.data.data.groups = subitems;
         }
+
+        //console.log("updated");
+        await this.item.update(this.item.data);
 
         return subitems;
     }
@@ -617,7 +637,9 @@ export class sItemSheet extends ItemSheet {
         }
         //console.log(html);
         if(tosave){
-            this.item.update({"data.attributes": attributes}, {diff: false});
+            //this.item.update({"data.attributes": attributes}, {diff: false});
+            this.item.data.data.attributes = attributes;
+            this.item.update(this.item.data);
         }
 
 
@@ -649,7 +671,8 @@ export class sItemSheet extends ItemSheet {
         }
 
         //await this.item.update({[`data.attributes.${name}.value`]:setvalue});
-        await this.item.update({"data.attributes":this.item.data.data.attributes},{diff:false});
+        //await this.item.update({"data.attributes":this.item.data.data.attributes},{diff:false});
+        this.item.update(this.item.data);
     }
 
 
@@ -677,17 +700,20 @@ export class sItemSheet extends ItemSheet {
 
         await mods.push(newMod);
 
-        await this.item.update({"data.mods": mods}, {diff: false});
+        //await this.item.update({"data.mods": mods}, {diff: false});
+        this.item.update(this.item.data);
 
-        console.log(mods);
+        //console.log(mods);
     }
 
     editmodInput(index,name,value){
         const mods = this.item.data.data.mods;
         const obj = mods[index];
         obj[name] = value;
+        this.item.data.data.mods = mods;
+        this.item.update(this.item.data);
 
-        this.item.update({"data.mods": mods}, {diff: false});
+        //this.item.update({"data.mods": mods}, {diff: false});
     }
 
     async deletemodInput(index){
@@ -695,7 +721,8 @@ export class sItemSheet extends ItemSheet {
         mods.splice(index,1);
         await this.scrollbarSet();
 
-        this.item.update({"data.mods": mods}, {diff: false});
+        //this.item.update({"data.mods": mods}, {diff: false});
+        this.item.update(this.item.data);
     }
 
     addItemToMod(modId,citemId){
@@ -708,7 +735,8 @@ export class sItemSheet extends ItemSheet {
 
         if(!mod.items.includes(citemId))
             mod.items.push(arrayItem);
-        this.item.update({"data.mods": mods}, {diff: false});
+        //this.item.update({"data.mods": mods}, {diff: false});
+        this.item.update(this.item.data);
     }
 
     async scrollBarTest(basehtml){
