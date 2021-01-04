@@ -843,6 +843,12 @@
 
 }
 
+.sandbox.sheet .isimg {
+    border: none;
+    max-width: 100%;
+    height: auto;
+}
+
 .sandbox.sheet .rollable {
     cursor: pointer; 
 }
