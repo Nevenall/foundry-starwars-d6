@@ -196,6 +196,13 @@ export class auxMeth {
         //console.log(typeof(expr));
         if(typeof(expr)!="string")
             return expr;
+
+        let diff = await game.settings.get("sandbox", "diff");
+        if(diff==null)
+            diff = 0;
+        if(isNaN(diff))
+            diff = 0;
+        expr = expr.replace(/\#{diff}/g,diff);
         //console.log(itemattributes);
         //console.log(number);
         //console.log(exprmode);
@@ -416,7 +423,7 @@ export class auxMeth {
         let safety_break = 0;
 
         while(!sums_are_num){
-
+            //console.log(expr);
             sums_are_num = true;
             if(safety_break>7)
                 break;
@@ -433,7 +440,8 @@ export class auxMeth {
                 let subb = auxMeth.getBracketsString(suba);
                 scaleresult.push(subb);
             }
-            if(scaleresult!=null){
+            //console.log(scaleresult);
+            if(scaleresult!=null && scaleresult.length>0){
                 //console.log(expr);
                 //Substitute string for current value
                 for (let i=scaleresult.length-1;i>=0;i--){
@@ -481,13 +489,16 @@ export class auxMeth {
                             valuemod=checker.value;
                         }
                     }
+                    if(isNaN(valuemod)){
+                        //console.log(valuemod);
+                        let nonum = /[#@]{|\%\[|\if\[/g;
+                        let checknonum = valuemod.match(nonum);
 
-                    let nonum = /[#@]{|\%\[|\if\[/g;
-                    let checknonum = valuemod.match(nonum);
-
-                    if(checknonum!=null){
-                        sums_are_num = false;
+                        if(checknonum!=null){
+                            sums_are_num = false;
+                        }
                     }
+
 
                     let attname = "%[" + scaleresult[i]+ "]";
                     expr = expr.replace(attname,valuemod);
@@ -1048,6 +1059,13 @@ export class auxMeth {
             }
 
             //console.log(expr);
+            //MATH and ARITHMETIC CORRECTIONS
+            let plusmin = /\+\-/g;
+            expr = expr.replace(plusmin,"-");
+            let minmin = /\-\-/g;
+            expr = expr.replace(minmin,"+");
+
+            //console.log(expr);
 
             safety_break += 1;
 
@@ -1055,6 +1073,9 @@ export class auxMeth {
 
         //console.log(expr);
         //console.log(exprmode);
+
+        //console.log("finished parsed")
+        //console.log(expr);
 
         toreturn = expr;
 
