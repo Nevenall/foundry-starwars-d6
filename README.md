@@ -360,10 +360,19 @@ Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, 
 - #{name}: Returns the name of the cItem you are rolling from.
 - #{roll}: Returns the value of the latest roll executed on a cItem. How is this useful? Well, imagine you have a cItem that is a CONSUMABLE, and every time is activated it rolls 1d6. If you want that 1d6 result to be added to an attribute as part of an ADD MOD, you just need to use #{roll} in the MOD value input field.
 - #{num}: returns the current number of units of the cItems that this actor has.
+
+- max(expr1,expr2,expr3): returns the max value within a series of expressions. For example max(2,3,4,@{value}) will return the maximum value of that list. You can combine with roll registrations (see below) like max(?[Name]), that will return the max die of all dice from a registered roll called Name.  
+- min(expr1,expr2,expr3): return min value of the list. You can also use a registered roll here!
+- countE(expr1,expr2,expr3;value): counts the number of expression results that are equal to the value. For example, using our previous example  countE(?[Test];3) will return  how many dice are equal to 3 (from the 3d6 rolled in the example).
+- countH(expr1,expr2,expr3;value): returns number of elements in the list with a value higher than 3. Can also be used with registered rolls like countH(?[Name];3).
+countL(expr1,expr2,expr3;value):  returns number of elements in the list with a value lower than 3.  Can also be used with registered rolls like countL(?[Name];3) 
+sum(expr1,expr2,expr3) : returns the sum of all elements in the list.  Can also be used with registered rolls like sum(?[Name]) 
+- maxdie(XdY): returns the max result in a simple roll expression, For example, maxdie(1d6) returns 6.
+
+THE FOLLOWING EXPRESSIONS CAN NOT BE USED INSIDE cITEM MOD VALUE fields:
 - #{target|target_attribute_key}: Returns the value of an attribute of the target actor on the map. Useful for calculating AC and such. Example: 1d20 + @{weapon_skill} &&total;0:FAILURE;#{target|ac}:YOU HIT!&&
 - #{diff}: There is a DC box on the bottom of your active scene, to the right of the macro bar. DC stands for difficulty class. If your system/game requires the GM to set a difficulty, this is the place to write it down. Then, the rolls can reference this difficulty by using #{diff}.
 - &&value_to_compare;value_1:text_1,value_N,text_N&&: So imagine you want to return a sentence to the chat, along with your roll. You want to return "SUCESS" if the result of your roll is over 8, "FAILURE" if the result of the roll is under 7, and "PARTIAL SUCCESS" on every other result. This function allows you to return that sentence/word below the roll result. So you can do this with the following formula &&total;0:FAILURE,7:PARTIAL SUCCESS,9:SUCCESS&&. The first argument of the expression is the value you are analysing, and if you write "total" it will take into account the total of the roll. You can include a property instead of that, or another roll expression with a numeric outcome.
-
 - ~Roll_ID~: adds a Roll ID to the roll. Remember that we have a MOD type called ROLL? And this one adds values to rolls of a specific Roll ID? So this function lets you add ROll IDs to rolls. As many as you like. So let's say we just defined a roll for an attack with Roll Name:"Attack", Roll ID: "attack", and Roll Expression: 1d20+@{strength}. However, we want more definition for it, and for that we want to incorporate some more Roll IDs, in case we need to modify the roll through a MOD. Let's say we want to add the Ids "melee_attack" and "slashing", then we would have to change the Roll Expression to 1d20+@{strength} ~melee_attack~ ~slashing~
 - ~ADV~ or ~DIS~: fives advantage or disadvantage to the roll
 - ~init~: sends the result of the roll to the initiative on the combat tracker.
@@ -372,20 +381,13 @@ Example with ANDs and ORs if\[F1:C1 OR F2:C2 AND F3:C3,true_value,ELSE if\[F:C, 
 
 - roll(Name;dice;faces;explodes): If you want to have a roll separated from your roll expression with a name, and displayed by its own, you use this formula. For example, imagine that for a system we are designing we need to roll 1d6 in every skill check, and this die is called the "Anger Die". You could set it up like this. For example roll(Anger;1;6;false) registers a roll named Anger, of 1 dice of 6 faces and doesnt explode; This expression substitutes !(Roll Name;Roll Expression), that is removed from the system. Also ¬¬ expression doesn't work anymore. The last argument, "explodes", can be either false, true, or add. If it is add, the succesive exploded dice will be added instead of displayed as independent dice. For example, roll(Anger;1;4;true) might return 4,4,3 while roll(Anger;1;4;add) might return 11.
 - ?[Roll Name]: returns the reference of a registered roll, as many times as you want. You need to use this with one of the following.
-- max(expr1,expr2,expr3): returns the max value within a series of expressions. For example max(2,3,4,@{value}) will return the maximum value of that list. You can combine with roll registrations like max(?[Name]), that will return the max die of all dice from a registered roll called Name.  
-- min(expr1,expr2,expr3): return min value of the list. You can also use a registered roll here!
-- countE(expr1,expr2,expr3;value): counts the number of expression results that are equal to the value. For example, using our previous example  countE(?[Test];3) will return  how many dice are equal to 3 (from the 3d6 rolled in the example).
-- countH(expr1,expr2,expr3;value): returns number of elements in the list with a value higher than 3. Can also be used with registered rolls like countH(?[Name];3).
-countL(expr1,expr2,expr3;value):  returns number of elements in the list with a value lower than 3.  Can also be used with registered rolls like countL(?[Name];3) 
-sum(expr1,expr2,expr3) : returns the sum of all elements in the list.  Can also be used with registered rolls like sum(?[Name]) 
-- maxdie(XdY): returns the max result in a simple roll expression, For example, maxdie(1d6) returns 6.
 
 ![Naming sub rolls](docs/images/tuto44.png)
 
 - $<index;expression>: So roll parsing is not perfect, and until we find a way to do it more visually attractive there will be tons of problems. Expressions that contain brackets inside other expressions that also contain brackets will give you troubles. To avoid this, you can save pieces of your expression through this function. For example $<1;%[@{str},0:0,15:1]> will register the expresion after the semicolon as $1. A full example of this is: $<1;%[@{str},0:0,15:1]> 2d6+$1. This expression is equivalent to 2d6 + %[@{str},0:0,15:1]. Remember to change the number before the semicolon, as is the index and will let you identify subexpressions using $1,$2,$3, etc.
 
-- add(property_key;value): this expression will only work with a targeted token. It will add "value" to the current value of the specified property (key only, no @). For example, roll(Damage_Roll;2;10;false) sum(?[Damage_Roll]) add(HP;-sum(?[Damage_Roll])). This example expression will substract 2d10 from the property @{HP} of the targeted token.
 
+- add(property_key;value): this expression will only work with a targeted token. It will add "value" to the current value of the specified property (key only, no @). For example, roll(Damage_Roll;2;10;false) sum(?[Damage_Roll]) add(HP;-sum(?[Damage_Roll])). This example expression will substract 2d10 from the property @{HP} of the targeted token.
 - set(property_key;value): as add() property, but will set the value to it.
 
 SOME EXAMPLES OF ROLLS:
@@ -418,6 +420,7 @@ Check on Game Settings>Configure Settings>System Settings
 - Token options: Sandbox has some specific token options. in the Template Actor, the Token tabs lets you choose which properties do you want to display as bars, and the level of access required to see one. This checkbox in settings lets you activate these options.
 - CSS Style file: this is your custom CSS file location, to change the styling of your character sheet.
 - Initiative attribute key: if you want your initiative to be global, just include your roll initiative expression formula in the value of a simpletext property. Something like "1d20 + @{dexterity}" in a property with "initexpression" key for example. Then, in this settings field you only have to write "initexpression". You wont need to use ~init~ again and all actor will use Founry's general combat tracker roller.
+- Images for Panels: You can now cover a panel with an image, you only have to select the option "Is Image" in the panel item, and include a route to the image in "Image Path", like this: worlds/yourworld/yourimage.png
 
 ## TODO LIST
 - Check release notes
