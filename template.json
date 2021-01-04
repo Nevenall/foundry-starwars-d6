@@ -140,6 +140,8 @@
             "condop":"NON",
             "condvalue":"",
             "backg":"D",
+            "isimg":false,
+            "imgsrc":"",
             "properties":[]
         },
         "multipanel":{
