@@ -654,7 +654,7 @@ export class gActorSheet extends ActorSheet {
 
 
             if(tabitem.data.condop=="EQU"){
-                if(tabitem.data.condvalue == "true"||tabitem.data.condvalue == "false" || typeof tabitem.data.condvalue ==="boolean"){
+                if(tabitem.data.condvalue == "true" || tabitem.data.condvalue == "false" || tabitem.data.condvalue==true || tabitem.data.condvalue==false){
                     newElement.insertAdjacentHTML( 'beforebegin', "{{#if actor.data.attributes." + tabitem.data.condat + attProp + "}}" );
                     newElement.insertAdjacentHTML( 'afterend', "{{/if}}" );
                 }
@@ -1024,15 +1024,16 @@ export class gActorSheet extends ActorSheet {
                 labelwidth="";
             }
 
-
-            let property = game.items.get(rawproperty.id).data;
-            if(property==null){
-                ui.notifications.warn("A property in your sheet does not exist anymore. Please remove the reference to it");
+            console.log(rawproperty);
+            let propertybase = game.items.get(rawproperty.id);
+            if(propertybase==null){
+                ui.notifications.warn("The property " + rawproperty.name + " in panel " + tabpanel.name + " does not exist anymore. Please remove the reference to it");
+                throw new Error("Something went badly wrong!");
             }
 
             else{
 
-
+                let property = propertybase.data;
                 if(count==0){
 
                     new_row.className = "new-row";
@@ -1628,6 +1629,12 @@ export class gActorSheet extends ActorSheet {
             }
         }
 
+        if(tabpanel.data.isimg){
+            div6.setAttribute("img",tabpanel.data.imgsrc);
+            div6.className += " isimg";
+        }
+
+
         //console.log(flags.rwidth + " / row: " + flags.rows + " " + tabpanel.name);
 
     }
@@ -1712,8 +1719,17 @@ export class gActorSheet extends ActorSheet {
                                         if(!hasProperty(mymods[r],"index"))
                                             setProperty(mymods[r],"index",0);
 
-                                        if(mymods[r].expr != templatecItem.data.data.mods[mymods[r].index].value)
-                                            isconsistent = false;
+                                        if(templatecItem.data.data.mods[mymods[r].index] == null){
+                                            //console.log(templatecItem.name);
+                                            //isconsistent = false;
+                                        }
+
+                                        else{
+                                            if(mymods[r].expr != templatecItem.data.data.mods[mymods[r].index].value)
+                                                isconsistent = false;
+                                        }
+
+
                                     }
                                 }
 
@@ -1994,10 +2010,10 @@ export class gActorSheet extends ActorSheet {
                     return;
                 }
                 else{
-                    subitems[i].number +=1;
+                    subitems[i].number = parseInt(subitems[i].number) + 1;
                     subitems[i].uses = parseInt(subitems[i].uses) + parseInt(dropitem.data.data.maxuses);
                     await this.updateSubItems(isTab,subitems);
-                    await this.actor.actorUpdater();
+                    //await this.actor.actorUpdater();
                     return;
                 }
 
@@ -2850,6 +2866,20 @@ export class gActorSheet extends ActorSheet {
                 } 
             }
 
+        }
+    }
+
+    async setImages(basehtml){
+        const html = await basehtml.find(".isimg");
+        for(let i=0;i<html.length;i++){
+            let imgNode = html[i];
+            let imgPath = imgNode.getAttribute("img");
+
+            let imgEl = document.createElement('img');
+            imgEl.className = "isimg";
+            imgEl.src = imgPath;
+
+            imgNode.appendChild(imgEl);
         }
     }
 
