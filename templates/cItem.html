@@ -121,11 +121,15 @@
                                 {{#each item.data.mods as |mod id|}}
                                 <li class="mod-block" data-item-id="{{id}}">
                                     <div class="mod-row">
+
                                         <div class="mod-row">
                                             <a class="mod-delete" title="Delete Mod" name="{{id}}.delete"><i class="fas fa-times-circle"></i></a>
+                                            {{#ifCond mod.type "ITEM"}}
                                             <label class="label-free">once</label>
                                             <input class="check-once" index={{id}} name="{{id}}.once" id="{{id}}" type="checkbox" {{checked mod.once}}/>
+                                            {{/ifCond}}
                                         </div>
+
                                         <div class="mod-row-block">
 
                                             <div class="col-1-6  mod-row-header">
