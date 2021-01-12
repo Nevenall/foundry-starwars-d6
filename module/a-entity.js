@@ -1590,7 +1590,7 @@ export class gActor extends Actor{
         let rolltotal=0;
         let conditionalText="";
         //let diff = SBOX.diff[game.data.world.name];
-        let diff = await game.settings.get("sandbox", "diff");
+        let diff = await game.settings.get("starwars-d6", "diff");
         if(diff==null)
             diff = 0;
         if(isNaN(diff))
@@ -2177,7 +2177,7 @@ export class gActor extends Actor{
             isfumble: hasfumble
         };
 
-        renderTemplate("systems/sandbox/templates/dice.html", rollData).then(html => {
+        renderTemplate("systems/starwars-d6/templates/dice.html", rollData).then(html => {
             let rolltype = document.getElementsByClassName("roll-type-select");
             let rtypevalue = rolltype[0].value;
             let rvalue = 0;
@@ -2214,7 +2214,7 @@ export class gActor extends Actor{
         };
 
 
-        renderTemplate("systems/sandbox/templates/msg.html", rollData).then(html => {
+        renderTemplate("systems/starwars-d6/templates/msg.html", rollData).then(html => {
             ChatMessage.create({
                 content: html
             });
@@ -2238,7 +2238,7 @@ export class gActor extends Actor{
         else{
             console.log("requesting to GM");
 
-            game.socket.emit("system.sandbox", {
+            game.socket.emit("system.starwars-d6", {
                 op: 'target_edit',
                 user: game.user.id,
                 scene: canvas.scene.id,

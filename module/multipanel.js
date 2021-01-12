@@ -7,7 +7,7 @@ export class multiPanel extends ItemSheet {
     /** @override */
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
-            classes: ["sandbox", "sheet", "item"],
+            classes: ["starwars-d6", "sheet", "item"],
             width: 520,
             height: 480,
             tabs: [{navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description"}]
@@ -18,7 +18,7 @@ export class multiPanel extends ItemSheet {
 
     /** @override */
     get template() {
-        const path = "systems/sandbox/templates/";
+        const path = "systems/starwars-d6/templates/";
         return `${path}/${this.item.data.type}.html`;
     }
 

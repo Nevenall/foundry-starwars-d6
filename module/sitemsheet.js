@@ -9,7 +9,7 @@ export class sItemSheet extends ItemSheet {
     /** @override */
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
-            classes: ["sandbox", "sheet", "item"],
+            classes: ["starwars-d6", "sheet", "item"],
             width: 520,
             height: 500,
             tabs: [{navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "description"}]
@@ -20,7 +20,7 @@ export class sItemSheet extends ItemSheet {
 
     /** @override */
     get template() {
-        const path = "systems/sandbox/templates/";
+        const path = "systems/starwars-d6/templates/";
         return `${path}/${this.item.data.type}.html`;
     }
 
@@ -35,7 +35,7 @@ export class sItemSheet extends ItemSheet {
         const data = super.getData();
         data.flags = item.data.flags;
 
-        //BEHOLD THE BEST DEBUGGER LINE ON SANDBOX!
+        //BEHOLD THE BEST DEBUGGER LINE ON starwars-d6!
         console.log(data);
 
         return data;

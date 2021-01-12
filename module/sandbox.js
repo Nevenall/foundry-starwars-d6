@@ -17,7 +17,7 @@ import { auxMeth } from "./auxmeth.js";
 /* -------------------------------------------- */
 
 Hooks.once("init", async function() {
-    console.log(`Initializing Sandbox System`);
+    console.log(`Initializing starwars-d6 System`);
 
     /**
 	 * Set an initiative formula for the system
@@ -45,7 +45,7 @@ Hooks.once("init", async function() {
 
 
 
-    game.settings.register("sandbox", "showADV", {
+    game.settings.register("starwars-d6", "showADV", {
         name: "Show Roll with Advantage option",
         hint: "If checked, 1d20,ADV,DIS options will be displayed under the Actor's name",
         scope: "world",
@@ -54,7 +54,7 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
-    game.settings.register("sandbox", "showSimpleRoller", {
+    game.settings.register("starwars-d6", "showSimpleRoller", {
         name: "Show d20 Roll icon option",
         hint: "If checked a d20 icon will be displayed under the Actor's name",
         scope: "world",
@@ -63,7 +63,7 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
-    game.settings.register("sandbox", "consistencycheck", {
+    game.settings.register("starwars-d6", "consistencycheck", {
         name: "Check cItem Consistency",
         hint: "If checked, when rebuilding template, every cItem will be evaluated for consistency. WARNING: May take several minutes in big systems",
         scope: "world",
@@ -72,7 +72,7 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
-    game.settings.register("sandbox", "showDC", {
+    game.settings.register("starwars-d6", "showDC", {
         name: "Show DC window",
         hint: "If checked a DC box will appear at the bottom of the screen",
         scope: "world",
@@ -81,7 +81,7 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
-    game.settings.register("sandbox", "showLastRoll", {
+    game.settings.register("starwars-d6", "showLastRoll", {
         name: "Show Last Roll window",
         hint: "If checked a box displaying the results of the last Roll will appear at the bottom of the screen",
         scope: "world",
@@ -90,7 +90,7 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
-    game.settings.register("sandbox", "diff", {
+    game.settings.register("starwars-d6", "diff", {
         name: "GM difficulty",
         hint: "This is linked to the DC Box at the bottom of the screen",
         scope: "world",
@@ -99,7 +99,7 @@ Hooks.once("init", async function() {
         type: Number,
     });
 
-    game.settings.register("sandbox", "tokenOptions", {
+    game.settings.register("starwars-d6", "tokenOptions", {
         name: "Token Options",
         hint: "You can specify bar1 under token on the template Token tab",
         scope: "world",
@@ -108,7 +108,7 @@ Hooks.once("init", async function() {
         type: Boolean,
     });
 
-    game.settings.register("sandbox", "customStyle", {
+    game.settings.register("starwars-d6", "customStyle", {
         name: "CSS Style file",
         hint: "You can specify a custom styling file. If default wanted, leave blank",
         scope: "world",
@@ -117,7 +117,7 @@ Hooks.once("init", async function() {
         type: String,
     });
 
-    game.settings.register("sandbox", "initKey", {
+    game.settings.register("starwars-d6", "initKey", {
         name: "Initiative Attribute Key",
         hint: "After editing, please refresh instance",
         scope: "world",
@@ -192,7 +192,7 @@ Hooks.once("init", async function() {
 
     Combat.prototype._getInitiativeFormula = async function(combatant) {
 
-        let initF = await game.settings.get("sandbox", "initKey");
+        let initF = await game.settings.get("starwars-d6", "initKey");
         let formula = "1d20";
         if(initF!=""){
             formula = "@{" + initF + "}"
@@ -213,7 +213,7 @@ Hooks.once("init", async function() {
         decimals: 2
     };
 
-    game.socket.on("system.sandbox", (data) => {
+    game.socket.on("system.starwars-d6", (data) => {
         if (data.op === 'target_edit'){
             gActor.handleTargetRequest(data); 
         } 
@@ -225,11 +225,11 @@ Hooks.once("init", async function() {
 Hooks.once('ready', async() => {
     //console.log("ready!");
     //Custom styling
-    if(game.settings.get("sandbox", "customStyle")!=""){
+    if(game.settings.get("starwars-d6", "customStyle")!=""){
         const link = document.createElement('link');
         link.type = 'text/css';
         link.rel = 'stylesheet';
-        link.href = game.settings.get("sandbox", "customStyle");
+        link.href = game.settings.get("starwars-d6", "customStyle");
         await document.getElementsByTagName('head')[0].appendChild(link);
     }
 
@@ -276,7 +276,7 @@ Hooks.once('ready', async() => {
             setProperty(SBOX.diff,game.data.world.name,0);
         }
 
-        sInput.value = game.settings.get("sandbox", "diff");
+        sInput.value = game.settings.get("starwars-d6", "diff");
 
         sInput.addEventListener("keydown", async (event) => {
             event.preventDefault();
@@ -288,7 +288,7 @@ Hooks.once('ready', async() => {
 
             else if(event.key=="Enter"){
                 //SBOX.diff[game.data.world.name] = sInput.value;
-                await game.settings.set("sandbox", "diff", sInput.value);
+                await game.settings.set("starwars-d6", "diff", sInput.value);
             }
 
             else if(event.key=="-"){
@@ -313,7 +313,7 @@ Hooks.once('ready', async() => {
             event.stopPropagation();
 
             //SBOX.diff[game.data.world.name] = sInput.value;
-            await game.settings.set("sandbox", "diff", sInput.value);
+            await game.settings.set("starwars-d6", "diff", sInput.value);
 
         });
 
@@ -322,7 +322,7 @@ Hooks.once('ready', async() => {
 
         backgr.appendChild(form);
 
-        if(game.settings.get("sandbox", "showDC")){
+        if(game.settings.get("starwars-d6", "showDC")){
             await hotbar.appendChild(backgr);
         }
 
@@ -330,7 +330,7 @@ Hooks.once('ready', async() => {
         await auxMeth.rollToMenu();
         SBOX.showshield = false;
 
-        if(game.settings.get("sandbox", "tokenOptions")){
+        if(game.settings.get("starwars-d6", "tokenOptions")){
             document.addEventListener("keydown", (event) => {
                 if(event.key=="Control"){
                     SBOX.showshield = true;
@@ -369,7 +369,7 @@ Hooks.once('ready', async() => {
 //COPIED FROM A MODULE. TO SHOW A SHIELD ON A TOKEN AND LINK THE ATTRIBUTE. TO REMOVE
 Hooks.on("hoverToken", (token, hovered) => {
 
-    if(!game.settings.get("sandbox", "tokenOptions"))
+    if(!game.settings.get("starwars-d6", "tokenOptions"))
         return;
 
     if(token.actor==null)
@@ -484,7 +484,7 @@ Hooks.on("preUpdateActor", async (actor,updateData,options,userId) => {
     //console.log(updateData);
     //console.log(data.data.gtemplate);
     //console.log("preup");
-    if(game.settings.get("sandbox", "tokenOptions")){
+    if(game.settings.get("starwars-d6", "tokenOptions")){
 
         //if(!actor.token)
         //setProperty(updateData,"token",{})
@@ -556,7 +556,7 @@ Hooks.on("preUpdateActor", async (actor,updateData,options,userId) => {
 Hooks.on("preCreateToken", async (scene, tokenData, options, userId) =>{
     //console.log(tokenData);
 
-    if(game.settings.get("sandbox", "tokenOptions")){
+    if(game.settings.get("starwars-d6", "tokenOptions")){
         const sameTokens = game.scenes.get(scene.id).data.tokens.filter(e => e.actorId === tokenData.actorId) || [];
         let tokennumber = 0;
         if (sameTokens.length !== 0) { 
@@ -633,29 +633,29 @@ Hooks.on("preCreateItem", (entity, options, userId) => {
     let image="";
     if(!entity.img){
         if(entity.type=="cItem"){
-            image="systems/sandbox/docs/icons/sh_citem_icon.png";
+            image="systems/starwars-d6/docs/icons/sh_citem_icon.png";
 
 
         }
 
         if(entity.type=="sheettab"){
-            image="systems/sandbox/docs/icons/sh_tab_icon.png";
+            image="systems/starwars-d6/docs/icons/sh_tab_icon.png";
         }
 
         if(entity.type=="group"){
-            image="systems/sandbox/docs/icons/sh_group_icon.png";
+            image="systems/starwars-d6/docs/icons/sh_group_icon.png";
         }
 
         if(entity.type=="panel"){
-            image="systems/sandbox/docs/icons/sh_panel_icon.png";
+            image="systems/starwars-d6/docs/icons/sh_panel_icon.png";
         }
 
         if(entity.type=="multipanel"){
-            image="systems/sandbox/docs/icons/sh_panel_icon.png";
+            image="systems/starwars-d6/docs/icons/sh_panel_icon.png";
         }
 
         if(entity.type=="property"){
-            image="systems/sandbox/docs/icons/sh_prop_icon.png";
+            image="systems/starwars-d6/docs/icons/sh_prop_icon.png";
         }
 
         if(image!="")
@@ -794,7 +794,7 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
         };
 
 
-        await renderTemplate("systems/sandbox/templates/dice.html", rollData).then(async newhtml => {
+        await renderTemplate("systems/starwars-d6/templates/dice.html", rollData).then(async newhtml => {
 
             let container = html[0];
 
@@ -822,7 +822,7 @@ Hooks.on("renderChatMessage", async (app, html, data) => {
         let containerDiv = document.createElement("DIV");
 
         let headerDiv = document.createElement("HEADER");
-        let headertext = await fetch("systems/sandbox/templates/sbmessage.html").then(resp => resp.text());
+        let headertext = await fetch("systems/starwars-d6/templates/sbmessage.html").then(resp => resp.text());
         headerDiv.innerHTML = headertext;
 
         let msgcontent = html;

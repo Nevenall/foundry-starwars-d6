@@ -59,7 +59,7 @@ export class auxMeth {
 
         if(gtemplate==="" || gtemplate==="Default"){
             gtemplate = "character";
-            path = "systems/sandbox/templates/";
+            path = "systems/starwars-d6/templates/";
         }
 
         let templatepath = `${path}/${gtemplate}.html`;
@@ -72,7 +72,7 @@ export class auxMeth {
 
     static async retrieveBTemplate(){
 
-        var form = await fetch("systems/sandbox/templates/character.html").then(resp => resp.text());
+        var form = await fetch("systems/starwars-d6/templates/character.html").then(resp => resp.text());
 
         return form;
 
@@ -132,7 +132,7 @@ export class auxMeth {
 
     static async registerShowMod(){
         Handlebars.registerHelper('advShow', function(options) {
-            if(game.settings.get("sandbox", "showADV")) {
+            if(game.settings.get("starwars-d6", "showADV")) {
                 return options.fn(this);
             }
             return options.inverse(this);
@@ -141,7 +141,7 @@ export class auxMeth {
 
     static async registerShowSimpleRoll(){
         Handlebars.registerHelper('showRoller', function(options) {
-            if(game.settings.get("sandbox", "showSimpleRoller")) {
+            if(game.settings.get("starwars-d6", "showSimpleRoller")) {
                 return options.fn(this);
             }
             return options.inverse(this);
@@ -197,7 +197,7 @@ export class auxMeth {
         if(typeof(expr)!="string")
             return expr;
 
-        let diff = await game.settings.get("sandbox", "diff");
+        let diff = await game.settings.get("starwars-d6", "diff");
         if(diff==null)
             diff = 0;
         if(isNaN(diff))
@@ -1203,7 +1203,7 @@ export class auxMeth {
 
     static rollToMenu(html=null){
 
-        if(!game.settings.get("sandbox", "showLastRoll"))
+        if(!game.settings.get("starwars-d6", "showLastRoll"))
             return;
 
         //console.log("rolling to menu");
