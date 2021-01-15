@@ -5,19 +5,17 @@
  */
 
 // Import Modules
-import { gActorSheet } from "./gactorsheet.js";
+import { gActorSheet } from "./character-sheet.js";
 import { sItemSheet } from "./sitemsheet.js";
-import { gActor } from "./a-entity.js";
-import { gItem } from "./i-entity.js";
-import { SBOX } from "./config.js";
-import { auxMeth } from "./auxmeth.js";
+import { gActor } from "./character.js";
+
 
 /* -------------------------------------------- */
 /*  Hooks                 */
 /* -------------------------------------------- */
 
 Hooks.once("init", async function() {
-    console.log(`Initializing starwars-d6 System`);
+    console.log(`a long time ago in a galaxy far far away...`);
 
     /**
 	 * Set an initiative formula for the system

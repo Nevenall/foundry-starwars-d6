@@ -8,18 +8,16 @@
   "templateVersion": 1,
   "author": "nevenall",
   "esmodules": [
-    "module/sandbox.js"
+    "module/index.js"
   ],
   "styles": [
-    "styles/sandbox.css"
+    "styles/starwars.css"
   ],
   "packs": [],
   "socket": true,
   "languages": [],
   "gridDistance": 1,
   "gridUnits": "m",
-  "primaryTokenAttribute": "health",
-  "secondaryTokenAttribute": "power",
   "url": "https://github.com/Nevenall/foundry-starwars-d6",
   "manifest": "https://github.com/Nevenall/foundry-starwars-d6/raw/master/system.json",
   "download": "https://github.com/Nevenall/foundry-starwars-d6/archive/master/foundry-starwars-d6-master.zip"
