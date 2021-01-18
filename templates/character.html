@@ -1,22 +1,56 @@
-<form class="{{cssClass}}" autocomplete="off">
-   <header>
-
+<form class="character-form {{cssClass}}" autocomplete="off">
+   <div class="personal">
       <div class="field">
          <label>name:</label>
-         <input type="text" name="name" value="{{actor.name}}" placeholder="NAME" title="Name" />
+         <input type="text" name="name" value="{{actor.name}}" placeholder="name" title="Name" />
       </div>
+      <div class="field">
+         <label>concept:</label>
+         <input type="text" name="concept" value="{{actor.concept}}" placeholder="concept" title="concept" />
+      </div>
+      <div class="field">
+         <label>species:</label>
+         <input type="text" name="species" value="{{actor.species}}" placeholder="species" title="species" />
+      </div>
+      <div class="field">
+         <label>gender:</label>
+         <input type="text" name="gender" value="{{actor.gender}}" placeholder="gender" title="gender" />
+      </div>
+      <div class="field">
+         <label>age:</label>
+         <input type="text" name="age" value="{{actor.age}}" placeholder="age" title="age" />
+      </div>
+      <div class="field">
+         <label>height:</label>
+         <input type="text" name="height" value="{{actor.height}}" placeholder="height" title="height" />
+      </div>
+      <div class="field">
+         <label>weight:</label>
+         <input type="text" name="weight" value="{{actor.weight}}" placeholder="weight" title="weight" />
+      </div>
+      <div class="field">
+         <label>look:</label>
+         <input type="text" name="look" value="{{actor.look}}" placeholder="look" title="look" />
+      </div>
+   </div>
+   <img class="portrait" src="{{actor.img}}" title="{{actor.name}}" alt="picture of {{actor.name}}" data-edit="img" />
 
-      <img src="{{actor.img}}" title="{{actor.name}}" alt="picture of {{actor.name}}" data-edit="img" />
+   <div class="statistics">
+      <div class="dexterity">
+         <!-- attribute dice, label in smallcaps -->
+         <!-- list of {skill name label}: {dice} -->
+         <h3>Dexterity</h3>
+      </div>
+      <div class="perception"></div>
+      <div class="knowledge"></div>
+      <div class="strength"></div>
+      <div class="mechanical"></div>
+      <div class="technical"></div>
+      <div class="force"></div>
+      <div class="force-powers"></div>
+   </div>
 
 
-   </header>
 
 
-   <section>
-
-
-
-
-
-   </section>
 </form>

@@ -1,7 +1,7 @@
 /**
  * @extends {Actor}
  */
-export class Character extends Actor {
+export default class Character extends Actor {
 
    /** @override */
    async update(data, options = {}) {
