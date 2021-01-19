@@ -25,6 +25,7 @@ export default class CustomRoll extends Roll {
 
       // Step 5 - clean and de-dupe terms
       terms = this.constructor.cleanTerms(terms)
+      
       return terms
    }
 
