@@ -1,6 +1,7 @@
 import CharacterSheet from './character-sheet.js'
 import Character from './character.js'
 import Roll from './custom-roll.js'
+import Die from './custom-die.js'
 
 
 Hooks.once('init', async function () {
@@ -8,7 +9,15 @@ Hooks.once('init', async function () {
 
    // CONFIG.debug.hooks = true
    CONFIG.Actor.entityClass = Character
+
    CONFIG.Dice.rolls[0] = Roll
+   
+   // CONFIG.Dice.terms['d'] = Die
+   
+   // add a new kind of dice for character points
+   // CONFIG.Dice.types.push(CharacterPointDie)
+   // CONFIG.Dice.terms.push({"cp": })
+
 
    // debug - not totally sure what this does :)
    game.debug = true
