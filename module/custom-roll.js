@@ -6,7 +6,6 @@ export default class CustomRoll extends Roll {
       super(formula, data = {})
    }
 
-
    _identifyTerms(formula, { step = 0 } = {}) {
 
       if (typeof formula !== "string") throw new Error("The formula provided to a Roll instance must be a string")
@@ -23,9 +22,12 @@ export default class CustomRoll extends Roll {
       // Step 4 - expand remaining arithmetic terms
       terms = this._splitDiceTerms(terms, step)
 
+      // Step 4.1 - if the formula leaves off the 6 (ie '2d') turn one of the dice into a wild die.
+      terms = this._customHandling(terms)
+
       // Step 5 - clean and de-dupe terms
       terms = this.constructor.cleanTerms(terms)
-      
+
       return terms
    }
 
@@ -86,6 +88,59 @@ export default class CustomRoll extends Roll {
       }, [])
 
       // Return the set of final terms
+      return terms
+   }
+
+
+   _customHandling(terms) {
+
+
+      // todo - if the formula leaves off the 6 (ie '2d') turn one of the dice into a wild die.
+      // we want the wild die to be a separate die in the formula. 
+      // if we add dice, ie 2d+1d we don't want to wild die both, just the one. 
+
+      // note - this gets called 3 times per roll, need to take that into account I guess.  
+      // also once for every chat message when we reload
+
+      // we are breaking adding and subtracting
+      // so we should adjust by finding the first D term with a plus. 
+      // todo - for this game -1d means substract  a die before you roll, not roll a d6 and subtract it from the total.
+      // we can adjust that eval here. 
+
+      // we need to evaluate math as well. 
+      // so, the collected dice will look at + and - terms
+      // and adjust the die total. 
+      // well also have to preserve any +/- number
+
+      let shouldAddWildDie = terms.some(el => el.options ? el.options.shouldAddWildDie : false)
+      for (let i = 0; i < terms.length; i++) {
+         const el = terms[i]
+         if (el._evaluated) { continue }
+
+         if (el === '+' || el === '-') {
+            let left = terms[i - 1]
+            let right = terms[i + 1]
+
+            if (left.options && left.options.shouldAddWildDie && right.options && right.options.shouldAddWildDie) {
+               // splice these 3 elements with one combined by evaluating the operations
+               // in doing so the wild die flag is intentionally lost
+               if (el === '+') {
+                  terms.splice(i - 1, 3, new CustomDie({ number: left.number + right.number, faces: 6, options: { ...left.options, ...right.options } }))
+               } else if (el === '-') {
+                  terms.splice(i - 1, 3, new CustomDie({ number: left.number - right.number, faces: 6, options: { ...left.options, ...right.options } }))
+               }
+               --i
+            }
+         }
+      }
+
+      if (shouldAddWildDie) {
+         let collectedDice = terms.find(el => el.options ? el.options.shouldAddWildDie : false)
+         collectedDice.number--
+         let wildDie = new CustomDie({ number: 1, faces: 6, modifiers: ['x'] })
+         terms.unshift(wildDie, '+')
+      }
+
       return terms
    }
 

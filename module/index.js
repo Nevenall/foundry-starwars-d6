@@ -11,9 +11,8 @@ Hooks.once('init', async function () {
    CONFIG.Actor.entityClass = Character
 
    CONFIG.Dice.rolls[0] = Roll
-   
-   // CONFIG.Dice.terms['d'] = Die
-   
+   CONFIG.Dice.terms[''] = Die
+
    // add a new kind of dice for character points
    // CONFIG.Dice.types.push(CharacterPointDie)
    // CONFIG.Dice.terms.push({"cp": })
