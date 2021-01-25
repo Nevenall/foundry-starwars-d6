@@ -119,11 +119,13 @@ export default class CustomRoll extends Roll {
 
       if (shouldAddWildDie) {
          let collectedDice = terms.find(el => el.options ? el.options.shouldAddWildDie : false)
-         collectedDice.number--
-         collectedDice.options.shouldAddWildDie = false
-         collectedDice.options.collectedDice = true
-         let wildDie = new CustomDie({ number: 1, faces: 6, modifiers: ['x'], options: { isWildDie: true, flavor: 'wild_die', shouldAddWildDie: false } })
-         terms.unshift(wildDie, '+')
+         if (collectedDice.number > 0) {
+            collectedDice.number--
+            collectedDice.options.shouldAddWildDie = false
+            collectedDice.options.collectedDice = true
+            let wildDie = new CustomDie({ number: 1, faces: 6, modifiers: ['x'], options: { isWildDie: true, flavor: 'wild_die', shouldAddWildDie: false } })
+            terms.unshift(wildDie, '+')
+         }
       }
 
       return terms
@@ -154,8 +156,8 @@ export default class CustomRoll extends Roll {
          if (term.evaluate) {
             let total = term.evaluate({ minimize, maximize }).total
             if (term.options.flavor === 'wild_die' && total === 1) {
-            // todo - some day we'll figure out how to change the roll parameters of the rest of our dice to dh1 because of the 1 on the wild die.
-            //
+               // todo - some day we'll figure out how to change the roll parameters of the rest of our dice to dh1 because of the 1 on the wild die.
+               //
                console.log("you rolled a one on your wild die")
             }
             return total
