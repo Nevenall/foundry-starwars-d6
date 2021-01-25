@@ -12,6 +12,7 @@ Hooks.once('init', async function () {
 
    CONFIG.Dice.rolls[0] = Roll
    CONFIG.Dice.terms[''] = Die
+   // CONFIG.Dice.terms['w'] = Die
 
    // add a new kind of dice for character points
    // CONFIG.Dice.types.push(CharacterPointDie)

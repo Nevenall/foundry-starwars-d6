@@ -23,7 +23,7 @@ export default class CustomRoll extends Roll {
       terms = this._splitDiceTerms(terms, step)
 
       // Step 4.1 - if the formula leaves off the 6 (ie '2d') turn one of the dice into a wild die.
-      terms = this._customHandling(terms)
+      terms = this._customHandling(terms, step)
 
       // Step 5 - clean and de-dupe terms
       terms = this.constructor.cleanTerms(terms)
@@ -92,30 +92,13 @@ export default class CustomRoll extends Roll {
    }
 
 
-   _customHandling(terms) {
+   _customHandling(terms, steps) {
+      if (steps > 0) { return terms }
+      let shouldAddWildDie = terms.some(el => el && el.options ? el.options.shouldAddWildDie : false)
 
-
-      // todo - if the formula leaves off the 6 (ie '2d') turn one of the dice into a wild die.
-      // we want the wild die to be a separate die in the formula. 
-      // if we add dice, ie 2d+1d we don't want to wild die both, just the one. 
-
-      // note - this gets called 3 times per roll, need to take that into account I guess.  
-      // also once for every chat message when we reload
-
-      // we are breaking adding and subtracting
-      // so we should adjust by finding the first D term with a plus. 
-      // todo - for this game -1d means substract  a die before you roll, not roll a d6 and subtract it from the total.
-      // we can adjust that eval here. 
-
-      // we need to evaluate math as well. 
-      // so, the collected dice will look at + and - terms
-      // and adjust the die total. 
-      // well also have to preserve any +/- number
-
-      let shouldAddWildDie = terms.some(el => el.options ? el.options.shouldAddWildDie : false)
       for (let i = 0; i < terms.length; i++) {
          const el = terms[i]
-         if (el._evaluated) { continue }
+         if (!el || el._evaluated) { continue }
 
          if (el === '+' || el === '-') {
             let left = terms[i - 1]
@@ -137,11 +120,62 @@ export default class CustomRoll extends Roll {
       if (shouldAddWildDie) {
          let collectedDice = terms.find(el => el.options ? el.options.shouldAddWildDie : false)
          collectedDice.number--
-         let wildDie = new CustomDie({ number: 1, faces: 6, modifiers: ['x'] })
+         collectedDice.options.shouldAddWildDie = false
+         collectedDice.options.collectedDice = true
+         let wildDie = new CustomDie({ number: 1, faces: 6, modifiers: ['x'], options: { isWildDie: true, flavor: 'wild_die', shouldAddWildDie: false } })
          terms.unshift(wildDie, '+')
       }
 
       return terms
+   }
+
+   evaluate({ minimize = false, maximize = false } = {}) {
+      if (this._rolled) throw new Error("This Roll object has already been rolled.");
+
+      // Step 1 - evaluate any inner Rolls and recompile the formula
+      let hasInner = false;
+      this.terms = this.terms.map((t, i, terms) => {
+         if (t instanceof Roll) {
+            hasInner = true;
+            t.evaluate({ minimize, maximize });
+            this._dice = this._dice.concat(t.dice);
+            const priorMath = (i > 0) && (terms[i - 1].split(" ").pop() in Math);
+            return priorMath ? `(${t.total})` : String(t.total);
+         }
+         return t;
+      });
+
+      // Step 2 - re-compile the formula and re-identify terms
+      const formula = this.constructor.cleanFormula(this.terms);
+      this.terms = this._identifyTerms(formula, { step: 1 });
+
+      // Step 3 - evaluate remaining terms
+      this.results = this.terms.map((term, i, arr) => {
+         if (term.evaluate) {
+            let total = term.evaluate({ minimize, maximize }).total
+            if (term.options.flavor === 'wild_die' && total === 1) {
+            // todo - some day we'll figure out how to change the roll parameters of the rest of our dice to dh1 because of the 1 on the wild die.
+            //
+               console.log("you rolled a one on your wild die")
+            }
+            return total
+         } else {
+            return term
+         }
+
+      });
+
+      // Step 4 - safely evaluate the final total
+      let total = this._safeEval(this.results.join(" "));
+      if (total === null) total = 0;
+      if (!Number.isNumeric(total)) {
+         throw new Error(game.i18n.format("DICE.ErrorNonNumeric", { formula: this.formula }));
+      }
+
+      // Store final outputs
+      this._total = total;
+      this._rolled = true;
+      return this;
    }
 
 }
