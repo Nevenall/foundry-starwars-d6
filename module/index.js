@@ -45,5 +45,5 @@ Hooks.once('ready', async () => {
 
 Hooks.on("renderChatMessage", async (app, html, data) => {
 
-
+   var s = ''
 })

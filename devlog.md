@@ -33,3 +33,10 @@ then after we update stuff the expression gets regenerated from the dice terms
 and then we AGAIN identify terms from that reparsed expression. 
 Some of this comes from sending the roll info to the client, but damn. 
 
+## 5.5.2021, danb
+
+foundry 8.2 is out. can adjust things for that
+
+vs code allows us to create compound launch configs https://code.visualstudio.com/docs/editor/debugging#_compound-launch-configurations
+so we can attach to foundry and chrome. Get both server and client.
+we could also configure the foundry launch command. 
