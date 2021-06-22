@@ -7,11 +7,15 @@ import Die from './custom-die.js'
 Hooks.once('init', async function () {
    console.log('a long time ago in a galaxy far far away...')
 
+   // debug - turn on debugging for various things
    // CONFIG.debug.hooks = true
+   CONFIG.debug.dice = true
+
+
    CONFIG.Actor.entityClass = Character
 
-   CONFIG.Dice.rolls[0] = Roll
-   CONFIG.Dice.terms[''] = Die
+   // CONFIG.Dice.rolls[0] = Roll
+   // CONFIG.Dice.terms[''] = Die
    // CONFIG.Dice.terms['w'] = Die
 
    // add a new kind of dice for character points
@@ -19,8 +23,7 @@ Hooks.once('init', async function () {
    // CONFIG.Dice.terms.push({"cp": })
 
 
-   // debug - not totally sure what this does :)
-   game.debug = true
+
 
    // Register sheet application classes
    Actors.unregisterSheet("core", ActorSheet)
