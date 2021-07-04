@@ -504,8 +504,8 @@ export default class MyRoll extends Roll {
       let dice = terms.find(el => el?.options?.sw)
       if (dice) {
          dice.number--
-         terms.unshift(new Die({ number: 1, faces: 6, modifiers: ["x"], options: { wildDie: true } }))
-         terms.unshift(new Die({ number: 1, faces: 6, modifiers: ["x"], options: { wildDie: true } }))
+         terms.unshift(new OperatorTerm({operator: '+'}))
+         terms.unshift(new Die({ number: 1, faces: 6, modifiers: ["x"], options: { wildDie: true, flavor: "Wild Die" } }))
       }
       return terms
    }
