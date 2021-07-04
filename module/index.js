@@ -7,7 +7,7 @@ Hooks.once('init', async function () {
    console.log('a long time ago in a galaxy far far away...')
 
    //CONFIG.debug.hooks = true
-   CONFIG.debug.dice = true
+   //CONFIG.debug.dice = true
 
    CONFIG.Actor.documentClass = Character
 
