@@ -493,7 +493,21 @@ export default class MyRoll extends Roll {
          prior: terms[i - 1],
          next: terms[i + 1]
       }));
+
+      // Step 6: turn one of the die into the wild die
+      terms = this.AddWildDie(terms)
+
       return terms;
+   }
+
+   static AddWildDie(terms) {
+      let dice = terms.find(el => el?.options?.sw)
+      if (dice) {
+         dice.number--
+         terms.unshift(new Die({ number: 1, faces: 6, modifiers: ["x"], options: { wildDie: true } }))
+         terms.unshift(new Die({ number: 1, faces: 6, modifiers: ["x"], options: { wildDie: true } }))
+      }
+      return terms
    }
 
    /* -------------------------------------------- */
@@ -806,10 +820,8 @@ export default class MyRoll extends Roll {
          // default match failed, try matching terms of the form 4d
          let swMatch = term.match(/^([0-9]+)?[dD]([^ (){}[\]+\-*/]+)?(?:\[([^\]]+)\])?$/)
          if (swMatch) {
-            let ret = new Die({ number: 4, faces: 6 })
+            return new Die({ number: parseInt(swMatch[1]), faces: 6, options: { sw: true } })
          }
-
-
       }
 
       // Remaining strings

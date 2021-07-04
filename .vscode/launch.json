@@ -20,8 +20,8 @@
       "name": "Attach to Chrome",
       "port": 9222,
       "request": "attach",
-      "type": "pwa-chrome",
-      "url": "http://localhost:3030",
+      "type": "chrome",
+      "url": "http://localhost:3030/game",
       "webRoot": "${workspaceFolder}/module"
     },
     {
