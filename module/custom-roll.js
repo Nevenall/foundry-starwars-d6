@@ -248,9 +248,29 @@ export default class MyRoll extends Roll {
          if (!term._evaluated) await term.evaluate({ minimize, maximize, async: true });
       }
 
+      // Step 3.5 ​— if the wild die, is a 1, drop it & the highest die in the sw term
+      this.terms = this.checkWildDie(this.terms)
+
       // Step 4 - Evaluate the final expression
       this._total = this._evaluateTotal();
       return this;
+   }
+
+   checkWildDie(terms) {
+      let wildDie = terms.find(el => el?.options?.wildDie)
+      let swDice = terms.find(el => el?.options?.sw)
+      if (wildDie != null && swDice != null) {
+         if (wildDie.total === 1) {
+            wildDie.results[0].active = false
+            wildDie.results[0].discarded = true
+            let toModify = swDice.results.sort((a, b) => b.result - a.result)
+            if (toModify.length > 0) {
+               toModify[0].active = false
+               toModify[0].discarded = true
+            }
+         }
+      }
+      return terms
    }
 
    /* -------------------------------------------- */
@@ -495,16 +515,16 @@ export default class MyRoll extends Roll {
       }));
 
       // Step 6: turn one of the die into the wild die
-      terms = this.AddWildDie(terms)
+      terms = this.addWildDie(terms)
 
       return terms;
    }
 
-   static AddWildDie(terms) {
+   static addWildDie(terms) {
       let dice = terms.find(el => el?.options?.sw)
       if (dice) {
          dice.number--
-         terms.unshift(new OperatorTerm({operator: '+'}))
+         terms.unshift(new OperatorTerm({ operator: '+' }))
          terms.unshift(new Die({ number: 1, faces: 6, modifiers: ["x"], options: { wildDie: true, flavor: "Wild Die" } }))
       }
       return terms
