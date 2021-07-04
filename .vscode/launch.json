@@ -15,32 +15,15 @@
       "outputCapture": "std",
       "localRoot": "C:\\Program Files\\FoundryVTT\\resources\\app\\public\\scripts\\",
       "remoteRoot": "\\localhost:3030\\scripts\\",
-      
-    },
-    
-    {
-      "name": "Launch Foundry Server",
-      "program": "C:/Program Files/FoundryVTT/resources/app/main.js",
-      "request": "launch",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "args": [
-        "--inspect",
-        "--port=3030",
-        "--dataPath=C:/foundry-dev"
-      ],
-      "type": "pwa-node",
-      "outputCapture": "std"
     },
     {
       "name": "Attach to Chrome",
       "port": 9222,
       "request": "attach",
       "type": "pwa-chrome",
-      "webRoot": "${workspaceFolder}"
+      "url": "http://localhost:3030",
+      "webRoot": "${workspaceFolder}/module"
     },
-    
     {
       "name": "Scratchpad",
       "program": "${workspaceFolder}/scratchpad.js",
@@ -49,15 +32,6 @@
         "<node_internals>/**"
       ],
       "type": "pwa-node"
-    }
-  ],
-  "compounds": [
-    {
-      "name": "FoundryVTT",
-      "configurations": [
-        "Attach to Foundry Server",
-        "Attach to Chrome"
-      ]
     }
   ]
 }

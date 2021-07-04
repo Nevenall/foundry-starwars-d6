@@ -6,13 +6,9 @@
  * // Roll 4 six-sided dice
  * let die = new Die({faces: 6, number: 4}).evaluate();
  */
-export default class CustomDie extends Die {
+ class Die extends DiceTerm {
    constructor(termData = {}) {
       super(termData);
-
-      // todo - can we alter the static factory methods from here?
-      // why do we use both Die and DiceTerm when Die is also an implimentation of DiceTerm?
-
       if (typeof this.faces !== "number") {
          throw new Error("A Die term must have a numeric number of faces.");
       }
