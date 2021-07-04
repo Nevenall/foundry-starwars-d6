@@ -40,3 +40,9 @@ foundry 8.2 is out. can adjust things for that
 vs code allows us to create compound launch configs https://code.visualstudio.com/docs/editor/debugging#_compound-launch-configurations
 so we can attach to foundry and chrome. Get both server and client.
 we could also configure the foundry launch command. 
+
+## 7.3.2021, danb
+
+Ok, we can't really do a custom DiceTerm because of all the uses of that explicit type. 
+I think the Roll class is the overall management class. I think, so it can switch from using the DiceTerm.matchTerm class to do it's own special matching.
+we can try the default matching and it doesn't work, we'll do our matching.

@@ -1,15 +1,17 @@
 /**
- * An abstract base class for any term which appears in a dice roll formula
- * @abstract
+ * An abstract base class for any type of RollTerm which involves randomized input from dice, coins, or other devices.
+ * @extends RollTerm
  *
  * @param {object} termData                 Data used to create the Dice Term, including the following:
- * @param {number} termData.number          The number of dice of this term to roll, before modifiers are applied
+ * @param {number} [termData.number=1]      The number of dice of this term to roll, before modifiers are applied
  * @param {number} termData.faces           The number of faces on each die of this type
- * @param {string[]} termData.modifiers     An array of modifiers applied to the results
- * @param {object} termData.options         Additional options that modify the term
+ * @param {string[]} [termData.modifiers]   An array of modifiers applied to the results
+ * @param {object[]} [termData.results]     An optional array of pre-cast results for the term
+ * @param {object} [termData.options]       Additional options that modify the term
  */
-class DiceTerm {
-   constructor({number=1, faces=6, modifiers=[], options={}}={}) {
+ export default class CustomDiceTerm extends DiceTerm {
+   constructor({number=1, faces=6, modifiers=[], results=[], options={}}) {
+     super({options});
  
      /**
       * The number of dice of this term to roll, before modifiers are applied
@@ -30,31 +32,54 @@ class DiceTerm {
      this.modifiers = modifiers;
  
      /**
-      * An object of additional options which modify the dice term
-      * @type {object}
-      */
-     this.options = options;
- 
-     /**
       * The array of dice term results which have been rolled
-      * @type {object[]}
+      * @type {DiceTermResult[]}
       */
-     this.results = [];
+     this.results = results;
  
-     /**
-      * An internal flag for whether the dice term has been evaluated
-      * @type {boolean}
-      * @private
-      */
-     this._evaluated = false;
+     // If results were explicitly passed, the term has already been evaluated
+     if ( results.length ) this._evaluated = true;
    }
  
    /* -------------------------------------------- */
  
    /**
-    * Return the dice expression portion of the full term formula, excluding any flavor text.
+    * Define the denomination string used to register this DiceTerm type in CONFIG.Dice.terms
     * @type {string}
     */
+   static DENOMINATION = "";
+ 
+   /**
+    * Define the named modifiers that can be applied for this particular DiceTerm type.
+    * @type {{string: (string|Function)}}
+    */
+   static MODIFIERS = {};
+ 
+   /**
+    * A regular expression pattern which captures the full set of term modifiers
+    * Anything until a space, group symbol, or arithmetic operator
+    * @type {string}
+    */
+   static MODIFIERS_REGEXP_STRING = "([^ (){}[\\]+\\-*/]+)";
+ 
+   /**
+    * A regular expression used to separate individual modifiers
+    * @type {RegExp}
+    */
+   static MODIFIER_REGEXP = /([A-z]+)([^A-z\s()+\-*\/]+)?/g
+ 
+ 
+   /** @inheritdoc */
+   static REGEXP = new RegExp(`^([0-9]+)?[dD]([A-z]|[0-9]+)${DiceTerm.MODIFIERS_REGEXP_STRING}?${DiceTerm.FLAVOR_REGEXP_STRING}?$`);
+ 
+   /** @inheritdoc */
+   static SERIALIZE_ATTRIBUTES = ["number", "faces", "modifiers", "results"];
+ 
+   /* -------------------------------------------- */
+   /*  Dice Term Attributes                        */
+   /* -------------------------------------------- */
+ 
+   /** @inheritdoc */
    get expression() {
      const x = this.constructor.DENOMINATION === "d" ? this.faces : this.constructor.DENOMINATION;
      return `${this.number}d${x}${this.modifiers.join("")}`;
@@ -62,34 +87,9 @@ class DiceTerm {
  
    /* -------------------------------------------- */
  
-   /**
-    * Return a standardized representation for the displayed formula associated with this DiceTerm
-    * @type {string}
-    */
-   get formula() {
-     let f = this.expression;
-     if ( this.flavor ) f += `[${this.flavor}]`;
-     return f;
-   }
- 
-   /* -------------------------------------------- */
- 
-   /**
-    * Return the flavor text associated with a particular DiceTerm, possibly an empty string if the term is flavorless.
-    * @type {string}
-    */
-   get flavor() {
-     return this.options.flavor || "";
-   }
- 
-   /* -------------------------------------------- */
- 
-   /**
-    * Return the total result of the DiceTerm if it has been evaluated
-    * @type {number|null}
-    */
+   /** @inheritdoc */
    get total() {
-     if ( !this._evaluated ) return null;
+     if ( !this._evaluated ) return undefined;
      return this.results.reduce((t, r) => {
        if ( !r.active ) return t;
        if ( r.count !== undefined ) return t + r.count;
@@ -112,6 +112,8 @@ class DiceTerm {
    }
  
    /* -------------------------------------------- */
+   /*  Dice Term Methods                           */
+   /* -------------------------------------------- */
  
    /**
     * Alter the DiceTerm by adding or multiplying the number of dice which are rolled
@@ -130,27 +132,15 @@ class DiceTerm {
  
    /* -------------------------------------------- */
  
-   /**
-    * Evaluate the roll term, populating the results Array.
-    * @param {boolean} [minimize]    Apply the minimum possible result for each roll.
-    * @param {boolean} [maximize]    Apply the maximum possible result for each roll.
-    * @returns {DiceTerm}    The evaluated dice term
-    */
-   evaluate({minimize=false, maximize=false}={}) {
-     if ( this._evaluated ) {
-       throw new Error(`This ${this.constructor.name} has already been evaluated and is immutable`);
+   /** @inheritdoc */
+   _evaluateSync({minimize=false, maximize=false}={}) {
+     if ( (this.number > 999) ) {
+       throw new Error(`You may not evaluate a DiceTerm with more than 999 requested results`);
      }
- 
-     // Roll the initial number of dice
      for ( let n=1; n <= this.number; n++ ) {
        this.roll({minimize, maximize});
      }
- 
-     // Apply modifiers
      this._evaluateModifiers();
- 
-     // Return the evaluated term
-     this._evaluated = true;
      return this;
    }
  
@@ -158,16 +148,16 @@ class DiceTerm {
  
    /**
     * Roll the DiceTerm by mapping a random uniform draw against the faces of the dice term.
-    * @param {boolean} [minimize]    Apply the minimum possible result instead of a random result.
-    * @param {boolean} [maximize]    Apply the maximum possible result instead of a random result.
-    * @return {object}
+    * @param {object} [options={}]           Options which modify how a random result is produced
+    * @param {boolean} [options.minimize=false]    Minimize the result, obtaining the smallest possible value.
+    * @param {boolean} [options.maximize=false]    Maximize the result, obtaining the largest possible value.
+    * @return {DiceTermResult}               The produced result
     */
    roll({minimize=false, maximize=false}={}) {
-     const rand = CONFIG.Dice.randomUniform();
-     let result = Math.ceil(rand * this.faces);
-     if ( minimize ) result = Math.min(1, this.faces);
-     if ( maximize ) result = this.faces;
-     const roll = {result, active: true};
+     const roll = {result: undefined, active: true};
+     if ( minimize ) roll.result = Math.min(1, this.faces);
+     else if ( maximize ) roll.result = this.faces;
+     else roll.result = Math.ceil(CONFIG.Dice.randomUniform() * this.faces);
      this.results.push(roll);
      return roll;
    }
@@ -176,15 +166,61 @@ class DiceTerm {
  
    /**
     * Return a string used as the label for each rolled result
-    * @param {string} result     The numeric result
-    * @return {string}           The result label
+    * @param {DiceTermResult} result     The rolled result
+    * @return {string}                   The result label
     */
-   static getResultLabel(result) {
-     return String(result);
+   getResultLabel(result) {
+     return String(result.result);
    }
  
    /* -------------------------------------------- */
-   /*  Modifier Helpers                            */
+ 
+   /**
+    * Get the CSS classes that should be used to display each rolled result
+    * @param {DiceTermResult} result     The rolled result
+    * @return {string[]}                 The desired classes
+    */
+   getResultCSS(result) {
+     const hasSuccess = result.success !== undefined;
+     const hasFailure = result.failure !== undefined;
+     const isMax = result.result === this.faces;
+     const isMin = result.result === 1;
+     return [
+       this.constructor.name.toLowerCase(),
+       "d" + this.faces,
+       result.success ? "success" : null,
+       result.failure ? "failure" : null,
+       result.rerolled ? "rerolled" : null,
+       result.exploded ? "exploded" : null,
+       result.discarded ? "discarded" : null,
+       !(hasSuccess || hasFailure) && isMin ? "min" : null,
+       !(hasSuccess || hasFailure) && isMax ? "max" : null
+     ]
+   }
+ 
+   /* -------------------------------------------- */
+ 
+   /**
+    * Render the tooltip HTML for a Roll instance
+    * @return {object}      The data object used to render the default tooltip template for this DiceTerm
+    */
+   getTooltipData() {
+     return {
+       formula: this.expression,
+       total: this.total,
+       faces: this.faces,
+       flavor: this.flavor,
+       rolls: this.results.map(r => {
+         return {
+           result: this.getResultLabel(r),
+           classes: this.getResultCSS(r).filterJoin(" ")
+         }
+       })
+     };
+   }
+ 
+   /* -------------------------------------------- */
+   /*  Modifier Methods                            */
    /* -------------------------------------------- */
  
    /**
@@ -194,14 +230,50 @@ class DiceTerm {
     */
    _evaluateModifiers() {
      const cls = this.constructor;
-     for ( let m of this.modifiers ) {
-       const command = m.match(/[A-z]+/)[0].toLowerCase();
-       let fn = cls.MODIFIERS[command];
-       if ( typeof fn === "string" ) fn = this[fn];
-       if ( fn instanceof Function ) {
-         fn.call(this, m);
+     const requested = foundry.utils.deepClone(this.modifiers);
+     this.modifiers = [];
+ 
+     // Iterate over requested modifiers
+     for ( let m of requested ) {
+       let command = m.match(/[A-z]+/)[0].toLowerCase();
+ 
+       // Matched command
+       if ( command in cls.MODIFIERS ) {
+         this._evaluateModifier(command, m);
+         continue;
+       }
+ 
+       // Unmatched compound command
+       while ( !!command ) {
+         let matched = false;
+         for (let cmd of Object.keys(cls.MODIFIERS)) {
+           if (command.startsWith(cmd)) {
+             matched = true;
+             this._evaluateModifier(cmd, cmd);
+             command = command.replace(cmd, "");
+           }
+         }
+         if (!matched) command = "";
        }
      }
+   }
+ 
+   /* -------------------------------------------- */
+ 
+   /**
+    * Evaluate a single modifier command, recording it in the array of evaluated modifiers
+    * @param {string} command        The parsed modifier command
+    * @param {string} modifier       The full modifier request
+    * @private
+    */
+   _evaluateModifier(command, modifier) {
+       let fn = this.constructor.MODIFIERS[command];
+       if ( typeof fn === "string" ) fn = this[fn];
+       if ( fn instanceof Function ) {
+         const result = fn.call(this, modifier);
+         const earlyReturn = (result === false) || (result === this); // handling this is backwards compatibility
+         if ( !earlyReturn ) this.modifiers.push(modifier.toLowerCase());
+       }
    }
  
    /* -------------------------------------------- */
@@ -210,7 +282,7 @@ class DiceTerm {
     * A helper comparison function.
     * Returns a boolean depending on whether the result compares favorably against the target.
     * @param {number} result         The result being compared
-    * @param {string} comparison     The comparison operator in [=,<,<=,>,>=]
+    * @param {string} comparison     The comparison operator in [=,&lt;,&lt;=,>,>=]
     * @param {number} target         The target value
     * @return {boolean}              Is the comparison true?
     */
@@ -340,28 +412,28 @@ class DiceTerm {
    /* -------------------------------------------- */
  
    /**
-    * Construct a DiceTerm from a provided data object
-    * @param {object} data         Provided data from an un-serialized term
-    * @return {DiceTerm}           The constructed DiceTerm
+    * Determine whether a string expression matches this type of term
+    * @param {string} expression               The expression to parse
+    * @param {object} [options={}]             Additional options which customize the match
+    * @param {boolean} [options.imputeNumber=true]  Allow the number of dice to be optional, i.e. "d6"
+    * @return {RegExpMatchArray|null}
     */
-   static fromData(data) {
-     // TODO: Backwards compatibility for pre-0.7.0 dice
-     if (!("number" in data)) data = this._backwardsCompatibleTerm(data);
-     const cls = Object.values(CONFIG.Dice.terms).find(c => c.name === data.class) || Die;
-     return cls.fromResults(data, data.results);
+   static matchTerm(expression, {imputeNumber=true}={}) {
+     const match = expression.match(this.REGEXP);
+     if ( !match ) return null;
+     
+     if ( (match[1] === undefined) && !imputeNumber ) return null;
+     return match;
    }
  
    /* -------------------------------------------- */
  
    /**
-    * Parse a provided roll term expression, identifying whether it matches this type of term.
-    * @param {string} expression
-    * @param {object} options            Additional term options
-    * @return {DiceTerm|null}            The constructed DiceTerm instance
+    * Construct a term of this type given a matched regular expression array.
+    * @param {RegExpMatchArray} match          The matched regular expression array
+    * @return {DiceTerm}                      The constructed term
     */
-   static fromExpression(expression, options={}) {
-     const match = this.matchTerm(expression);
-     if ( !match ) return null;
+   static fromMatch(match) {
      let [number, denomination, modifiers, flavor] = match.slice(1);
  
      // Get the denomination of DiceTerm
@@ -372,99 +444,50 @@ class DiceTerm {
      // Get the term arguments
      number = Number.isNumeric(number) ? parseInt(number) : 1;
      const faces = Number.isNumeric(denomination) ? parseInt(denomination) : null;
-     modifiers = Array.from((modifiers || "").matchAll(DiceTerm.MODIFIER_REGEX)).map(m => m[0]);
-     if ( flavor ) options.flavor = flavor;
+ 
+     // Match modifiers
+     modifiers = Array.from((modifiers || "").matchAll(DiceTerm.MODIFIER_REGEXP)).map(m => m[0]);
  
      // Construct a term of the appropriate denomination
-     return new term({number, faces, modifiers, options});
+     return new term({number, faces, modifiers, options: {flavor}});
    }
  
    /* -------------------------------------------- */
- 
-   /**
-    * Check if the expression matches this type of term
-    * @param {string} expression               The expression to parse
-    * @param {boolean} [imputeNumber=true]     Allow the number of dice to be optional, i.e. "d6"
-    * @return {RegExpMatchArray|null}
-    */
-   static matchTerm(expression, {imputeNumber=true}={}) {
-     const rgx = new RegExp(`^([0-9]+)${imputeNumber ? "?" : ""}[dD]([A-z]|[0-9]+)${DiceTerm.MODIFIERS_REGEX}${DiceTerm.FLAVOR_TEXT_REGEX}`);
-     const match = expression.match(rgx);
-     return match || null;
-   }
- 
+   /*  Deprecations                                */
    /* -------------------------------------------- */
  
    /**
-    * Create a "fake" dice term from a pre-defined array of results
-    * @param {object} options        Arguments used to initialize the term
-    * @param {object[]} results      An array of pre-defined results
-    * @return {DiceTerm}
-    *
-    * @example
-    * let d = new Die({faces: 6, number: 4, modifiers: ["r<3"]});
-    * d.evaluate();
-    * let d2 = Die.fromResults({faces: 6, number: 4, modifiers: ["r<3"]}, d.results);
+    * @deprecated since 0.8.1
+    * @ignore
     */
-   static fromResults(options, results) {
-     const term = new this(options);
-     term.results = results;
-     term._evaluated = true;
+   static fromExpression(expression, options={}) {
+     console.warn("You are calling DiceTerm.fromExpression which has been deprecated in favor of the matchTerm and fromMatch methods");
+     const match = this.matchTerm(expression);
+     if ( !match ) return null;
+     const term = this.fromMatch(match);
+     term.options = options;
      return term;
    }
  
    /* -------------------------------------------- */
  
    /**
-    * Serialize the DiceTerm to a JSON string which allows it to be saved in the database or embedded in text.
-    * This method should return an object suitable for passing to the JSON.stringify function.
-    * @return {object}
+    * @deprecated since 0.8.1
+    * @ignore
     */
-   toJSON() {
-     return {
-       class: this.constructor.name,
-       number: this.number,
-       faces: this.faces,
-       modifiers: this.modifiers,
-       options: this.options,
-       results: this.results
-     }
+   static fromResults(options, results) {
+     console.warn("You are calling DiceTerm.fromResults which has been deprecated in favor passing results directly to the DiceTerm constructor");
+     return new this({results, options});
    }
  
    /* -------------------------------------------- */
  
    /**
-    * Reconstruct a DiceTerm instance from a provided JSON string
-    * @param {string} json   A serialized JSON representation of a DiceTerm
-    * @return {DiceTerm}     A reconstructed DiceTerm from the provided JSON
+    * @deprecated since 0.8.1
+    * @ignore
     */
-   static fromJSON(json) {
-     let data;
-     try {
-       data = JSON.parse(json);
-     } catch(err) {
-       throw new Error("You must pass a valid JSON string");
-     }
-     return this.fromData(data);
-   }
- 
-   /* -------------------------------------------- */
- 
-   /**
-    * Provide backwards compatibility for Die syntax prior to 0.7.0
-    * @private
-    */
-   static _backwardsCompatibleTerm(data) {
-     const match = this.matchTerm(data.formula);
-     data.number = parseInt(match[1]);
-     data.results = data.rolls.map(r => {
-       r.result = r.roll;
-       delete r.roll;
-       r.active = r.active !== false;
-       return r;
-     });
-     delete data.rolls;
-     delete data.formula;
-     return data;
+   static getResultLabel(result) {
+     console.warn("You are calling the DiceTerm.getResultLabel static method which has been deprecated in favor of a DiceTerm#getResultLabel instance method");
+     return this.prototype.getResultLabel.call(this, result);
    }
  }

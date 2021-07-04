@@ -2,9 +2,9 @@
   "name": "starwars-d6",
   "title": "Star Wars d6",
   "description": "Star Wars WEG STYLE!",
-  "version": "0.0.3",
-  "minimumCoreVersion": "0.5.5",
-  "compatibleCoreVersion": "0.7.9",
+  "version": "0.0.4",
+  "minimumCoreVersion": "0.8.0",
+  "compatibleCoreVersion": "0.8.8",
   "templateVersion": 0,
   "author": "nevenall",
   "esmodules": [
