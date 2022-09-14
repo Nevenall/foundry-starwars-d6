@@ -1,24 +1,28 @@
 {
-  "name": "starwars-d6",
   "title": "Star Wars d6",
   "description": "Star Wars WEG STYLE!",
   "version": "0.0.4",
-  "minimumCoreVersion": "0.8.0",
-  "compatibleCoreVersion": "0.8.8",
-  "templateVersion": 0,
-  "author": "nevenall",
   "esmodules": [
     "module/index.js"
   ],
   "styles": [
     "styles/starwars.css"
   ],
-  "packs": [],
   "socket": true,
-  "languages": [],
   "gridDistance": 1,
   "gridUnits": "m",
   "url": "https://github.com/Nevenall/foundry-starwars-d6",
   "manifest": "https://github.com/Nevenall/foundry-starwars-d6/raw/master/system.json",
-  "download": "https://github.com/Nevenall/foundry-starwars-d6/archive/master/foundry-starwars-d6-master.zip"
+  "download": "https://github.com/Nevenall/foundry-starwars-d6/archive/master/foundry-starwars-d6-master.zip",
+  "id": "starwars-d6",
+  "authors": [
+    {
+      "name": "nevenall",
+      "flags": {}
+    }
+  ],
+  "compatibility": {
+    "minimum": "0.8.0",
+    "verified": "0.8.8"
+  }
 }
